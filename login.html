@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生命潮健康管理中心客户管理系统</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body class="login-page">
+    <!-- 顶部标题栏 -->
+    <header>
+        <div class="header-left">
+            <img src="dzlogo.png" alt="健康体检logo" class="logo">
+            <div class="system-title">
+                <h1>生命潮健康管理中心客户管理系统</h1>
+                <p>Life tide health management center customer management system</p>
+            </div>
+        </div>
+        <!-- 添加返回按钮 -->
+        <div class="header-right">
+            <a href="index.html" class="back-to-home">
+                <i class="fas fa-home"></i>
+                返回官网首页
+            </a>
+        </div>
+    </header>
+
+    <!-- 主要内容区 -->
+    <main>
+        <div class="content-wrapper">
+            <!-- 左侧医疗插画 -->
+            <div class="illustration">
+                <img src="登录页图.png" alt="医疗插画">
+            </div>
+
+            <!-- 右侧登录框 -->
+            <div class="login-container">
+                <div class="login-box">
+                    <h2>欢迎登录 健康管理中心客户管理系统</h2>
+                    <form class="login-form">
+                        <div class="input-group">
+                            <span class="input-icon">👤</span>
+                            <input type="text" placeholder="请输入用户名" required>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" placeholder="******" required>
+                            <span class="show-password">👁</span>
+                        </div>
+                        <div class="input-group captcha-group">
+                            <span class="input-icon">🔐</span>
+                            <input type="text" placeholder="请输入验证码" required>
+                            <img src="验证码.png" 
+                                 alt="验证码" 
+                                 class="captcha-image"
+                                 style="pointer-events: none;">
+                        </div>
+                        <div class="form-links">
+                            <a href="#" class="register-link">用户注册</a>
+                            <a href="#" class="register-link">查修注册</a>
+                        </div>
+                        <button type="submit" class="login-button">登录</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧联系方式 -->
+        <div class="contact-buttons">
+            <a href="#" class="contact-item">
+                <img src="R-C.png" alt="电话咨询">
+                <span>电话咨询</span>
+            </a>
+            <a href="#" class="contact-item">
+                <img src="wecat.8b00afc8.svg" alt="联系我们">
+                <span>联系我们</span>
+            </a>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="footer-content">
+            <div class="version-info">
+                <span>服务热线： 888888888</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="login.js"></script>
+</body>
+</html>
