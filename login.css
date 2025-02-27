@@ -1,0 +1,360 @@
+:root {
+    --primary-blue: #4086F4;
+    --background-blue: #4086F4;
+    --white: #FFFFFF;
+    --text-gray: #666666;
+    --border-color: #E5E5E5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body.login-page {
+    font-family: 'Microsoft YaHei', sans-serif;
+    background: var(--background-blue);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 顶部标题栏样式 */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 20px 40px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+body {
+    font-family: 'Roboto', sans-serif;
+}
+@media (max-width: 768px) {
+    .system-title h1 {
+        font-size: 20px;
+    }
+    .system-title p {
+        font-size: 14px;
+    }
+}
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+}
+
+.system-title h1 {
+    font-size: 24px; /* 放大字体 */
+    color: #ff7f00; /* 橙色 */
+    margin: 0;
+}
+
+.system-title p {
+    font-size: 16px; /* 放大字体 */
+    color: #ff7f00; /* 橙色 */
+    margin: 5px 0 0 0;
+}
+
+.header-right {
+    margin-left: auto;
+}
+
+.header-right .slogan {
+    text-align: right;
+}
+
+.header-right .slogan p {
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+}
+
+.back-to-home {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #2196F3;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.back-to-home:hover {
+    background: #1976D2;
+}
+
+.back-to-home i {
+    font-size: 16px;
+}
+
+/* 主要内容区样式 */
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 40px;
+}
+
+.content-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.illustration {
+    flex: 1;
+    max-width: 600px;
+}
+
+.illustration img {
+    width: 100%;
+    height: auto;
+}
+
+/* 登录框样式 */
+.login-container {
+    width: 400px;
+    margin-left: 50px;
+}
+
+.login-box {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.login-box h2 {
+    color: var(--primary-blue);
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 18px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-gray);
+}
+
+.show-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-gray);
+}
+
+.captcha {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 80%;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.captcha-group {
+    position: relative;
+}
+
+.captcha-image {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 32px;
+    pointer-events: none;  /* 禁用所有鼠标事件 */
+    user-select: none;     /* 禁止选择 */
+}
+
+.form-links {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.register-link {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary-blue);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #3476DB;
+}
+
+/* 小弹窗样式 */
+.toast {
+    position: fixed;
+    top: 15%; /* 调整到中间偏上 */
+    left: 50%; /* 水平居中 */
+    transform: translate(-50%, -50%); /* 居中定位 */
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 图标和文本之间的间距 */
+}
+
+/* 显示动画 */
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0); /* 显示时保持水平居中 */
+}
+
+/* 成功弹窗样式 */
+.toast.success {
+    background-color: #5dbb5d; /* 绿色 */
+}
+
+/* 错误弹窗样式 */
+.toast.error {
+    background-color: #c5544c; /* 红色 */
+}
+
+/* 图标样式 */
+.toast-icon {
+    font-size: 16px; /* 图标大小 */
+}
+
+/* 文本样式 */
+.toast-text {
+    flex: 1; /* 文本占据剩余空间 */
+}
+/* 添加圆角和阴影 */
+.success-message, .error-message {
+    border-radius: 0 0 8px 8px; /* 底部圆角 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* 阴影效果 */
+}
+
+/* 右侧联系方式样式 */
+.contact-buttons {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.contact-item {
+    background: var(--white);
+    padding: 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-gray);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.contact-item img {
+    width: 50px;
+    height: 50px;
+}
+
+/* 页脚样式 */
+footer {
+    background: var(--white);
+    padding: 15px 50px;
+    font-size: 12px;
+    color: var(--text-gray);
+}
+
+.footer-content {
+    text-align: center;
+}
+
+.version-info {
+    margin-bottom: 8px;
+}
+
+.version-info span {
+    margin: 0 10px;
+}
+
+.footer-links a {
+    color: var(--text-gray);
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+    .illustration {
+        display: none;
+    }
+    
+    .login-container {
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        width: 100%;
+    }
+    
+    header {
+        padding: 10px 20px;
+    }
+    
+    .contact-buttons {
+        display: none;
+    }
+}
