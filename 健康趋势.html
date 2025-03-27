@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康趋势 - 生命潮健康管理中心</title>
+    <link rel="stylesheet" href="JKstyle.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-left">
+            <img src="logo.png" alt="Logo" class="logo">
+            <h1>生命潮健康管理中心</h1>
+        </div>
+        <div class="nav-right">
+            <span class="user-info">
+                <i class="fas fa-user-circle"></i>
+                账号： admin
+            </span>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                退出
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 左侧菜单 -->
+        <aside class="sidebar">
+            <div class="menu-group">
+                <div class="menu-title">用户管理</div>
+                <ul>
+                    <li><i class="fas fa-users"></i> 用户列表</li>
+                    <li><i class="fas fa-trash"></i> 已删除列表</li>
+                </ul>
+            </div>
+            <div class="menu-group">
+                <div class="menu-title">数据统计</div>
+                <ul>
+                    <li class="active"><i class="fas fa-chart-line"></i> 健康趋势</li>
+                    <li><i class="fas fa-chart-pie"></i> 数据分析</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主要内容区 -->
+        <main class="main-content">
+            <!-- 数据概览卡片 -->
+            <div class="dashboard-stats">
+                <div class="stat-card total">
+                    <i class="fas fa-users"></i>
+                    <div class="stat-info">
+                        <span class="stat-value">24</span>
+                        <span class="stat-label">总用户数</span>
+                    </div>
+                </div>
+                <div class="stat-card diabetes">
+                    <i class="fas fa-heartbeat"></i>
+                    <div class="stat-info">
+                        <span class="stat-value">8</span>
+                        <span class="stat-label">糖代谢用户</span>
+                    </div>
+                </div>
+                <div class="stat-card sub-health">
+                    <i class="fas fa-stethoscope"></i>
+                    <div class="stat-info">
+                        <span class="stat-value">8</span>
+                        <span class="stat-label">亚健康用户</span>
+                    </div>
+                </div>
+                <div class="stat-card other">
+                    <i class="fas fa-user-md"></i>
+                    <div class="stat-info">
+                        <span class="stat-value">8</span>
+                        <span class="stat-label">其他用户</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户选择区域 -->
+            <div class="user-select-section">
+                <div class="select-group">
+                    <label>选择用户：</label>
+                    <select id="userSelect" class="user-select">
+                        <option value="">全部用户</option>
+                        <option value="1">张三</option>
+                        <option value="2">李四</option>
+                        <option value="3">王五</option>
+                        <!-- 其他用户选项 -->
+                    </select>
+                </div>
+                <div class="select-group">
+                    <label>时间范围：</label>
+                    <select id="timeRange" class="time-range">
+                        <option value="week">近一周</option>
+                        <option value="month">近一月</option>
+                        <option value="year">近一年</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 趋势图表区域 -->
+            <div class="trend-charts">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>用户增长趋势</h3>
+                        <div class="chart-controls">
+                            <select class="time-range">
+                                <option value="week">近一周</option>
+                                <option value="month">近一月</option>
+                                <option value="year">近一年</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="userGrowthChart" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>健康指标趋势</h3>
+                        <div class="chart-controls">
+                            <select class="metric-select">
+                                <option value="bmi">BMI指数</option>
+                                <option value="bloodPressure">血压</option>
+                                <option value="bloodSugar">血糖</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="healthMetricsChart" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>用户年龄分布</h3>
+                    </div>
+                    <div id="ageDistributionChart" class="chart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>调理方向分布</h3>
+                    </div>
+                    <div id="directionDistributionChart" class="chart"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+    /* 用户选择区域样式 */
+    .user-select-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .select-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .select-group label {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .user-select, .time-range {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        color: #333;
+        font-size: 14px;
+        min-width: 150px;
+    }
+
+    .user-select:focus, .time-range:focus {
+        outline: none;
+        border-color: #2196F3;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+    }
+    </style>
+
+    <script>
+        // 初始化图表
+        function initCharts() {
+            // 用户增长趋势图
+            const userGrowthChart = echarts.init(document.getElementById('userGrowthChart'));
+            userGrowthChart.setOption({
+                title: {
+                    text: '用户增长趋势',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [20, 21, 22, 23, 24, 24, 24],
+                    type: 'line',
+                    smooth: true,
+                    areaStyle: {}
+                }]
+            });
+
+            // 健康指标趋势图
+            const healthMetricsChart = echarts.init(document.getElementById('healthMetricsChart'));
+            healthMetricsChart.setOption({
+                title: {
+                    text: '健康指标趋势',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['正常', '异常'],
+                    bottom: 0
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['1月', '2月', '3月', '4月', '5月', '6月']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '正常',
+                        type: 'line',
+                        data: [15, 16, 17, 18, 19, 20]
+                    },
+                    {
+                        name: '异常',
+                        type: 'line',
+                        data: [5, 4, 3, 2, 1, 0]
+                    }
+                ]
+            });
+
+            // 年龄分布图
+            const ageDistributionChart = echarts.init(document.getElementById('ageDistributionChart'));
+            ageDistributionChart.setOption({
+                title: {
+                    text: '用户年龄分布',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left'
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { value: 8, name: '20-30岁' },
+                            { value: 10, name: '31-40岁' },
+                            { value: 4, name: '41-50岁' },
+                            { value: 2, name: '50岁以上' }
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            });
+
+            // 调理方向分布图
+            const directionDistributionChart = echarts.init(document.getElementById('directionDistributionChart'));
+            directionDistributionChart.setOption({
+                title: {
+                    text: '调理方向分布',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left'
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { value: 8, name: '糖代谢' },
+                            { value: 8, name: '亚健康' },
+                            { value: 8, name: '其他' }
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }
+                ]
+            });
+
+            // 监听窗口大小变化，调整图表大小
+            window.addEventListener('resize', function() {
+                userGrowthChart.resize();
+                healthMetricsChart.resize();
+                ageDistributionChart.resize();
+                directionDistributionChart.resize();
+            });
+        }
+
+        // 添加用户选择和时间范围变化的监听
+        document.getElementById('userSelect').addEventListener('change', updateCharts);
+        document.getElementById('timeRange').addEventListener('change', updateCharts);
+
+        function updateCharts() {
+            const selectedUser = document.getElementById('userSelect').value;
+            const timeRange = document.getElementById('timeRange').value;
+            
+            // 更新用户增长趋势图
+            const userGrowthChart = echarts.init(document.getElementById('userGrowthChart'));
+            userGrowthChart.setOption({
+                title: {
+                    text: selectedUser ? '用户健康趋势' : '用户增长趋势',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: getTimeRangeData(timeRange)
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: selectedUser ? getUserHealthData(selectedUser, timeRange) : [20, 21, 22, 23, 24, 24, 24],
+                    type: 'line',
+                    smooth: true,
+                    areaStyle: {}
+                }]
+            });
+
+            // 更新健康指标趋势图
+            const healthMetricsChart = echarts.init(document.getElementById('healthMetricsChart'));
+            healthMetricsChart.setOption({
+                title: {
+                    text: selectedUser ? '个人健康指标趋势' : '健康指标趋势',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['正常', '异常'],
+                    bottom: 0
+                },
+                xAxis: {
+                    type: 'category',
+                    data: getTimeRangeData(timeRange)
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: '正常',
+                        type: 'line',
+                        data: selectedUser ? getUserMetricsData(selectedUser, timeRange, 'normal') : [15, 16, 17, 18, 19, 20]
+                    },
+                    {
+                        name: '异常',
+                        type: 'line',
+                        data: selectedUser ? getUserMetricsData(selectedUser, timeRange, 'abnormal') : [5, 4, 3, 2, 1, 0]
+                    }
+                ]
+            });
+        }
+
+        function getTimeRangeData(timeRange) {
+            switch(timeRange) {
+                case 'week':
+                    return ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                case 'month':
+                    return Array.from({length: 30}, (_, i) => `${i + 1}日`);
+                case 'year':
+                    return ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                default:
+                    return ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            }
+        }
+
+        function getUserHealthData(userId, timeRange) {
+            // 模拟用户健康数据
+            const data = {
+                week: [22, 23, 24, 23, 25, 24, 23],
+                month: Array.from({length: 30}, () => Math.floor(Math.random() * 5 + 22)),
+                year: Array.from({length: 12}, () => Math.floor(Math.random() * 5 + 22))
+            };
+            return data[timeRange];
+        }
+
+        function getUserMetricsData(userId, timeRange, type) {
+            // 模拟用户指标数据
+            const data = {
+                normal: {
+                    week: [3, 4, 3, 4, 3, 4, 3],
+                    month: Array.from({length: 30}, () => Math.floor(Math.random() * 3 + 2)),
+                    year: Array.from({length: 12}, () => Math.floor(Math.random() * 3 + 2))
+                },
+                abnormal: {
+                    week: [1, 0, 1, 0, 1, 0, 1],
+                    month: Array.from({length: 30}, () => Math.floor(Math.random() * 2)),
+                    year: Array.from({length: 12}, () => Math.floor(Math.random() * 2))
+                }
+            };
+            return data[type][timeRange];
+        }
+
+        // 页面加载完成后初始化图表
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            updateCharts();
+        });
+    </script>
+</body>
+</html> 
