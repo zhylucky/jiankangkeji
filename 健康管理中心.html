@@ -125,8 +125,7 @@
                             <td><button class="btn-complete" onclick="completeProfile(1)">用户档案</button></td>
                             <td><button class="btn-log">查看日志</button></td>
                             <td>
-                                <button class="btn-report" onclick="openReportModal('navigation')">导航报告</button>
-                                <button class="btn-report" onclick="openSleepReportModal()">睡眠报告</button>
+                                <a href="#" onclick="openNavigationReportModal(1)">导航报告</a>
                             </td>
                             <td><button class="btn-delete">删除</button></td>
                         </tr>
@@ -181,13 +180,17 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>导航报告列表</h3>
-                <button class="close-btn" onclick="closeNavigationReportModal()">&times;</button>
+                <button class="close-btn" onclick="closeNavigationReportModal()" aria-label="关闭">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <table class="report-list-table">
+                <table class="report-table">
                     <thead>
                         <tr>
                             <th>测评日期</th>
+                            <th>报告类型</th>
+                            <th>状态</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -214,108 +217,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 睡眠报告列表模态框 -->
-    <div id="sleepReportModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>睡眠报告列表</h3>
-                <button class="close-btn" onclick="closeSleepReportModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="sleepReportList"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 睡眠报告详细模态框 -->
-    <div id="sleepDetailedReportModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>睡眠报告详细信息</h3>
-                <button class="close-btn" onclick="closeSleepDetailedReportModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="sleepDetailedReportList"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function openReportModal(reportType) {
-            const modal = document.getElementById('reportModal');
-            const title = document.getElementById('modalTitle');
-            const reportList = document.getElementById('reportList');
-
-            title.innerText = reportType === 'navigation' ? '导航报告列表' : '报告列表';
-            reportList.innerHTML = '';
-
-            const reports = [
-                { date: '2025-02-13 14:56:19' },
-                { date: '2025-02-13 11:52:32' },
-                { date: '2025-02-13 10:12:12' },
-                { date: '2025-02-12 09:41:27' },
-                { date: '2025-02-11 11:46:57' },
-                { date: '2025-02-11 10:04:00' },
-                { date: '2025-02-10 16:18:51' },
-                { date: '2025-02-10 15:37:14' }
-            ];
-
-            reports.forEach(report => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${report.date}</td>
-                    <td><button class="btn-view" onclick="viewReport('${report.date}')">查看</button></td>
-                `;
-                reportList.appendChild(tr);
-            });
-
-            modal.style.display = 'flex';
-        }
-
-        function closeReportModal() {
-            const modal = document.getElementById('reportModal');
-            modal.style.display = 'none';
-        }
-
-        function viewReport(date) {
-            const detailedModal = document.getElementById('detailedReportModal');
-            const detailedReportList = document.getElementById('detailedReportList');
-
-            // 清空之前的内容
-            detailedReportList.innerHTML = '';
-
-            // 生成假数据
-            const detailedReports = [
-                { date: '2025-02-13', content: '导航报告内容1' },
-                { date: '2025-02-13', content: '导航报告内容2' },
-                { date: '2025-02-12', content: '导航报告内容3' },
-                { date: '2025-02-11', content: '导航报告内容4' },
-                { date: '2025-02-10', content: '导航报告内容5' }
-            ];
-
-            detailedReports.forEach(report => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${report.date}</td>
-                    <td>${report.content}</td>
-                `;
-                detailedReportList.appendChild(tr);
-            });
-
-            detailedModal.style.display = 'flex'; // 显示详细报告模态框
-        }
-
-        function closeDetailedReportModal() {
-            const modal = document.getElementById('detailedReportModal');
-            modal.style.display = 'none';
-        }
-
-        function closeNavigationReportModal() {
-            console.log('关闭导航报告模态框'); // 调试信息
-            const modal = document.getElementById('navigationReportModal');
-            modal.style.display = 'none'; // 确保模态框关闭
-        }
     </script><script src="JKscript.js"></script>
 
 

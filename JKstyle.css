@@ -309,6 +309,48 @@ body {
     color: var(--white);
 }
 
+/* 统一左侧菜单样式 */
+.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    padding: 10px 18px;
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar ul li a:hover {
+    background: #f0f4ff;
+    color: #1976d2;
+}
+
+.sidebar ul li.active a,
+.sidebar ul li a.active {
+    background: #1976d2;
+    color: #fff;
+    font-weight: bold;
+}
+
+.sidebar ul li a i {
+    margin-right: 8px;
+    font-size: 17px;
+}
+
+/* 保证li.active和a.active都能高亮 */
+.sidebar ul li.active,
+.sidebar ul li.active a {
+    background: #1976d2;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* 已删除列表样式优化 */
+.sidebar ul li a .fa-trash {
+    color: #888;
+}
+
 /* 主要内容区样式 */
 .main-content {
     flex: 1;
@@ -455,8 +497,16 @@ body {
 }
 
 .status-badge.已完成 {
-    background-color: var(--success-color);
-    color: white;
+    background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+    color: #fff;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 6px 18px;
+    box-shadow: 0 2px 8px rgba(67,233,123,0.08);
+    display: inline-block;
+    letter-spacing: 2px;
+    border: none;
 }
 
 .status-badge.进行中 {
@@ -677,15 +727,27 @@ body {
 }
 
 /* 修改模态框样式 */
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 95%;
-    max-width: 1200px;
-    max-height: 90vh; /* 设置最大高度为视窗高度的90% */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 9999;
     display: flex;
-    flex-direction: column;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.modal-content {
+    background: #ddd9d9;
+    border-radius: 8px;
+    max-width: 2000px;
+    width: 98%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    margin: 40px 0;
+    position: relative;
 }
 
 .modal-body {
@@ -852,45 +914,149 @@ body {
     background-color: rgba(64, 134, 244, 0.1);
 }
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+.modal-header {
+    position: relative;
+    padding-right: 60px;
+}
+
+.close-btn {
+    position: absolute;
+    top: 24px;
+    right: 32px;
+    background: transparent;
+    border: none;
+    font-size: 26px;
+    color: #888;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+    z-index: 10;
+}
+
+.close-btn:hover {
+    background: #f0f4ff;
+    color: #1976d2;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 18px;
+    margin-top: 28px;
+}
+
+.report-table th, .report-table td {
+    padding: 18px 22px;
+    font-size: 17px;
+    background: #f8f9fa;
+    border-bottom: none;
+    text-align: center;
+}
+
+.report-table th {
+    background: #f0f4ff;
+    color: #1976d2;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.report-table tr {
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(64,134,244,0.06);
+    height: 62px;
+}
+
+.report-table td {
+    background: #fff;
+    border-radius: 10px;
+    vertical-align: middle;
+    font-size: 16px;
+}
+
+.report-table td:last-child {
     display: flex;
+    gap: 12px;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    background: #fff;
 }
 
-.modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.report-table .btn-view, .report-table .btn-view-report, .report-table button {
+    min-width: 56px;
+    padding: 6px 18px;
+    border-radius: 16px;
+    font-size: 15px;
+    background: linear-gradient(90deg, #2196F3 0%, #6dd5fa 100%);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 2px;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+    outline: none;
 }
 
-.report-table, .detailed-report-table {
-    width: 100%;
-    border-collapse: collapse;
+.report-table .btn-view:hover, .report-table .btn-view-report:hover, .report-table button:hover {
+    background: linear-gradient(90deg, #1565c0 0%, #2196F3 100%);
+    transform: translateY(-2px) scale(1.04);
 }
 
-.report-table th, .report-table td,
-.detailed-report-table th, .detailed-report-table td {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    text-align: left;
+.status-badge {
+    padding: 8px 24px;
+    border-radius: 18px;
+    font-size: 16px;
+    font-weight: 500;
+    margin-right: 10px;
+    margin-left: 4px;
+    letter-spacing: 1px;
 }
 
-.report-table th, .detailed-report-table th {
-    background: #f8f9fa;
+.status-badge.已完成 {
+    background-color: #34C759;
+    color: #fff;
 }
 
-.report-table tr:hover, .detailed-report-table tr:hover {
-    background-color: #f1f1f1;
+.btn-view-report, .report-table .btn-view, .report-table button {
+    padding: 9px 28px;
+    border-radius: 20px;
+    font-size: 16px;
+    background: #4086F4;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: background 0.2s;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.btn-view-report:hover, .report-table .btn-view:hover, .report-table button:hover {
+    background: #2B5CC5;
+}
+
+/* 表格行间距和内容分隔 */
+.report-table tr {
+    margin-bottom: 14px;
+}
+
+@media (max-width: 1100px) {
+    .modal-content {
+        max-width: 99vw !important;
+        min-width: 0;
+        padding: 18px !important;
+    }
+    .report-table th, .report-table td {
+        padding: 10px 4px;
+        font-size: 14px;
+    }
+    .btn-view-report, .report-table .btn-view, .report-table button {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
 }
 
 /* 表单布局样式 */
@@ -1120,4 +1286,40 @@ body {
     .analysis-summary {
         grid-template-columns: 1fr;
     }
+}
+
+#navigationReportModal .modal-content {
+    max-width: 900px !important;
+    width: 98% !important;
+}
+#navigationReportModal .report-table th,
+#navigationReportModal .report-table td {
+    font-size: 20px;
+    padding: 24px 28px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: center;   /* 水平居中 */
+    align-items: center;
+    position: relative;
+    padding-right: 60px;
+    min-height: 56px;
+}
+
+.modal-header h3 {
+    flex: 1;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    color: #222;
+}
+
+.close-btn {
+    position: absolute;
+    top: 50%;
+    right: 32px;
+    transform: translateY(-50%);
+    /* 其他样式保持不变 */
 }

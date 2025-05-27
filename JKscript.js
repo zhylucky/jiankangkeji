@@ -273,9 +273,7 @@ function renderTable() {
                 <div class="report-dropdown">
                     <button class="btn-report" onclick="toggleDropdown(event)">查看报告</button>
                     <div class="dropdown-content" style="display: none;">
-                        <a href="#" data-type="navigation" onclick="viewReport('navigation')">导航报告</a>
-                        <a href="#" data-type="sleep" onclick="viewReport('sleep')">睡眠报告</a>
-                        <a href="#" data-type="assessment" onclick="viewReport('assessment')">健康测评报告</a>
+                        <a href="#" onclick="openNavigationReportModal(${user.id})">导航报告</a>
                     </div>
                 </div>
             </td>
@@ -401,9 +399,7 @@ function renderFilteredTable(filteredData) {
                 <div class="report-dropdown">
                     <button class="btn-report" onclick="toggleDropdown(event)">查看报告</button>
                     <div class="dropdown-content" style="display: none;">
-                        <a href="#" data-type="navigation" onclick="viewReport('navigation')">导航报告</a>
-                        <a href="#" data-type="sleep" onclick="viewReport('sleep')">睡眠报告</a>
-                        <a href="#" data-type="assessment" onclick="viewReport('assessment')">健康测评报告</a>
+                        <a href="#" onclick="openNavigationReportModal(${user.id})">导航报告</a>
                     </div>
                 </div>
             </td>
@@ -1073,143 +1069,11 @@ function loadUserProfile() {
     }
 }
 
-// 在JKscript.js中添加报告查看逻辑
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.btn-view-survey')) { // 确保是查看报告按钮
-        const reportType = e.target.closest('tr').querySelector('.report-dropdown .dropdown-content a').dataset.type;
-        const userId = e.target.closest('tr').querySelector('input[type="checkbox"]').value;
-        showReport(userId, reportType);
-    }
-});
-
-function showReport(userId, type) {
-    const user = userData.find(u => u.id === parseInt(userId));
-    if (!user) return;
-
-    const reportTitles = {
-        navigation: '健康导航报告',
-        sleep: '睡眠质量报告',
-        assessment: '健康评估报告'
-    };
-
-    const modalHtml = `
-        <div class="modal-overlay">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>${user.name} - ${reportTitles[type]}</h3>
-                    <button class="close-btn" onclick="closeModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="report-preview" id="${type}-report">
-                        ${generateReportContent(type, user)}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
-
-function generateReportContent(type, user) {
-    // 这里根据不同类型生成报告内容
-    const templates = {
-        navigation: `...导航报告HTML内容...`,
-        sleep: `...睡眠报告HTML内容...`,
-        assessment: `...健康评估HTML内容...`
-    };
-    return templates[type];
-}
-
-function openReportModal(reportType) {
-    const modal = document.getElementById('reportModal');
-    const title = document.getElementById('modalTitle');
-    const reportList = document.getElementById('reportList');
-
-    title.innerText = '报告列表';
-    reportList.innerHTML = '';
-
-    // 添加报告类型选项
-    const reports = [
-        { date: '2025-02-13 14:56:19', type: '导航报告' },
-        { date: '2025-02-13 11:52:32', type: '睡眠报告' }
-    ];
-
-    reports.forEach(report => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${report.date}</td>
-            <td>${report.type}</td>
-            <td>
-                <button class="btn-view" onclick="viewReport('${report.date}', '${report.type}')">查看</button>
-            </td>
-        `;
-        reportList.appendChild(tr);
-    });
-
-    modal.style.display = 'flex';
-}
-
-function viewReport(date, type) {
-    const detailedModal = document.getElementById('detailedReportModal');
-    
-    // 根据报告类型显示不同的内容
-    if (type === '睡眠报告') {
-        detailedModal.querySelector('.modal-body').innerHTML = `
-            <div class="report-details" style="padding: 20px;">
-                <h3 style="margin: 0 0 16px 0; color: #333; font-size: 16px;">睡眠报告详细信息</h3>
-                <div class="report-content" style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
-                    <p style="margin: 0 0 12px 0;">测评日期：${date}</p>
-                    <p style="margin: 0;">
-                        报告下载地址：
-                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/report/2025/1/3/60b2fcef-cf6c-48ef-bb71-287e5876acef.pdf" 
-                           target="_blank"
-                           style="color: #2196F3; text-decoration: none; font-weight: 500;">
-                            点击查看报告
-                        </a>
-                    </p>
-                </div>
-            </div>
-        `;
-    } else {
-        // 导航报告的显示内容
-        detailedModal.querySelector('.modal-body').innerHTML = `
-            <div class="report-details" style="padding: 20px;">
-                <h3 style="margin: 0 0 16px 0; color: #333; font-size: 16px;">导航报告详细信息</h3>
-                <div class="report-content" style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
-                    <p style="margin: 0 0 12px 0;">测评日期：${date}</p>
-                    <p style="margin: 0;">
-                        报告下载地址：
-                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf" 
-                           target="_blank"
-                           style="color: #2196F3; text-decoration: none; font-weight: 500;">
-                            点击查看报告
-                        </a>
-                    </p>
-                </div>
-            </div>
-        `;
-    }
-
-    detailedModal.style.display = 'flex';
-}
-
 /* 全局函数定义 */
 window.toggleDropdown = function(event) {
     event.stopPropagation();
     const dropdown = event.target.closest('.report-dropdown').querySelector('.dropdown-content');
     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-}
-
-window.viewReport = function(type, event) {
-    event.preventDefault();
-    const userId = event.target.closest('tr').querySelector('input[type="checkbox"]').value;
-    const user = userData.find(u => u.id == userId);
-    
-    // 关闭下拉菜单
-    event.target.closest('.report-dropdown').querySelector('.dropdown-content').style.display = 'none';
-    
-    showReport(user.id, type);
 }
 
 // 修改全局点击监听
@@ -1224,7 +1088,7 @@ document.addEventListener('click', function(e) {
         if (type === 'navigation') {
             openNavigationReportModal(userId);
         } else {
-            showReport(userId, type);
+            // showReport(userId, type);
         }
     } else {
         document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
@@ -1256,7 +1120,7 @@ function openNavigationReportModal(userId) {
             }
             .report-table th {
                 background: #f8f9fa;
-                padding: 10px 15px;  /* 调整内边距 */
+                padding: 25px 25px;  /* 调整内边距 */
                 text-align: left;
                 font-weight: 500;
                 color: #666;
@@ -1330,29 +1194,16 @@ function openNavigationReportModal(userId) {
     ];
 
     // 更新表格内容
-    reportList.innerHTML = tableStyle + `
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th>测评日期</th>
-                    <th>报告类型</th>
-                    <th>状态</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${reports.map(report => `
-                    <tr>
-                        <td>${report.date}</td>
-                        <td><span class="report-type">${report.type}</span></td>
-                        <td><span class="status-tag">${report.status}</span></td>
-                        <td><button class="btn-view" onclick="viewNavigationReport('${report.date}')">查看</button></td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
+reportList.innerHTML = reports.map(report => `
+    <tr>
+        <td>${report.date}</td>
+        <td><span class="report-type">${report.type}</span></td>
+        <td><span class="status-badge 已完成">${report.status}</span></td>
+        <td><button class="btn-view" onclick="viewNavigationReport('${report.date}')">查看</button></td>
+    </tr>
+`).join('');
 
+    
     modal.style.display = 'flex';
 }
 
@@ -1364,107 +1215,9 @@ function closeNavigationReportModal() {
 
 // 修改导航报告详细信息模态框
 function viewNavigationReport(date) {
-    const detailedModal = document.getElementById('detailedReportModal');
-    
-    // 设置内容容器样式
-    detailedModal.querySelector('.modal-content').style.cssText = `
-        background: white;
-        border-radius: 8px;
-        width: 500px;
-        padding: 0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    `;
-
-    // 更新模态框内容
-    detailedModal.querySelector('.modal-body').innerHTML = `
-        <div class="report-details" style="padding: 20px;">
-            <h3 style="margin: 0 0 16px 0; color: #333; font-size: 16px;">导航报告详细信息</h3>
-            <div class="report-content" style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
-                <p style="margin: 0 0 12px 0;">测评日期：${date}</p>
-                <p style="margin: 0;">
-                    报告下载地址：
-                    <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf" 
-                       target="_blank"
-                       style="color: #2196F3; text-decoration: none; font-weight: 500;">
-                        点击查看报告
-                    </a>
-                </p>
-            </div>
-        </div>
-    `;
-
-    detailedModal.style.display = 'flex';
-}
-
-// 添加睡眠报告相关函数
-function openSleepReportModal() {
-    const modal = document.getElementById('sleepReportModal');
-    const reportList = document.getElementById('sleepReportList');
-
-    // 模拟睡眠报告数据
-    const reports = [
-        { date: '2025-02-13 14:56:19', status: '已完成', type: '睡眠检测' },
-        { date: '2025-02-13 11:52:32', status: '已完成', type: '睡眠检测' },
-        { date: '2025-02-13 10:12:12', status: '已完成', type: '睡眠检测' },
-        { date: '2025-02-12 09:41:27', status: '已完成', type: '睡眠检测' }
-    ];
-
-    // 更新表格内容
-    reportList.innerHTML = `
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th>测评日期</th>
-                    <th>报告类型</th>
-                    <th>状态</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${reports.map(report => `
-                    <tr>
-                        <td>${report.date}</td>
-                        <td>${report.type}</td>
-                        <td>${report.status}</td>
-                        <td><button class="btn-view" onclick="viewSleepReport('${report.date}')">查看</button></td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-
-    modal.style.display = 'flex';
-}
-
-function viewSleepReport(date) {
-    const detailedModal = document.getElementById('sleepDetailedReportModal');
-    const detailedReportList = document.getElementById('sleepDetailedReportList');
-
-    detailedReportList.innerHTML = `
-        <div class="sleep-report-content">
-            <h3>睡眠质量报告</h3>
-            <p>测评日期：${date}</p>
-            <p>
-                <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/report/2025/1/3/60b2fcef-cf6c-48ef-bb71-287e5876acef.pdf" 
-                   target="_blank"
-                   class="report-link">
-                    点击查看报告
-                </a>
-            </p>
-        </div>
-    `;
-
-    detailedModal.style.display = 'flex';
-}
-
-function closeSleepReportModal() {
-    const modal = document.getElementById('sleepReportModal');
-    modal.style.display = 'none';
-}
-
-function closeSleepDetailedReportModal() {
-    const modal = document.getElementById('sleepDetailedReportModal');
-    modal.style.display = 'none';
+    // 这里可根据date动态生成pdf地址，示例写死
+    const pdfUrl = "https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf";
+    window.open(pdfUrl, '_blank');
 }
 
 // 添加退出登录函数
