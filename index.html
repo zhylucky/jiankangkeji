@@ -2,11 +2,13 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="北京道贞健康科技有限公司官方网站，提供个人健康管家Pro+等健康管理产品。">
     <meta name="keywords" content="健康科技, 健康管理, 个人健康管家, 道贞健康">
-    <title>北京道贞健康科技有限公司</title>
+    <title>道贞健康科技</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -15,7 +17,7 @@
         <div class="logo">
             <img src="dzlogo.png" alt="道贞logo">
             <div class="logo-text">
-                <div class="logo-text-cn">道贞健康科技官网</div>
+                <div class="logo-text-cn">道贞健康科技</div>
                 <div class="logo-text-en">Dao Zhen Health Technology</div>
             </div>
         </div>
@@ -32,19 +34,53 @@
         <!-- 公司介绍部分 -->
         <section id="about" class="about-section">
             <div class="section-content">
-                <h1 class="featured-title">央视《发现者》栏目:生命潮®《数字健康之路》</h1>
-                <div class="video-preview">
-                    <div class="video-thumbnail">
-                        <img src="logo.jpg" alt="视频封面">
-                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E3%80%8A%E6%95%B0%E5%AD%97%E5%81%A5%E5%BA%B7%E4%B9%8B%E8%B7%AF%E3%80%8B_20241111-HD%EF%BC%88%E6%92%AD%E5%87%BA%E7%89%88%EF%BC%89.mp4" class="play-button" target="_blank" rel="noopener noreferrer">
-                            <span class="play-icon">▶️</span>
-                            <span class="button-text">观看视频</span>
-                        </a>
+                <!-- 改造后的央视视频卡片 -->
+                <div class="video-card video-card--cctv">
+                    <div class="video-card__logo">
+                        <img src="logo.jpg" alt="发现者栏目Logo">
                     </div>
+                    <div class="video-card__info">
+                        <h3 class="video-card__title">央视《发现者》栏目:生命潮®《数字健康之路》</h3>
+                    </div>
+                    <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E3%80%8A%E6%95%B0%E5%AD%97%E5%81%A5%E5%BA%B7%E4%B9%8B%E8%B7%AF%E3%80%8B_20241111-HD%EF%BC%88%E6%92%AD%E5%87%BA%E7%89%88%EF%BC%89.mp4" class="video-card__button" target="_blank" rel="noopener noreferrer">
+                        <span class="play-icon">▶</span>
+                        观看视频
+                    </a>
                 </div>
             </div>
         </section>
 
+                <!-- 产品核心优势 -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2>产品的核心优势</h2>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-bed"></i>
+                        <h3>精准睡眠监测</h3>
+                        <p>医疗级传感器，准确捕捉睡眠中的每一次呼吸与心跳，全面评估睡眠质量。</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-chart-pie"></i>
+                        <h3>多维度健康评估</h3>
+                        <p>综合分析睡眠、情绪、体能数据，生成全面健康画像，洞悉潜在风险。</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-file-medical"></i>
+                        <h3>AI智能健康报告</h3>
+                        <p>基于大数据的智能算法，为您解读健康数据背后的意义，提供专业、易懂的健康报告。</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        <h3>个性化干预方案</h3>
+                        <p>根据您的健康状况，量身定制改善建议，从生活方式到专业指导，助您持续改善。</p>
+                    </div>
+                </div>
+            </div>
+        </section>       
+        
         <!-- 产品介绍部分 -->
         <section id="products" class="products-section">
             <div class="section-content">
@@ -52,20 +88,27 @@
                 <div class="product-showcase">
                     <div class="product-info">
                         <h3>个人健康管家Pro+</h3>
-                        <p>随时随地掌握健康，包含了睡眠、情绪、体能、健康、导航管理及测评，可多维度进行健康追踪和管理。</p>
+                        <p>随时随地掌握健康，包含了睡眠、情绪、体能、健康、导航管理及测评，可多维度进行健康追踪和管理。
+                            通过直观的界面和深度的数据分析，Pro+ 将复杂的健康数据转化为您可以轻松理解和行动的指南。</p>
                     </div>
-                    <div class="product-video">
-                        <div class="video-thumbnail">
-                            <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png" alt="产品视频封面">
-                            <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E4%B8%AA%E4%BA%BA%E5%81%A5%E5%BA%B7PRO%2B_V2SD.mp4" class="play-button" target="_blank" rel="noopener noreferrer">
-                                <span class="play-icon">▶️</span>
-                                <span class="button-text">产品介绍</span>
-                            </a>
+                    <!-- 改造后的产品视频卡片 -->
+                    <div class="video-card video-card--pro">
+                        <div class="video-card__logo">
+                            <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png" alt="个人健康管家Pro+ Logo">
                         </div>
+                        <div class="video-card__info">
+                            <h3 class="video-card__title">个人健康管家Pro+</h3>
+                        </div>
+                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E4%B8%AA%E4%BA%BA%E5%81%A5%E5%BA%B7PRO%2B_V2SD.mp4" class="video-card__button" target="_blank" rel="noopener noreferrer">
+                            <span class="play-icon">▶</span>
+                            产品介绍
+                        </a>
                     </div>
                 </div>
             </div>
         </section>
+
+
 
         <!-- APP下载部分 -->
         <section id="download" class="download-section">

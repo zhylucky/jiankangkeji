@@ -2,12 +2,14 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>健康管理中心</title>
     <link rel="stylesheet" href="JKstyle.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <!-- 顶部导航 -->
@@ -34,123 +36,22 @@
             <div class="menu-group">
                 <div class="menu-title">用户管理</div>
                 <ul>
-                    <li class="active"><i class="fas fa-users"></i> 用户列表</li>
+                    <li class="active" onclick="loadContent('partials/user_list.html', this)"><i class="fas fa-users"></i> 用户列表</li>
                     <li><i class="fas fa-trash"></i> 已删除列表</li>
                 </ul>
             </div>
             <div class="menu-group">
                 <div class="menu-title">数据统计</div>
                 <ul>
-                    <li><i class="fas fa-chart-line"></i> <a href="健康趋势.html">健康趋势</a></li>
-                    <li><i class="fas fa-chart-pie"></i> <a href="数据分析.html">数据分析</a></li>
+                    <li onclick="loadContent('partials/health_trends.html', this)"><i class="fas fa-chart-line"></i> 健康趋势</li>
+                    <li onclick="loadContent('partials/data_analysis.html', this)"><i class="fas fa-chart-pie"></i> 数据分析</li>
                 </ul>
             </div>
         </aside>
 
-        <!-- 主要内容区 -->
-        <main class="main-content">
-            <!-- 搜索和筛选区 -->
-            <div class="search-section">
-                <div class="search-group">
-                    <div class="search-inputs">
-                        <div class="input-group">
-                            <i class="fas fa-user"></i>
-                            <input type="text" placeholder="姓名">
-                        </div>
-                        <div class="input-group">
-                            <i class="fas fa-phone"></i>
-                            <input type="text" placeholder="手机号">
-                        </div>
-                    </div>
-                    <div class="search-actions">
-                        <select class="filter-select">
-                            <option value="">全部方向</option>
-                            <option value="糖代谢">糖代谢</option>
-                            <option value="亚健康">亚健康</option>
-                            <option value="其他">其他</option>
-                        </select>
-                        <button class="btn-search">
-                            <i class="fas fa-search"></i> 搜索
-                        </button>
-                        <button class="btn-reset">
-                            <i class="fas fa-redo"></i> 重置
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 工具栏 -->
-            <div class="toolbar">
-                <div class="left-tools">
-                    <button class="btn-add">
-                        <i class="fas fa-plus"></i> 新增用户
-                    </button>
-                    <button class="btn-export">
-                        <i class="fas fa-file-export"></i> 导出数据
-                    </button>
-                    <button class="btn-batch">
-                        <i class="fas fa-tags"></i> 批量标签
-                    </button>
-                </div>
-                <div class="right-tools">
-                    <span class="selected-count">已选择 0 项</span>
-                </div>
-            </div>
-
-            <!-- 数据表格 -->
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" class="select-all"></th>
-                            <th>姓名</th>
-                            <th>性别</th>
-                            <th>年龄</th>
-                            <th>手机号</th>
-                            <th>调理方向</th>
-                            <th>完善档案</th>
-                            <th>日志列表</th>
-                            <th>查看报告</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="checkbox"></td>
-                            <td>张三</td>
-                            <td>男</td>
-                            <td>30</td>
-                            <td>13800000000</td>
-                            <td>糖代谢</td>
-                            <td><button class="btn-complete" onclick="completeProfile(1)">用户档案</button></td>
-                            <td><button class="btn-log">查看日志</button></td>
-                            <td>
-                                <a href="#" onclick="openNavigationReportModal(1)">导航报告</a>
-                            </td>
-                            <td><button class="btn-delete">删除</button></td>
-                        </tr>
-                        <!-- 其他数据行 -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- 分页控件 -->
-            <div class="pagination">
-                <div class="pagination-container">
-                    <span>共 24 条</span>
-                    <select class="page-size">
-                        <option value="10">10条/页</option>
-                        <option value="20">20条/页</option>
-                        <option value="50">50条/页</option>
-                    </select>
-                    <div class="page-buttons">
-                        <!-- 页码按钮将通过 JavaScript 动态生成 -->
-                    </div>
-                    <div class="page-jump">
-                        前往 <input type="number" min="1" max="3" value="1"> 页
-                    </div>
-                </div>
-            </div>
+        <!-- 主要内容区 (将作为动态内容的容器) -->
+        <main id="main-content" class="main-content">
+            <!-- 内容将通过 JavaScript 动态加载 -->
         </main>
     </div>
 
@@ -217,7 +118,75 @@
             </div>
         </div>
     </div>
-    </script><script src="JKscript.js"></script>
 
+    <!-- 客户档案模态框 -->
+    <div id="profileModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content profile-modal-content">
+            <div class="modal-header">
+                <h3>客户档案表</h3>
+                <span id="profileFilingDate"></span>
+                <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <form id="profileForm" onsubmit="saveProfile(event)">
+                <input type="hidden" id="profileUserId">
+                <div class="profile-modal-body">
+                    <div class="profile-grid">
+                        <div class="form-field"><span>姓名:</span><p id="profileName" class="readonly-field"></p></div>
+                        <div class="form-field"><span>性别:</span><p id="profileGender" class="readonly-field"></p></div>
+                        <div class="form-field"><span>出生日期:</span><input type="date" id="profileDob"></div>
+                        <div class="form-field full-width"><span>电话:</span><p id="profilePhone" class="readonly-field"></p></div>
+                        <div class="form-field full-width"><span>住址:</span><input type="text" id="profileAddress"></div>
 
+                        <div class="form-field"><span>有何种疾病:</span><input type="text" id="profileDiseases"></div>
+                        <div class="form-field" colspan="2"><span>病史:</span><input type="text" id="profileMedicalHistory"></div>
+                        <div class="form-field"><span>调理原因:</span><input type="text" id="profileConditioningReason"></div>
+                        
+                        <div class="form-field"><span>身高(cm):</span><input type="number" id="profileHeight"></div>
+                        <div class="form-field"><span>体重(kg):</span><input type="number" id="profileWeight"></div>
+                        <div class="form-field"><span>BMI:</span><p id="profileBmi" class="readonly-field"></p></div>
+
+                        <div class="form-field full-width"><span>用药情况:</span><input type="text" id="profileMedicationStatus"></div>
+                        
+                        <div class="form-field" colspan="3">
+                            <span>调理内容:</span>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="conditioningContent" value="糖代谢"> 糖代谢</label>
+                                <label><input type="checkbox" name="conditioningContent" value="亚健康"> 亚健康</label>
+                                <label><input type="checkbox" name="conditioningContent" value="其他"> 其他</label>
+                            </div>
+                        </div>
+
+                        <div class="form-field" colspan="3">
+                            <span>血压:</span>
+                            <div class="inline-inputs">
+                                <label>收缩压:</label><input type="number" id="profileSystolic">
+                                <label>舒张压:</label><input type="number" id="profileDiastolic">
+                            </div>
+                        </div>
+
+                        <div class="form-field"><span>空腹血糖:</span><input type="number" step="0.1" id="profileFastingSugar"></div>
+                        <div class="form-field" colspan="2"><span>糖化血红蛋白:</span><input type="number" step="0.1" id="profileGlycatedHemoglobin"></div>
+
+                        <div class="form-field"><span>自我管理情况:</span><input type="text" id="profileSelf_management_status"></div>
+                        <div class="form-field"><span>交费情况:</span><input type="text" id="profilePaymentStatus"></div>
+                        <div class="form-field"><span>预计时间:</span><input type="text" id="profileEstimatedTime"></div>
+
+                        <div class="form-field full-width" colspan="3"><span>其他:</span><textarea id="profileOtherNotes"></textarea></div>
+
+                        <div class="form-field"><span>填表人:</span><input type="text" id="profileFiller"></div>
+                        <div class="form-field"><span>客户来源:</span><input type="text" id="profileClientSource"></div>
+                        <div class="form-field"><span>安排时间:</span><input type="datetime-local" id="profileScheduledTime"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeProfileModal()">取消</button>
+                    <button type="submit" class="btn-save">保存档案</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="JKscript.js"></script>
+</body>
 </html>

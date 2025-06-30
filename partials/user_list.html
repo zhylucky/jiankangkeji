@@ -1,0 +1,131 @@
+<!-- 搜索和筛选区 -->
+<div class="search-section">
+    <div class="search-group">
+        <div class="search-inputs">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" placeholder="姓名">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-phone"></i>
+                <input type="text" placeholder="手机号">
+            </div>
+        </div>
+        <div class="search-actions">
+            <select class="filter-select">
+                <option value="">全部方向</option>
+                <option value="糖代谢">糖代谢</option>
+                <option value="亚健康">亚健康</option>
+                <option value="其他">其他</option>
+            </select>
+            <button class="btn-search">
+                <i class="fas fa-search"></i> 搜索
+            </button>
+            <button class="btn-reset">
+                <i class="fas fa-redo"></i> 重置
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 工具栏 -->
+<div class="toolbar">
+    <div class="left-tools">
+        <button class="btn-add">
+            <i class="fas fa-plus"></i> 新增用户
+        </button>
+        <button class="btn-export">
+            <i class="fas fa-file-export"></i> 导出数据
+        </button>
+        <button class="btn-batch">
+            <i class="fas fa-tags"></i> 批量标签
+        </button>
+    </div>
+    <div class="right-tools">
+        <span class="selected-count">已选择 0 项</span>
+    </div>
+</div>
+
+<!-- 数据表格 -->
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th><input type="checkbox" class="select-all"></th>
+                <th>姓名</th>
+                <th>性别</th>
+                <th>年龄</th>
+                <th>手机号</th>
+                <th>调理方向</th>
+                <th>主要操作</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>                       
+            <!-- 其他数据行 -->
+        </tbody>
+    </table>
+</div>
+
+<!-- 分页控件 -->
+<div class="pagination">
+    <div class="pagination-container">
+        <span>共 24 条</span>
+        <select class="page-size">
+            <option value="10">10条/页</option>
+            <option value="20">20条/页</option>
+            <option value="50">50条/页</option>
+        </select>
+        <div class="page-buttons">
+            <!-- 页码按钮将通过 JavaScript 动态生成 -->
+        </div>
+        <div class="page-jump">
+            前往 <input type="number" min="1" max="3" value="1"> 页
+        </div>
+    </div>
+</div>
+
+<script>
+    // 这个脚本会在内容加载后被执行
+    (async function() {
+        try {
+            console.log('开始初始化用户列表模块...');
+            
+            // 确保Supabase客户端已准备好
+            if (!supabase) {
+                await new Promise(resolve => setTimeout(resolve, 100)); // 简单等待
+                if (!supabase) throw new Error('Supabase 客户端依然不可用');
+            }
+            
+            // 显示加载提示
+            showToast('正在加载数据...');
+            
+            // 加载用户数据
+            console.log('加载用户数据...');
+            const result = await loadUsers();
+            if (!result.success) {
+                throw new Error('加载用户数据失败');
+            }
+            console.log('用户数据加载完成');
+            
+            // 初始化事件监听
+            console.log('初始化用户列表事件监听...');
+            initEventListeners();
+            console.log('用户列表事件监听初始化完成');
+            
+            // 一次性渲染UI
+            console.log('渲染用户列表界面...');
+            renderTable();
+            await updatePagination();
+            console.log('用户列表界面渲染完成');
+            
+            // 隐藏加载提示
+            showToast('用户列表加载完成');
+            
+            console.log('用户列表模块初始化完成！');
+        } catch (error) {
+            console.error('初始化用户列表模块失败:', error);
+            showToast('初始化用户列表模块失败: ' + error.message);
+        }
+    })();
+</script> 

@@ -1,240 +1,116 @@
-// 用户数据
-const userData = [
-    {
-        id: 1,
-        name: '张明',
-        gender: '男',
-        age: 37,
-        phone: '13812345671',
-        direction: '糖代谢'
-    },
-    {
-        id: 2,
-        name: '李芳',
-        gender: '女',
-        age: 42,
-        phone: '13912345672',
-        direction: '亚健康'
-    },
-    {
-        id: 3,
-        name: '王强',
-        gender: '男',
-        age: 45,
-        phone: '13712345673',
-        direction: '其他'
-    },
-    {
-        id: 4,
-        name: '刘静',
-        gender: '女',
-        age: 28,
-        phone: '13612345674',
-        direction: '糖代谢'
-    },
-    {
-        id: 5,
-        name: '陈勇',
-        gender: '男',
-        age: 52,
-        phone: '13512345675',
-        direction: '亚健康'
-    },
-    {
-        id: 6,
-        name: '周娜',
-        gender: '女',
-        age: 33,
-        phone: '13412345676',
-        direction: '其他'
-    },
-    {
-        id: 7,
-        name: '杨光',
-        gender: '男',
-        age: 41,
-        phone: '13312345677',
-        direction: '糖代谢'
-    },
-    {
-        id: 8,
-        name: '赵雪',
-        gender: '女',
-        age: 29,
-        phone: '13212345678',
-        direction: '亚健康'
-    },
-    {
-        id: 9,
-        name: '孙伟',
-        gender: '男',
-        age: 47,
-        phone: '13112345679',
-        direction: '其他'
-    },
-    {
-        id: 10,
-        name: '林萍',
-        gender: '女',
-        age: 35,
-        phone: '13012345680',
-        direction: '糖代谢'
-    },
-    {
-        id: 11,
-        name: '朱峰',
-        gender: '男',
-        age: 39,
-        phone: '13912345681',
-        direction: '亚健康'
-    },
-    {
-        id: 12,
-        name: '郑洁',
-        gender: '女',
-        age: 31,
-        phone: '13812345682',
-        direction: '其他'
-    },
-    {
-        id: 13,
-        name: '黄博',
-        gender: '男',
-        age: 44,
-        phone: '13712345683',
-        direction: '糖代谢'
-    },
-    {
-        id: 14,
-        name: '马丽',
-        gender: '女',
-        age: 38,
-        phone: '13612345684',
-        direction: '亚健康'
-    },
-    {
-        id: 15,
-        name: '徐涛',
-        gender: '男',
-        age: 49,
-        phone: '13512345685',
-        direction: '其他'
-    },
-    {
-        id: 16,
-        name: '胡婷',
-        gender: '女',
-        age: 34,
-        phone: '13412345686',
-        direction: '糖代谢'
-    },
-    {
-        id: 17,
-        name: '曾刚',
-        gender: '男',
-        age: 43,
-        phone: '13312345687',
-        direction: '亚健康'
-    },
-    {
-        id: 18,
-        name: '彭燕',
-        gender: '女',
-        age: 36,
-        phone: '13212345688',
-        direction: '其他'
-    },
-    {
-        id: 19,
-        name: '邓强',
-        gender: '男',
-        age: 46,
-        phone: '13112345689',
-        direction: '糖代谢'
-    },
-    {
-        id: 20,
-        name: '谢琳',
-        gender: '女',
-        age: 32,
-        phone: '13012345690',
-        direction: '亚健康'
-    },
-    {
-        id: 21,
-        name: '罗军',
-        gender: '男',
-        age: 51,
-        phone: '13912345691',
-        direction: '其他'
-    },
-    {
-        id: 22,
-        name: '韩丽',
-        gender: '女',
-        age: 32,
-        phone: '13812345692',
-        direction: '糖代谢'
-    },
-    {
-        id: 23,
-        name: '唐波',
-        gender: '男',
-        age: 48,
-        phone: '13712345693',
-        direction: '亚健康'
-    },
-    {
-        id: 24,
-        name: '曾玲',
-        gender: '女',
-        age: 30,
-        phone: '13612345694',
-        direction: '其他'
+// 初始化Supabase客户端
+const supabaseUrl = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4b2hweGlla21wc21remtjeGZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MTg0NDQsImV4cCI6MjA2NTI5NDQ0NH0.sUleRxPQsEMxNqGPWUfZBDbjvDR5huZ7hGQkrHoahqk';
+let supabase;
+
+try {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    } else {
+        throw new Error('Supabase客户端库未正确加载');
     }
-];
+} catch (error) {
+    console.error('Supabase初始化失败:', error);
+    alert('系统初始化失败：' + error.message);
+}
 
-// 分页相关变量
-let currentPage = 1;
-let pageSize = 10;
-
-// 添加数据统计信息
-const dashboardStats = {
-    totalUsers: userData.length,
-    diabetesUsers: userData.filter(u => u.direction === '糖代谢').length,
-    subHealthUsers: userData.filter(u => u.direction === '亚健康').length,
-    otherUsers: userData.filter(u => u.direction === '其他').length
+// =================================
+// 全局状态管理
+// =================================
+const state = {
+    users: [],
+    pagination: {
+        currentPage: 1,
+        pageSize: 10,
+        totalUsers: 0,
+    },
+    dashboardStats: {
+        totalUsers: 0,
+        diabetesUsers: 0,
+        subHealthUsers: 0,
+        otherUsers: 0
+    },
 };
 
-// 添加仪表盘渲染函数
+// =================================
+// 数据获取与处理
+// =================================
+
+// 加载用户数据
+async function loadUsers() {
+    try {
+        if (!supabase) throw new Error('Supabase客户端未初始化');
+        
+        const { currentPage, pageSize } = state.pagination;
+        const { data, error, count } = await supabase
+            .from('New_user')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
+        
+        if (error) throw error;
+        
+        state.users = data || [];
+        state.pagination.totalUsers = count || 0;
+        
+        // 渲染仪表盘数据，但只在用户列表页面执行
+        if (document.querySelector('.dashboard-stats')) {
+            updateDashboardStats(count, data);
+        }
+        
+        return { success: true };
+    } catch (error) {
+        console.error('加载用户数据失败:', error.message);
+        showToast('加载用户数据失败: ' + error.message);
+        return { success: false, message: error.message };
+    }
+}
+
+// 更新仪表盘统计数据
+function updateDashboardStats(totalCount, userData) {
+    state.dashboardStats = {
+        totalUsers: totalCount || 0,
+        diabetesUsers: userData?.filter(user => user.direction === '糖代谢').length || 0,
+        subHealthUsers: userData?.filter(user => user.direction === '亚健康').length || 0,
+        otherUsers: userData?.filter(user => user.direction === '其他').length || 0
+    };
+    renderDashboard();
+}
+
+// =================================
+// UI渲染
+// =================================
+
+// 渲染仪表盘
 function renderDashboard() {
+    const { totalUsers, diabetesUsers, subHealthUsers, otherUsers } = state.dashboardStats;
     const dashboardHtml = `
         <div class="dashboard-stats">
             <div class="stat-card total">
                 <i class="fas fa-users"></i>
                 <div class="stat-info">
-                    <span class="stat-value">${dashboardStats.totalUsers}</span>
+                    <span class="stat-value">${totalUsers}</span>
                     <span class="stat-label">总用户数</span>
                 </div>
             </div>
             <div class="stat-card diabetes">
                 <i class="fas fa-heartbeat"></i>
                 <div class="stat-info">
-                    <span class="stat-value">${dashboardStats.diabetesUsers}</span>
+                    <span class="stat-value">${diabetesUsers}</span>
                     <span class="stat-label">糖代谢用户</span>
                 </div>
             </div>
             <div class="stat-card sub-health">
                 <i class="fas fa-stethoscope"></i>
                 <div class="stat-info">
-                    <span class="stat-value">${dashboardStats.subHealthUsers}</span>
+                    <span class="stat-value">${subHealthUsers}</span>
                     <span class="stat-label">亚健康用户</span>
                 </div>
             </div>
             <div class="stat-card other">
                 <i class="fas fa-user-md"></i>
                 <div class="stat-info">
-                    <span class="stat-value">${dashboardStats.otherUsers}</span>
+                    <span class="stat-value">${otherUsers}</span>
                     <span class="stat-label">其他用户</span>
                 </div>
             </div>
@@ -242,990 +118,728 @@ function renderDashboard() {
     `;
 
     const mainContent = document.querySelector('.main-content');
-    mainContent.insertAdjacentHTML('afterbegin', dashboardHtml);
+    const existingDashboard = mainContent?.querySelector('.dashboard-stats');
+    if (existingDashboard) existingDashboard.remove();
+    mainContent?.insertAdjacentHTML('afterbegin', dashboardHtml);
 }
 
-// 修改表格渲染函数，保持原有数据结构
+// 渲染表格
 function renderTable() {
     const tbody = document.querySelector('.data-table tbody');
     if (!tbody) return;
 
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, userData.length);
-    const pageData = userData.slice(startIndex, endIndex);
-
     tbody.innerHTML = '';
 
-    pageData.forEach(user => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="checkbox" value="${user.id}"></td>
-            <td>${user.name}</td>
-            <td>${user.gender}</td>
-            <td>${user.age}</td>
-            <td>${user.phone}</td>
-            <td><span class="direction-tag ${user.direction}">${user.direction}</span></td>
-            <td>
-                <button class="btn-complete" onclick="completeProfile(${user.id})">用户档案</button>
+    if (state.users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">暂无数据</td></tr>';
+        return;
+    }
+    
+    state.users.forEach(user => {
+        const row = document.createElement('tr');
+        row.dataset.id = user.id;
+        
+        row.innerHTML = `
+            <td><input type="checkbox" class="user-select" data-id="${user.id}"></td>
+            <td>${user.name || ''}</td>
+            <td>${user.gender || ''}</td>
+            <td>${user.age || ''}</td>
+            <td>${user.phone || ''}</td>
+            <td><span class="direction-tag direction-${user.direction}">${user.direction || ''}</span></td>
+            <td class="action-cell">
+                <button class="action-btn" onclick="completeProfile(${user.id})"><i class="fas fa-id-card"></i><span>用户档案</span></button>
+                <button class="action-btn" onclick="openNavigationReportModal(${user.id})"><i class="fas fa-chart-bar"></i><span>导航报告</span></button>
             </td>
-            <td><button class="btn-view-log">查看日志</button></td>
-            <td>
-                <div class="report-dropdown">
-                    <button class="btn-report" onclick="toggleDropdown(event)">查看报告</button>
-                    <div class="dropdown-content" style="display: none;">
-                        <a href="#" onclick="openNavigationReportModal(${user.id})">导航报告</a>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn-view">查看</button>
-                    <button class="btn-edit">编辑</button>
-                    <button class="btn-delete">删除</button>
-                </div>
+            <td class="action-cell-single">
+                <button class="icon-btn" onclick="editUser(${user.id})"><i class="fas fa-edit"></i></button>
+                <button class="icon-btn danger" onclick="deleteUser(${user.id})"><i class="fas fa-trash"></i></button>
             </td>
         `;
-        tbody.appendChild(tr);
+        
+        tbody.appendChild(row);
     });
-
-    updatePagination();
+    
+    updateSelectedCount();
 }
-
-// 初始化函数
-window.onload = function() {
-    renderDashboard();
-    renderTable();
-    loadUserProfile();
-};
 
 // 更新分页控件
 function updatePagination() {
-    const totalPages = Math.ceil(userData.length / pageSize);
-    const paginationDiv = document.querySelector('.pagination');
+    const { currentPage, totalUsers, pageSize } = state.pagination;
+    const totalPages = Math.ceil(totalUsers / pageSize);
+    const paginationContainer = document.querySelector('.page-buttons');
+    if (!paginationContainer) return;
     
-    // 更新总条数显示
-    const totalCount = paginationDiv.querySelector('span');
-    totalCount.textContent = `共 ${userData.length} 条`;
-
-    // 更新页码按钮
-    const pageButtons = paginationDiv.querySelector('.page-buttons');
-    pageButtons.innerHTML = `
-        <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
-            <i class="fas fa-angle-left"></i>
-        </button>
-    `;
-
-    // 生成页码按钮
-    for (let i = 1; i <= totalPages; i++) {
-        pageButtons.innerHTML += `
-            <button class="page-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">
-                ${i}
-            </button>
-        `;
+    paginationContainer.innerHTML = '';
+    
+    const prevBtn = document.createElement('button');
+    prevBtn.classList.add('page-btn', 'prev');
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.addEventListener('click', () => changePage(currentPage - 1));
+    paginationContainer.appendChild(prevBtn);
+    
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, startPage + 4);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.classList.add('page-btn');
+        if (i === currentPage) pageBtn.classList.add('active');
+        pageBtn.textContent = i;
+        pageBtn.addEventListener('click', () => changePage(i));
+        paginationContainer.appendChild(pageBtn);
+    }
+    
+    const nextBtn = document.createElement('button');
+    nextBtn.classList.add('page-btn', 'next');
+    nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.addEventListener('click', () => changePage(currentPage + 1));
+    paginationContainer.appendChild(nextBtn);
+    
+    const totalRecordsSpan = document.querySelector('.pagination-container > span');
+    if (totalRecordsSpan) {
+        totalRecordsSpan.textContent = `共 ${totalUsers} 条`;
     }
 
-    pageButtons.innerHTML += `
-        <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
-            <i class="fas fa-angle-right"></i>
-        </button>
-    `;
-
-    // 更新页码跳转输入框
-    const pageJump = paginationDiv.querySelector('.page-jump input');
-    if (pageJump) {
-        pageJump.value = currentPage;
-        pageJump.max = totalPages;
+    const pageJumpInput = document.querySelector('.page-jump input');
+    if (pageJumpInput) {
+        pageJumpInput.value = currentPage;
+        pageJumpInput.max = totalPages;
+        
+        pageJumpInput.onchange = function() {
+            const page = parseInt(this.value, 10);
+            if (page >= 1 && page <= totalPages) {
+                changePage(page);
+            }
+        };
     }
+}
+
+// 更新选中项计数
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.user-select:checked');
+    const selectedCountSpan = document.querySelector('.selected-count');
+    if (selectedCountSpan) {
+        selectedCountSpan.textContent = `已选择 ${selectedCheckboxes.length} 项`;
+    }
+}
+
+// =================================
+// 事件处理与逻辑
+// =================================
+
+// 初始化事件监听
+function initUserListEventListeners() {
+    document.querySelector('.btn-add')?.addEventListener('click', openAddUserModal);
+    document.querySelector('.btn-search')?.addEventListener('click', debounce(filterData, 300));
+    document.querySelector('.btn-reset')?.addEventListener('click', resetFilter);
+    document.querySelector('.btn-export')?.addEventListener('click', exportData);
+    document.querySelector('.page-size')?.addEventListener('change', (e) => changePageSize(parseInt(e.target.value, 10)));
+    document.querySelector('.select-all')?.addEventListener('change', function() {
+        document.querySelectorAll('.user-select').forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectedCount();
+    });
+}
+
+// 防抖函数
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
 }
 
 // 切换页码
-function changePage(page) {
-    const totalPages = Math.ceil(userData.length / pageSize);
-    if (page < 1 || page > totalPages) return;
-    currentPage = page;
-    renderTable();
+async function changePage(page) {
+    state.pagination.currentPage = page;
+    await loadAndRenderUsers();
 }
 
 // 切换每页显示数量
-function changePageSize(size) {
-    pageSize = parseInt(size);
-    currentPage = 1; // 重置到第一页
-    renderTable();
+async function changePageSize(size) {
+    state.pagination.pageSize = size;
+    state.pagination.currentPage = 1;
+    await loadAndRenderUsers();
 }
 
-// 修改筛选和渲染相关函数
-function filterData() {
-    const direction = document.querySelector('.filter-select').value;
-    const nameInput = document.querySelector('input[placeholder="姓名"]').value;
-    const phoneInput = document.querySelector('input[placeholder="手机号"]').value;
-
-    // 筛选数据
-    const filteredData = userData.filter(user => {
-        const directionMatch = direction ? user.direction === direction : true;
-        const nameMatch = nameInput ? user.name.includes(nameInput) : true;
-        const phoneMatch = phoneInput ? user.phone.includes(phoneInput) : true;
-        return directionMatch && nameMatch && phoneMatch;
-    });
-
-    // 重置页码并渲染
-    currentPage = 1;
-    renderFilteredTable(filteredData);
+// 过滤数据
+async function filterData() {
+    try {
+        if (!supabase) throw new Error('Supabase客户端未初始化');
+        
+        const nameFilter = document.querySelector('.search-inputs input[placeholder="姓名"]').value;
+        const phoneFilter = document.querySelector('.search-inputs input[placeholder="手机号"]').value;
+        const directionFilter = document.querySelector('.filter-select').value;
+        
+        state.pagination.currentPage = 1;
+        
+        let query = supabase.from('New_user').select('*', { count: 'exact' });
+        
+        if (nameFilter) query = query.ilike('name', `%${nameFilter}%`);
+        if (phoneFilter) query = query.ilike('phone', `%${phoneFilter}%`);
+        if (directionFilter) query = query.eq('direction', directionFilter);
+        
+        const { currentPage, pageSize } = state.pagination;
+        query = query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
+                     .order('created_at', { ascending: false });
+        
+        const { data, error, count } = await query;
+        if (error) throw error;
+        
+        state.users = data || [];
+        state.pagination.totalUsers = count || 0;
+        
+        renderTable();
+        updatePagination();
+        
+        showToast(`找到 ${state.pagination.totalUsers} 条记录`);
+    } catch (error) {
+        console.error('过滤数据失败:', error.message);
+        showToast('过滤数据失败: ' + error.message);
+    }
 }
 
-function renderFilteredTable(filteredData) {
-    const tbody = document.querySelector('.data-table tbody');
-    if (!tbody) return;
+// 重置过滤器
+async function resetFilter() {
+    const nameInput = document.querySelector('.search-inputs input[placeholder="姓名"]');
+    const phoneInput = document.querySelector('.search-inputs input[placeholder="手机号"]');
+    const directionSelect = document.querySelector('.filter-select');
+    
+    if (nameInput) nameInput.value = '';
+    if (phoneInput) phoneInput.value = '';
+    if (directionSelect) directionSelect.value = '';
+    
+    state.pagination.currentPage = 1;
+    await loadAndRenderUsers();
+}
 
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, filteredData.length);
-    const pageData = filteredData.slice(startIndex, endIndex);
+// 导出数据
+async function exportData() {
+    try {
+        showToast('正在导出所有数据...');
+        const { data, error } = await supabase
+            .from('New_user')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            showToast('没有数据可导出');
+            return;
+        }
+        
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, '用户数据');
+        
+        const date = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(workbook, `用户数据_${date}.xlsx`);
+        
+        showToast('数据导出成功');
+    } catch (error) {
+        console.error('导出数据失败:', error.message);
+        showToast('导出数据失败: ' + error.message);
+    }
+}
 
-    tbody.innerHTML = '';
+// =================================
+// 用户模态框 (新增/编辑)
+// =================================
 
-    pageData.forEach(user => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="checkbox" value="${user.id}"></td>
-            <td>${user.name}</td>
-            <td>${user.gender}</td>
-            <td>${user.age}</td>
-            <td>${user.phone}</td>
-            <td><span class="direction-tag ${user.direction}">${user.direction}</span></td>
-            <td>
-                <button class="btn-complete" onclick="completeProfile(${user.id})">用户档案</button>
-            </td>
-            <td><button class="btn-view-log">查看日志</button></td>
-            <td>
-                <div class="report-dropdown">
-                    <button class="btn-report" onclick="toggleDropdown(event)">查看报告</button>
-                    <div class="dropdown-content" style="display: none;">
-                        <a href="#" onclick="openNavigationReportModal(${user.id})">导航报告</a>
+// 预创建用户模态框
+function createUserModal() {
+    if (document.getElementById('userModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'userModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModalTitle">新增用户</h3>
+                <button class="close-btn" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="form-group">
+                        <label for="userName">姓名</label>
+                        <input type="text" id="userName" required>
                     </div>
-                </div>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn-view">查看</button>
-                    <button class="btn-edit">编辑</button>
-                    <button class="btn-delete">删除</button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    updatePagination(filteredData.length);
-}
-
-// 初始化事件监听
-document.addEventListener('DOMContentLoaded', function() {
-    // 渲染初始表格
-    renderTable();
-
-    // 每页显示数量切换
-    const pageSizeSelect = document.querySelector('.page-size');
-    if (pageSizeSelect) {
-        pageSizeSelect.addEventListener('change', (e) => {
-            changePageSize(e.target.value);
-        });
-    }
-
-    // 页码跳转
-    const pageJumpInput = document.querySelector('.page-jump input');
-    if (pageJumpInput) {
-        pageJumpInput.addEventListener('change', (e) => {
-            const page = parseInt(e.target.value);
-            changePage(page);
-        });
-    }
-
-    // 全选功能
-    const selectAll = document.querySelector('.select-all');
-    if (selectAll) {
-        selectAll.addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.data-table tbody input[type="checkbox"]');
-            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-        });
-    }
-
-    // 添加筛选事件监听
-    const filterSelect = document.querySelector('.filter-select');
-    const searchBtn = document.querySelector('.btn-search');
-    const resetBtn = document.querySelector('.btn-reset');
-
-    if (filterSelect) {
-        filterSelect.addEventListener('change', filterData);
-    }
-
-    if (searchBtn) {
-        searchBtn.addEventListener('click', filterData);
-    }
-
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            // 重置筛选条件
-            document.querySelector('.filter-select').value = '';
-            document.querySelector('input[placeholder="姓名"]').value = '';
-            document.querySelector('input[placeholder="手机号"]').value = '';
-            // 重新渲染原始数据
-            currentPage = 1;
-            renderTable();
-        });
-    }
-});
-
-// 添加显示提示信息的函数
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-// 修改完善档案函数
-function completeProfile(userId) {
-    const user = userData.find(u => u.id === userId);
-    if (!user) return;
-
-    // 先移除可能存在的旧模态框
-    const oldModal = document.getElementById('profileModal');
-    if (oldModal) {
-        oldModal.remove();
-    }
-
-    const modalHtml = `
-        <div class="modal-overlay" id="profileModal">
-            <div class="modal-content" style="width: 95%; max-width: 1200px;">
-                <div class="modal-header">
-                    <h3>完善用户档案 - ${user.name}</h3>
-                    <button type="button" class="close-btn">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="profileForm" class="profile-form">
-                        <!-- 第一行：基本信息 -->
-                        <div class="form-section">
-                            <h4 class="section-title">基本信息</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>姓名</label>
-                                    <input type="text" name="name" value="${user.name}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>性别</label>
-                                    <select name="gender" required>
-                                        <option value="男" ${user.gender === '男' ? 'selected' : ''}>男</option>
-                                        <option value="女" ${user.gender === '女' ? 'selected' : ''}>女</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>出生日期</label>
-                                    <input type="date" name="birthDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>电话</label>
-                                    <input type="tel" name="phone" value="${user.phone}" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group" style="width: 100%;">
-                                    <label>住址</label>
-                                    <input type="text" name="address" placeholder="请输入住址">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 第二行：健康状况 -->
-                        <div class="form-section">
-                            <h4 class="section-title">健康状况</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>有何种疾病</label>
-                                    <input type="text" name="disease" placeholder="请输入疾病">
-                                </div>
-                                <div class="form-group">
-                                    <label>病史</label>
-                                    <input type="text" name="medicalHistory" placeholder="请输入病史">
-                                </div>
-                                <div class="form-group">
-                                    <label>调理原因</label>
-                                    <input type="text" name="treatmentReason" placeholder="请输入调理原因">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 第三行：身体指标 -->
-                        <div class="form-section">
-                            <h4 class="section-title">身体指标</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>身高 (cm)</label>
-                                    <input type="number" name="height" placeholder="请输入身高">
-                                </div>
-                                <div class="form-group">
-                                    <label>体重 (kg)</label>
-                                    <input type="number" name="weight" placeholder="请输入体重">
-                                </div>
-                                <div class="form-group">
-                                    <label>BMI</label>
-                                    <input type="text" name="bmi" readonly>
-                                </div>
-                                <div class="form-group double-width">
-                                    <label>血压</label>
-                                    <div class="blood-pressure-inputs">
-                                        <input type="text" name="systolicPressure" placeholder="收缩压">
-                                        <span>/</span>
-                                        <input type="text" name="diastolicPressure" placeholder="舒张压">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>空腹血糖</label>
-                                    <input type="text" name="bloodSugar" placeholder="请输入空腹血糖">
-                                </div>
-                                <div class="form-group">
-                                    <label>糖化血红蛋白</label>
-                                    <input type="text" name="glycatedHemoglobin" placeholder="请输入糖化血红蛋白">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 第四行：管理信息 -->
-                        <div class="form-section">
-                            <h4 class="section-title">管理信息</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>自我管理情况</label>
-                                    <textarea name="selfManagement" rows="3" placeholder="请输入自我管理情况"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>用药情况</label>
-                                    <textarea name="medication" rows="3" placeholder="请输入用药情况"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>交费情况</label>
-                                    <textarea name="paymentStatus" rows="3" placeholder="请输入交费情况"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>预计时间</label>
-                                    <input type="datetime-local" name="scheduledTime">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 第五行：其他信息 -->
-                        <div class="form-section">
-                            <h4 class="section-title">其他信息</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>其他</label>
-                                    <textarea name="otherInfo" rows="3" placeholder="请输入其他信息"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>填表人</label>
-                                    <input type="text" name="filler" placeholder="请输入填表人">
-                                </div>
-                                <div class="form-group">
-                                    <label>客户来源</label>
-                                    <input type="text" name="source" placeholder="请输入客户来源">
-                                </div>
-                                <div class="form-group">
-                                    <label>安排时间</label>
-                                    <input type="datetime-local" name="scheduleDate">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn-save">保存档案</button>
-                            <button type="button" class="btn-preview">预览打印</button>
-                            <button type="button" class="btn-cancel">取消</button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="form-group">
+                        <label for="userGender">性别</label>
+                        <select id="userGender" required>
+                            <option value="">请选择</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userAge">年龄</label>
+                        <input type="number" id="userAge" min="1" max="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPhone">手机号</label>
+                        <input type="tel" id="userPhone" pattern="[0-9]{11}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userDirection">调理方向</label>
+                        <select id="userDirection" required>
+                            <option value="">请选择</option>
+                            <option value="糖代谢">糖代谢</option>
+                            <option value="亚健康">亚健康</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" onclick="closeUserModal()">取消</button>
+                        <button type="submit" class="btn-save">保存</button>
+                    </div>
+                </form>
             </div>
         </div>
     `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    // 获取新创建的模态框和相关按钮
-    const modal = document.getElementById('profileModal');
-    const closeBtn = modal.querySelector('.close-btn');
-    const cancelBtn = modal.querySelector('.btn-cancel');
-    const previewBtn = modal.querySelector('.btn-preview');
-    const form = modal.querySelector('form');
-
-    // 绑定关闭按钮事件
-    closeBtn.addEventListener('click', closeProfileModal);
-    
-    // 绑定取消按钮事件
-    cancelBtn.addEventListener('click', closeProfileModal);
-    
-    // 修改预览按钮事件绑定
-    previewBtn.addEventListener('click', function() {
-        const formData = new FormData(form);
-        const profileData = Object.fromEntries(formData.entries());
-        previewProfile(profileData);
-    });
-
-    // 绑定表单提交事件
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        saveProfile(this);
-    });
-
-    // 自动计算BMI
-    const heightInput = modal.querySelector('input[name="height"]');
-    const weightInput = modal.querySelector('input[name="weight"]');
-    const bmiInput = modal.querySelector('input[name="bmi"]');
-
-    const calculateBMI = () => {
-        const height = parseFloat(heightInput.value) / 100;
-        const weight = parseFloat(weightInput.value);
-        if (height && weight) {
-            const bmi = (weight / (height * height)).toFixed(1);
-            bmiInput.value = bmi;
-        } else {
-            bmiInput.value = '';
-        }
-    };
-
-    heightInput.addEventListener('input', calculateBMI);
-    weightInput.addEventListener('input', calculateBMI);
-
-    // 加载用户信息
-    loadProfile(user);
+    document.body.appendChild(modal);
+    document.getElementById('userForm').addEventListener('submit', saveUser);
 }
 
-// 修改保存档案函数
-function saveProfile(form) {
-    const formData = new FormData(form);
-    const profileData = Object.fromEntries(formData.entries());
-    
-    // 计算BMI
-    const height = parseFloat(profileData.height) / 100;
-    const weight = parseFloat(profileData.weight);
-    if (height && weight) {
-        profileData.bmi = (weight / (height * height)).toFixed(1);
+// 打开新增用户模态框
+function openAddUserModal() {
+    const form = document.getElementById('userForm');
+    if (!form) {
+        createUserModal(); // 如果模态框不存在，先创建
     }
     
-    // 保存用户信息到 localStorage
-    localStorage.setItem('userProfile', JSON.stringify(profileData));
-    
-    // 关闭模态框并显示成功提示
-    closeProfileModal();
-    showToast(`档案保存成功！用户：${profileData.name}`);
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('userModalTitle').textContent = '新增用户';
+    document.getElementById('userModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('userName').focus(), 100);
 }
 
-// 修改关闭模态框函数
+// 关闭用户模态框
+function closeUserModal() {
+    const modal = document.getElementById('userModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// 保存用户信息
+async function saveUser(e) {
+    e.preventDefault();
+    if (!supabase) throw new Error('Supabase客户端未初始化');
+    
+    const userId = document.getElementById('userId').value;
+    const userData = {
+        name: document.getElementById('userName').value,
+        gender: document.getElementById('userGender').value,
+        age: parseInt(document.getElementById('userAge').value, 10),
+        phone: document.getElementById('userPhone').value,
+        direction: document.getElementById('userDirection').value
+    };
+    
+    if (!userData.name || !userData.phone) {
+        showToast('姓名和电话不能为空');
+        return;
+    }
+    
+    showToast('保存中...');
+    
+    try {
+        let query;
+        if (userId) {
+            // 更新用户
+            query = supabase.from('New_user').update(userData).eq('id', userId);
+        } else {
+            // 添加用户
+            query = supabase.from('New_user').insert([userData]);
+        }
+        
+        const { error } = await query;
+        if (error) throw error;
+        
+        closeUserModal();
+        showToast(userId ? '用户更新成功' : '添加用户成功');
+        await loadAndRenderUsers();
+        // 仪表盘数据也需要更新
+        const { count, data } = await supabase.from('New_user').select('*', { count: 'exact' });
+        updateDashboardStats(count, data);
+        
+    } catch (error) {
+        console.error('保存用户失败:', error.message);
+        showToast('保存用户失败: ' + error.message);
+    }
+}
+
+// 编辑用户
+function editUser(userId) {
+    try {
+        const userToEdit = state.users.find(user => user.id === userId);
+        if (!userToEdit) {
+            showToast('未找到用户信息，可能数据未同步');
+            return;
+        }
+
+        openAddUserModal();
+
+        document.getElementById('userId').value = userToEdit.id;
+        document.getElementById('userName').value = userToEdit.name || '';
+        document.getElementById('userGender').value = userToEdit.gender || '';
+        document.getElementById('userAge').value = userToEdit.age || '';
+        document.getElementById('userPhone').value = userToEdit.phone || '';
+        document.getElementById('userDirection').value = userToEdit.direction || '';
+        document.getElementById('userModalTitle').textContent = '编辑用户';
+
+    } catch (error) {
+        console.error('打开编辑模态框失败:', error);
+        showToast('打开编辑窗口时出错: ' + error.message);
+    }
+}
+
+// 删除用户
+async function deleteUser(userId) {
+    showCustomConfirm('确定要删除该用户吗？此操作不可恢复。', async (confirmed) => {
+        if (!confirmed) return;
+        
+        try {
+            const { error } = await supabase.from('New_user').delete().eq('id', userId);
+            if (error) throw error;
+            
+            showToast('用户删除成功');
+            await loadAndRenderUsers();
+            const { count, data } = await supabase.from('New_user').select('*', { count: 'exact' });
+            updateDashboardStats(count, data);
+
+        } catch (error) {
+            console.error('删除用户失败:', error.message);
+            showToast('删除用户失败: ' + error.message);
+        }
+    });
+}
+
+// =================================
+// 客户档案模态框
+// =================================
+async function openProfileModal(userId) {
+    const modal = document.getElementById('profileModal');
+    const form = document.getElementById('profileForm');
+    if (!modal || !form) return;
+
+    form.reset();
+    document.getElementById('profileUserId').value = userId;
+    const user = state.users.find(u => u.id === userId);
+    document.getElementById('profileName').textContent = user?.name || 'N/A';
+    document.getElementById('profileGender').textContent = user?.gender || 'N/A';
+    document.getElementById('profilePhone').textContent = user?.phone || 'N/A';
+    document.getElementById('profileFilingDate').textContent = '建档日期: -';
+
+    modal.style.display = 'flex';
+
+    const saveButton = form.querySelector('.btn-save');
+    saveButton.disabled = true;
+    saveButton.textContent = '加载中...';
+
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .limit(1);
+
+        if (error) throw error;
+        
+        const profile = data && data.length > 0 ? data[0] : null;
+
+        if (profile) {
+            document.getElementById('profileFilingDate').textContent = `建档日期: ${new Date(profile.created_at).toLocaleDateString()}`;
+            form.profileDob.value = profile.date_of_birth;
+            form.profileAddress.value = profile.address;
+            form.profileDiseases.value = profile.diseases;
+            form.profileMedicalHistory.value = profile.medical_history;
+            form.profileConditioningReason.value = profile.conditioning_reason;
+            form.profileHeight.value = profile.height;
+            form.profileWeight.value = profile.weight;
+            form.profileMedicationStatus.value = profile.medication_status;
+            form.profileSystolic.value = profile.systolic_pressure;
+            form.profileDiastolic.value = profile.diastolic_pressure;
+            form.profileFastingSugar.value = profile.fasting_blood_sugar;
+            form.profileGlycatedHemoglobin.value = profile.glycated_hemoglobin;
+            form.profileSelf_management_status.value = profile.self_management_status;
+            form.profilePaymentStatus.value = profile.payment_status;
+            form.profileEstimatedTime.value = profile.estimated_time;
+            form.profileOtherNotes.value = profile.other_notes;
+            form.profileFiller.value = profile.filler_name;
+            form.profileClientSource.value = profile.client_source;
+            
+            if (profile.scheduled_time) {
+                const d = new Date(profile.scheduled_time);
+                const pad = (num) => num.toString().padStart(2, '0');
+                const localDatetime = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                document.getElementById('profileScheduledTime').value = localDatetime;
+            } else {
+                document.getElementById('profileScheduledTime').value = '';
+            }
+            
+            if (profile.conditioning_content?.length > 0) {
+                profile.conditioning_content.forEach(content => {
+                    const checkbox = form.querySelector(`[name="conditioningContent"][value="${content}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+        }
+    } catch (error) {
+        console.error('加载档案失败:', error);
+        showToast(`加载档案失败: ${error.message}`);
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = '保存档案';
+    }
+}
+
 function closeProfileModal() {
     const modal = document.getElementById('profileModal');
-    if (modal) {
-        modal.remove();
-    }
+    if (modal) modal.style.display = 'none';
 }
 
-// 修改 loadProfile 函数以匹配新的表单字段
-function loadProfile(user) {
-    // 获取当前模态框
-    const modal = document.getElementById('profileModal');
+async function saveProfile(event) {
+    event.preventDefault();
+    const userId = document.getElementById('profileUserId').value;
     
-    // 基本信息
-    modal.querySelector('input[name="name"]').value = user.name || '';
-    modal.querySelector('select[name="gender"]').value = user.gender || '男';
-    modal.querySelector('input[name="birthDate"]').value = user.birthDate || '';
-    modal.querySelector('input[name="phone"]').value = user.phone || '';
-    modal.querySelector('input[name="address"]').value = user.address || '';
+    const conditioningContent = Array.from(document.querySelectorAll('[name="conditioningContent"]:checked')).map(el => el.value);
 
-    // 健康信息
-    modal.querySelector('input[name="disease"]').value = user.disease || '';
-    modal.querySelector('input[name="medicalHistory"]').value = user.medicalHistory || '';
-    modal.querySelector('input[name="treatmentReason"]').value = user.treatmentReason || '';
+    const profileData = {
+        user_id: parseInt(userId, 10),
+        date_of_birth: document.getElementById('profileDob').value || null,
+        address: document.getElementById('profileAddress').value || null,
+        diseases: document.getElementById('profileDiseases').value || null,
+        medical_history: document.getElementById('profileMedicalHistory').value || null,
+        conditioning_reason: document.getElementById('profileConditioningReason').value || null,
+        height: document.getElementById('profileHeight').value ? Number(document.getElementById('profileHeight').value) : null,
+        weight: document.getElementById('profileWeight').value ? Number(document.getElementById('profileWeight').value) : null,
+        medication_status: document.getElementById('profileMedicationStatus').value || null,
+        conditioning_content: conditioningContent,
+        systolic_pressure: document.getElementById('profileSystolic').value ? parseInt(document.getElementById('profileSystolic').value) : null,
+        diastolic_pressure: document.getElementById('profileDiastolic').value ? parseInt(document.getElementById('profileDiastolic').value) : null,
+        fasting_blood_sugar: document.getElementById('profileFastingSugar').value ? Number(document.getElementById('profileFastingSugar').value) : null,
+        glycated_hemoglobin: document.getElementById('profileGlycatedHemoglobin').value ? Number(document.getElementById('profileGlycatedHemoglobin').value) : null,
+        self_management_status: document.getElementById('profileSelf_management_status').value || null,
+        payment_status: document.getElementById('profilePaymentStatus').value || null,
+        estimated_time: document.getElementById('profileEstimatedTime').value || null,
+        other_notes: document.getElementById('profileOtherNotes').value || null,
+        filler_name: document.getElementById('profileFiller').value || null,
+        client_source: document.getElementById('profileClientSource').value || null,
+        scheduled_time: document.getElementById('profileScheduledTime').value ? new Date(document.getElementById('profileScheduledTime').value).toISOString() : null
+    };
 
-    // 身体指标
-    modal.querySelector('input[name="height"]').value = user.height || '';
-    modal.querySelector('input[name="weight"]').value = user.weight || '';
-    modal.querySelector('input[name="bmi"]').value = user.bmi || '';
+    console.log('准备保存的档案数据: ', JSON.stringify(profileData, null, 2));
 
-    // 血压和血糖
-    modal.querySelector('input[name="systolicPressure"]').value = user.systolicPressure || '';
-    modal.querySelector('input[name="diastolicPressure"]').value = user.diastolicPressure || '';
-    modal.querySelector('input[name="bloodSugar"]').value = user.bloodSugar || '';
-    modal.querySelector('input[name="glycatedHemoglobin"]').value = user.glycatedHemoglobin || '';
+    showToast('正在保存档案...');
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .upsert(profileData, { onConflict: 'user_id' })
+            .select();
 
-    // 管理信息
-    modal.querySelector('textarea[name="selfManagement"]').value = user.selfManagement || '';
-    modal.querySelector('textarea[name="medication"]').value = user.medication || '';
-    modal.querySelector('textarea[name="paymentStatus"]').value = user.paymentStatus || '';
-    modal.querySelector('input[name="scheduledTime"]').value = user.scheduledTime || '';
-
-    // 其他信息
-    modal.querySelector('textarea[name="otherInfo"]').value = user.otherInfo || '';
-    modal.querySelector('input[name="filler"]').value = user.filler || '';
-    modal.querySelector('input[name="source"]').value = user.source || '';
-    modal.querySelector('input[name="scheduleDate"]').value = user.scheduleDate || '';
-
-    // 如果有身高和体重，自动计算 BMI
-    if (user.height && user.weight) {
-        const height = parseFloat(user.height) / 100;
-        const weight = parseFloat(user.weight);
-        const bmiInput = modal.querySelector('input[name="bmi"]');
-        if (bmiInput && height && weight) {
-            bmiInput.value = (weight / (height * height)).toFixed(1);
+        if (error) {
+            console.error('Supabase 保存错误:', error);
+            throw error;
         }
+
+        console.log('保存成功，返回数据:', data);
+        showToast('档案保存成功!');
+        closeProfileModal();
+    } catch (error) {
+        console.error('保存档案失败:', error);
+        showToast(`保存档案失败: ${error.message}`);
     }
 }
 
-// 修改 previewProfile 函数
-function previewProfile(profileData) {
-    const printWindow = window.open('', '_blank');
+function completeProfile(userId) {
+    openProfileModal(userId);
+}
+
+// =================================
+// 其他模态框与通用函数
+// =================================
+
+// 显示提示消息
+function showToast(message) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        document.body.appendChild(toast);
+    }
     
-    // 计算 BMI
-    let bmi = '';
-    if (profileData.height && profileData.weight) {
-        const height = parseFloat(profileData.height) / 100;
-        const weight = parseFloat(profileData.weight);
-        bmi = (weight / (height * height)).toFixed(1);
-    }
-
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>生命潮健康管理中心 - 用户档案</title>
-            <style>
-                @page {
-                    size: A4;
-                    margin: 2.5cm 3cm;
-                }
-                body {
-                    font-family: '微软雅黑', sans-serif;
-                    font-size: 14px;
-                    line-height: 1.5;
-                    color: #333;
-                    margin: 0;
-                    padding: 0;
-                }
-                .report-container {
-                    max-width: 100%;
-                    margin: 0 auto;
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 20px;
-                    padding-bottom: 12px;
-                    border-bottom: 2px solid #2196F3;
-                }
-                .header h1 {
-                    font-size: 22px;
-                    color: #2196F3;
-                    margin: 0 0 8px 0;
-                }
-                .header p {
-                    font-size: 14px;
-                    color: #666;
-                    margin: 4px 0;
-                }
-                .info-section {
-                    margin-bottom: 20px;
-                }
-                .section-title {
-                    font-size: 15px;
-                    color: #2196F3;
-                    margin-bottom: 12px;
-                    padding-left: 10px;
-                    border-left: 3px solid #2196F3;
-                }
-                .info-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 12px;
-                    margin-bottom: 12px;
-                }
-                .info-item {
-                    display: flex;
-                    align-items: baseline;
-                    padding: 4px 0;
-                }
-                .info-label {
-                    min-width: 90px;
-                    color: #666;
-                    font-weight: 500;
-                }
-                .info-value {
-                    flex: 1;
-                }
-                .health-tag {
-                    display: inline-block;
-                    padding: 2px 6px;
-                    border-radius: 10px;
-                    font-size: 12px;
-                    margin-left: 6px;
-                }
-                .normal { background: #e8f5e9; color: #2e7d32; }
-                .warning { background: #fff3e0; color: #ef6c00; }
-                .danger { background: #ffebee; color: #c62828; }
-                .signature-area {
-                    margin-top: 25px;
-                    display: flex;
-                    justify-content: space-between;
-                    padding-top: 15px;
-                }
-                .sign-box {
-                    text-align: center;
-                    margin-top: 15px;
-                }
-                .sign-line {
-                    border-top: 1px solid #999;
-                    width: 180px;
-                    margin: 8px auto;
-                    padding-top: 5px;
-                }
-                @media print {
-                    .no-print { display: none; }
-                    body { padding: 0; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="report-container">
-                <div class="header">
-                    <h1>生命潮健康管理中心</h1>
-                    <p>用户健康档案报告</p>
-                    <p>报告编号：HC${new Date().getTime().toString().slice(-8)}</p>
-                </div>
-
-                <div class="info-section">
-                    <div class="section-title">基本信息</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">姓名：</span>
-                            <span class="info-value">${profileData.name || '--'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">性别：</span>
-                            <span class="info-value">${profileData.gender || '--'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">出生日期：</span>
-                            <span class="info-value">${profileData.birthDate || '--'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">联系电话：</span>
-                            <span class="info-value">${profileData.phone || '--'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">住址：</span>
-                            <span class="info-value">${profileData.address || '--'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-section">
-                    <div class="section-title">健康指标</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">身高/体重：</span>
-                            <span class="info-value">
-                                ${profileData.height || '--'} cm / ${profileData.weight || '--'} kg
-                                ${bmi ? `<span class="health-tag ${getBMIStatus(bmi)}">BMI: ${bmi}</span>` : ''}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">血压：</span>
-                            <span class="info-value">
-                                ${profileData.systolicPressure || '--'}/${profileData.diastolicPressure || '--'} mmHg
-                                ${profileData.systolicPressure ? 
-                                    `<span class="health-tag ${getBloodPressureStatus(profileData.systolicPressure, profileData.diastolicPressure)}">
-                                        ${getPressureLevel(profileData.systolicPressure, profileData.diastolicPressure)}
-                                    </span>` : ''}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">空腹血糖：</span>
-                            <span class="info-value">${profileData.bloodSugar || '--'} mmol/L</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">糖化血红蛋白：</span>
-                            <span class="info-value">${profileData.glycatedHemoglobin || '--'} %</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-section">
-                    <div class="section-title">健康状况</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">现有疾病：</span>
-                            <span class="info-value">${profileData.disease || '无'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">既往病史：</span>
-                            <span class="info-value">${profileData.medicalHistory || '无'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">用药情况：</span>
-                            <span class="info-value">${profileData.medication || '无'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-section">
-                    <div class="section-title">健康建议</div>
-                    <div style="padding: 0 10px;">
-                        ${generateHealthAdvice(bmi, profileData.systolicPressure, profileData.diastolicPressure)}
-                    </div>
-                </div>
-
-                <div class="signature-area">
-                    <div class="sign-box">
-                        <div class="sign-line"></div>
-                        <div>健康管理师签名</div>
-                        <div>日期：${new Date().toLocaleDateString()}</div>
-                    </div>
-                    <div class="sign-box">
-                        <div class="sign-line"></div>
-                        <div>用户签名</div>
-                        <div>日期：${new Date().toLocaleDateString()}</div>
-                    </div>
-                </div>
-
-                <button onclick="window.print()" class="no-print" style="
-                    position: fixed;
-                    right: 30px;
-                    bottom: 30px;
-                    padding: 10px 20px;
-                    background: #2196F3;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-                ">打印档案</button>
-            </div>
-        </body>
-        </html>
-    `);
+    toast.textContent = message;
+    toast.className = 'show';
     
-    printWindow.document.close();
+    setTimeout(() => {
+        toast.className = toast.className.replace('show', '');
+    }, 3000);
 }
 
-// 辅助函数
-function calculateAge(birthDate) {
-    if (!birthDate) return '--';
-    const today = new Date();
-    const birth = new Date(birthDate);
-    return today.getFullYear() - birth.getFullYear();
+// 自定义确认框函数
+function showCustomConfirm(message, callback) {
+    let confirmOverlay = document.querySelector('.custom-confirm-overlay');
+    if (confirmOverlay) confirmOverlay.remove();
+    
+    confirmOverlay = document.createElement('div');
+    confirmOverlay.className = 'custom-confirm-overlay';
+    
+    const confirmBox = document.createElement('div');
+    confirmBox.className = 'custom-confirm-box';
+    confirmBox.innerHTML = `
+        <div class="confirm-header"><h3>确认操作</h3></div>
+        <div class="confirm-body"><p>${message}</p></div>
+        <div class="confirm-footer">
+            <button class="btn-confirm cancel">取消</button>
+            <button class="btn-confirm confirm">确定</button>
+        </div>
+    `;
+    
+    confirmOverlay.appendChild(confirmBox);
+    document.body.appendChild(confirmOverlay);
+    
+    const cancelBtn = confirmBox.querySelector('.btn-confirm.cancel');
+    const confirmBtn = confirmBox.querySelector('.btn-confirm.confirm');
+    
+    cancelBtn.addEventListener('click', () => {
+        confirmOverlay.remove();
+        if (callback) callback(false);
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+        confirmOverlay.remove();
+        if (callback) callback(true);
+    });
+    
+    confirmBtn.focus();
 }
 
-function formatPhone(phone) {
-    return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
-}
-
-function getBMIStatus(bmi) {
-    bmi = parseFloat(bmi);
-    if (bmi < 18.5) return 'status-warning';
-    if (bmi >= 18.5 && bmi < 24) return 'status-normal';
-    return 'status-danger';
-}
-
-function getBloodPressureStatus(systolic, diastolic) {
-    if (systolic < 120 && diastolic < 80) return 'status-normal';
-    if (systolic >= 140 || diastolic >= 90) return 'status-danger';
-    return 'status-warning';
-}
-
-function getPressureLevel(systolic, diastolic) {
-    if (systolic < 120 && diastolic < 80) return '正常血压';
-    if (systolic >= 140 || diastolic >= 90) return '高血压';
-    return '临界高血压';
-}
-
-function generateHealthAdvice(bmi, systolic, diastolic) {
-    let advice = [];
-    if (bmi >= 24) advice.push('建议进行体重管理，适量增加运动');
-    if (systolic >= 130) advice.push('注意监测血压，减少钠盐摄入');
-    if (!advice.length) advice.push('当前健康状况良好，保持规律作息和均衡饮食');
-    return advice.join('；') + '。';
-}
-
-// 加载用户信息并填充到报告中
-function loadUserProfile() {
-    const savedProfile = localStorage.getItem('userProfile');
-    if (savedProfile) {
-        const profileData = JSON.parse(savedProfile);
-        document.getElementById('userName').innerText = profileData.name || '';
-        document.getElementById('userGenderAge').innerText = `${profileData.gender} ∙ ${profileData.age}岁`;
-        document.getElementById('userPhone').innerText = profileData.phone || '';
-        document.getElementById('userHeightWeight').innerText = `${profileData.height} cm / ${profileData.weight} kg`;
-        document.getElementById('userBMI').innerText = profileData.bmi || '待测算';
-        document.getElementById('userBloodPressure').innerText = profileData.bloodPressure || '待测量';
-        document.getElementById('userBloodSugar').innerText = profileData.bloodSugar || '待检测';
-        document.getElementById('userDirection').innerText = profileData.treatmentReason || '待补充';
-        document.getElementById('reportDate').innerText = new Date().toLocaleDateString();
-    }
-}
-
-/* 全局函数定义 */
-window.toggleDropdown = function(event) {
-    event.stopPropagation();
-    const dropdown = event.target.closest('.report-dropdown').querySelector('.dropdown-content');
-    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-}
-
-// 修改全局点击监听
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.btn-report')) {
-        const dropdown = e.target.closest('.report-dropdown').querySelector('.dropdown-content');
-        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-    } else if (e.target.closest('.dropdown-content a')) {
-        e.preventDefault();
-        const type = e.target.dataset.type;
-        const userId = e.target.closest('tr').querySelector('input[type="checkbox"]').value;
-        if (type === 'navigation') {
-            openNavigationReportModal(userId);
-        } else {
-            // showReport(userId, type);
-        }
-    } else {
-        document.querySelectorAll('.dropdown-content').forEach(d => d.style.display = 'none');
-    }
-});
-
-// 修改导航报告列表模态框
 function openNavigationReportModal(userId) {
     const modal = document.getElementById('navigationReportModal');
     const reportList = document.getElementById('navigationReportList');
 
-    // 设置内容容器样式
-    modal.querySelector('.modal-content').style.cssText = `
-        background: white;
-        border-radius: 8px;
-        width: 580px;  /* 减小宽度 */
-        max-height: 600px;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    `;
-
-    // 添加表格样式
-    const tableStyle = `
-        <style>
-            .report-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .report-table th {
-                background: #f8f9fa;
-                padding: 25px 25px;  /* 调整内边距 */
-                text-align: left;
-                font-weight: 500;
-                color: #666;
-                border-bottom: 2px solid #eee;
-            }
-            .report-table td {
-                padding: 10px 15px;  /* 调整内边距 */
-                border-bottom: 1px solid #eee;
-            }
-            .report-table tr:hover {
-                background: #f8f9fa;
-            }
-            .btn-view {
-                padding: 4px 12px;
-                background: #2196F3;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            .btn-view:hover {
-                background: #1976D2;
-            }
-            .status-tag {
-                padding: 2px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-                background: #e8f5e9;
-                color: #2e7d32;
-            }
-            .report-type {
-                color: #666;
-                font-size: 13px;
-            }
-            .modal-body {
-                padding: 0;
-                overflow-y: auto;
-                max-height: calc(600px - 60px);
-            }
-            /* 调整列宽 */
-            .report-table th:nth-child(1),
-            .report-table td:nth-child(1) {
-                width: 35%;
-            }
-            .report-table th:nth-child(2),
-            .report-table td:nth-child(2) {
-                width: 25%;
-            }
-            .report-table th:nth-child(3),
-            .report-table td:nth-child(3) {
-                width: 20%;
-            }
-            .report-table th:nth-child(4),
-            .report-table td:nth-child(4) {
-                width: 20%;
-            }
-        </style>
-    `;
-
-    // 模拟报告数据
     const reports = [
         { date: '2025-02-13 14:56:19', status: '已完成', type: '常规检查' },
         { date: '2025-02-13 11:52:32', status: '已完成', type: '血糖监测' },
-        { date: '2025-02-13 10:12:12', status: '已完成', type: '血压监测' },
         { date: '2025-02-12 09:41:27', status: '已完成', type: '常规检查' },
-        { date: '2025-02-11 11:46:57', status: '已完成', type: '血糖监测' },
-        { date: '2025-02-11 10:04:00', status: '已完成', type: '血压监测' },
-        { date: '2025-02-10 16:18:51', status: '已完成', type: '常规检查' },
-        { date: '2025-02-10 15:37:14', status: '已完成', type: '血糖监测' }
     ];
 
-    // 更新表格内容
-reportList.innerHTML = reports.map(report => `
-    <tr>
-        <td>${report.date}</td>
-        <td><span class="report-type">${report.type}</span></td>
-        <td><span class="status-badge 已完成">${report.status}</span></td>
-        <td><button class="btn-view" onclick="viewNavigationReport('${report.date}')">查看</button></td>
-    </tr>
-`).join('');
-
+    reportList.innerHTML = reports.map(report => `
+        <tr>
+            <td>${report.date}</td>
+            <td><span class="report-type">${report.type}</span></td>
+            <td><span class="status-badge 已完成">${report.status}</span></td>
+            <td><button class="btn-view" onclick="viewNavigationReport('${report.date}')">查看</button></td>
+        </tr>
+    `).join('');
     
     modal.style.display = 'flex';
 }
 
-// 关闭导航报告列表模态框
 function closeNavigationReportModal() {
     const modal = document.getElementById('navigationReportModal');
-    modal.style.display = 'none';
+    if(modal) modal.style.display = 'none';
 }
 
-// 修改导航报告详细信息模态框
 function viewNavigationReport(date) {
-    // 这里可根据date动态生成pdf地址，示例写死
     const pdfUrl = "https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf";
     window.open(pdfUrl, '_blank');
 }
 
-// 添加退出登录函数
 function logout() {
-    // 清除可能存在的登录信息
     localStorage.removeItem('userInfo');
     sessionStorage.removeItem('userInfo');
-    
-    // 跳转到登录页面
     window.location.href = 'login.html';
 }
+
+// =================================
+// SPA 页面加载逻辑
+// =================================
+async function loadContent(url, clickedElement) {
+    const mainContent = document.getElementById('main-content');
+    if (!mainContent) return;
+
+    mainContent.innerHTML = '<div class="loading"></div>'; // 使用 loading 动画
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`加载失败: ${response.status}`);
+        
+        mainContent.innerHTML = await response.text();
+        
+        // 每个 partial 自己的初始化逻辑
+        if (url.includes('user_list.html')) {
+            await initUserListPage();
+        } else if (url.includes('health_trends.html')) {
+            initHealthTrendsPage(); 
+        } else if (url.includes('data_analysis.html')) {
+            initDataAnalysisPage();
+        }
+
+        if (clickedElement) {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            clickedElement.classList.add('active');
+        }
+
+    } catch (error) {
+        console.error('加载内容时出错:', error);
+        mainContent.innerHTML = `<div class="error-message">页面加载失败。</div>`;
+    }
+}
+
+// 页面初始化函数
+async function initUserListPage() {
+    initUserListEventListeners();
+    createUserModal(); // 预创建模态框
+    await loadAndRenderUsers();
+}
+
+// 统一加载和渲染的函数
+async function loadAndRenderUsers() {
+    showToast('正在加载数据...');
+    const result = await loadUsers();
+    if(result.success) {
+        renderTable();
+        updatePagination();
+        showToast('数据加载完成');
+    }
+}
+
+// (为其他页面预留的初始化函数)
+function initHealthTrendsPage() {
+    // 健康趋势页面的JS逻辑
+    console.log("健康趋势页面已加载");
+}
+
+function initDataAnalysisPage() {
+    // 数据分析页面的JS逻辑
+    console.log("数据分析页面已加载");
+    if(window.initCharts) {
+        window.initCharts();
+    }
+}
+
+
+// 页面首次加载时执行
+document.addEventListener('DOMContentLoaded', () => {
+    const initialElement = document.querySelector('.sidebar li.active');
+    if (initialElement) {
+        loadContent('partials/user_list.html', initialElement);
+    }
+    
+    // 全局ESC关闭模态框
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeUserModal();
+            closeProfileModal();
+            closeNavigationReportModal();
+        }
+    });
+});
