@@ -2,9 +2,18 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生命潮健康管理中心客户管理系统</title>
+    <meta name="description" content="生命潮健康管理中心登录页面">
+    <title>生命潮健康管理中心 - 登录</title>
     <link rel="stylesheet" href="login.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- 添加Supabase库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        // 确保全局变量可用
+        window.createClient = window.supabase ? window.supabase.createClient : null;
+    </script>
 </head>
 <body class="login-page">
     <!-- 顶部标题栏 -->
@@ -72,7 +81,7 @@
                 <span>电话咨询</span>
             </a>
             <a href="#" class="contact-item">
-                <img src="wecat.8b00afc8.svg" alt="联系我们">
+                <img src="WeChat.png" alt="联系我们">
                 <span>联系我们</span>
             </a>
         </div>

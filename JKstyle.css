@@ -167,7 +167,6 @@
 }
 
 .btn-complete,
-.btn-view-log,
 .btn-view-survey {
     padding: 4px 12px;
     border-radius: 4px;
@@ -179,7 +178,6 @@
 }
 
 .btn-complete:hover,
-.btn-view-log:hover,
 .btn-view-survey:hover {
     background: var(--primary-color);
     color: white;
@@ -348,7 +346,7 @@ body {
 
 /* 已删除列表样式优化 */
 .sidebar ul li a .fa-trash {
-    color: #888;
+    color: #222;
 }
 
 /* 主要内容区样式 */
@@ -453,7 +451,7 @@ body {
 }
 
 .data-table th, .data-table td {
-    padding: 12px 16px;
+    padding: 16px 20px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
@@ -624,27 +622,25 @@ body {
 
 /* 调理方向标签样式 */
 .direction-tag {
-    padding: 4px 12px;
-    border-radius: 20px;
+    padding: 4px 10px;
+    border-radius: 12px;
     font-size: 12px;
     font-weight: 500;
-    display: inline-block;
+    color: #fff;
+    background-color: #a0aec0; /* 默认灰色 */
 }
 
 /* 具体方向的样式 */
 .direction-tag.糖代谢 {
-    background: rgba(255, 107, 107, 0.1);
-    color: #FF6B6B !important; /* 使用!important确保样式不被覆盖 */
+    background-color: #ef4444;
 }
 
 .direction-tag.亚健康 {
-    background: rgba(255, 217, 61, 0.1);
-    color: #FFA000 !important;
+    background-color: #f59e0b;
 }
 
 .direction-tag.其他 {
-    background: rgba(108, 92, 231, 0.1);
-    color: #6C5CE7 !important;
+    background-color: #3b82f6;
 }
 
 /* 确保hover状态下也保持颜色 */
@@ -662,7 +658,6 @@ body {
 
 /* 按钮样式优化 */
 .btn-complete,
-.btn-view-log,
 .btn-view-survey {
     padding: 6px 16px;
     border-radius: 20px;
@@ -677,7 +672,6 @@ body {
 }
 
 .btn-complete:hover,
-.btn-view-log:hover,
 .btn-view-survey:hover {
     background: var(--primary-color);
     color: white;
@@ -739,7 +733,7 @@ body {
 }
 
 .modal-content {
-    background: #ddd9d9;
+    background: #FFFFFF;
     border-radius: 8px;
     max-width: 2000px;
     width: 98%;
@@ -818,7 +812,7 @@ body {
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-    background: #888;
+    background: #222;
     border-radius: 4px;
 }
 
@@ -926,7 +920,7 @@ body {
     background: transparent;
     border: none;
     font-size: 26px;
-    color: #888;
+    color: #222;
     cursor: pointer;
     padding: 8px 12px;
     border-radius: 50%;
@@ -1322,4 +1316,507 @@ body {
     right: 32px;
     transform: translateY(-50%);
     /* 其他样式保持不变 */
+}
+
+/* 用户模态框样式 */
+#userModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+#userModal .modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+#userModal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#userModal .modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+#userModal .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+#userModal .modal-body {
+    padding: 20px;
+}
+
+#userModal .form-group {
+    margin-bottom: 15px;
+}
+
+#userModal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+#userModal .form-group input,
+#userModal .form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#userModal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#userModal .btn-cancel,
+#userModal .btn-save {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+#userModal .btn-cancel {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+#userModal .btn-save {
+    background-color: #2196F3;
+    color: white;
+}
+
+/* 提示消息样式 */
+#toast {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1100;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    font-size: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+#toast.show {
+    visibility: visible;
+    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@keyframes fadein {
+    from {bottom: 0; opacity: 0;}
+    to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadeout {
+    from {bottom: 30px; opacity: 1;}
+    to {bottom: 0; opacity: 0;}
+}
+
+/* 数据表格中的操作按钮样式 */
+.data-table .btn-edit,
+.data-table .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    margin: 0 3px;
+}
+
+.data-table .btn-edit {
+    color: #2196F3;
+}
+
+.data-table .btn-delete {
+    color: #f44336;
+}
+
+/* 无数据提示样式 */
+.no-data {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-style: italic;
+}
+
+/* 页面加载动画 */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+.loading:after {
+    content: " ";
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6px solid #2196F3;
+    border-color: #2196F3 transparent #2196F3 transparent;
+    animation: loading 1.2s linear infinite;
+}
+
+@keyframes loading {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 自定义确认框样式 */
+.custom-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.custom-confirm-box {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    width: 360px;
+    max-width: 90%;
+    overflow: hidden;
+    animation: confirmFadeIn 0.3s ease;
+}
+
+@keyframes confirmFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.confirm-header {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.confirm-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+    font-weight: 500;
+}
+
+.confirm-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.confirm-body p {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 20px 20px;
+    gap: 10px;
+}
+
+.btn-confirm {
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-confirm.confirm {
+    background-color: #2196F3;
+    color: white;
+}
+
+.btn-confirm.confirm:hover {
+    background-color: #1976D2;
+}
+
+.btn-confirm.cancel {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.btn-confirm.cancel:hover {
+    background-color: #d5d5d5;
+}
+
+/* 客户档案模态框特定样式 */
+.profile-modal-content {
+    max-width: 900px;
+    width: 95%;
+}
+
+.profile-modal-body {
+    padding: 20px 30px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px 20px;
+    border: 1px solid #dee2e6;
+}
+
+.form-field {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+}
+
+.form-field[colspan="2"] {
+    grid-column: span 2;
+}
+
+.form-field[colspan="3"],
+.form-field.full-width {
+    grid-column: span 3;
+}
+
+.form-field span {
+    font-weight: 500;
+    color: #495057;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.form-field input[type="text"],
+.form-field input[type="date"],
+.form-field input[type="number"],
+.form-field input[type="datetime-local"],
+.form-field textarea {
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 14px;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.form-field input:focus, .form-field textarea:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.form-field .readonly-field {
+    width: 100%;
+    padding: 6px 10px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.checkbox-group, .inline-inputs {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.inline-inputs input {
+    width: 80px;
+}
+.modal-footer {
+    padding: 20px 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+}
+
+.modal-footer button {
+    padding: 10px 25px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.modal-footer .btn-save {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 5px rgba(64, 134, 244, 0.3);
+}
+
+.modal-footer .btn-save:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(64, 134, 244, 0.4);
+}
+
+.modal-footer .btn-cancel {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.modal-footer .btn-cancel:hover {
+    background-color: #d5d5d5;
+    transform: translateY(-2px);
+}
+
+#profileFilingDate {
+    position: absolute;
+    right: 80px;
+    top: 22px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* =================================
+   UI Redesign for User Table
+   ================================= */
+
+/* 表格行样式 */
+.data-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* 调理方向标签 */
+.direction-tag {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    background-color: #a0aec0; /* 默认灰色 */
+}
+.direction-tag.direction-糖代谢 {
+    background-color: #ef4444;
+}
+.direction-tag.direction-亚健康 {
+    background-color: #f59e0b;
+}
+.direction-tag.direction-其他 {
+    background-color: #3b82f6;
+}
+
+/* 多个动作按钮的单元格 */
+.action-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #edf2f7;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4a5568;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.action-btn:hover {
+    background-color: #e2e8f0;
+    color: #2d3748;
+    transform: translateY(-1px);
+}
+.action-btn i {
+    color: #718096;
+}
+
+/* 单个图标按钮的单元格 */
+.action-cell-single {
+    text-align: right;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #718096;
+    padding: 5px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    line-height: 1;
+    transition: background-color 0.2s, color 0.2s;
+}
+.icon-btn:hover {
+    background-color: #e2e8f0;
+    color: #2d3748;
+}
+.icon-btn.danger:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+/* 表头调整 */
+.data-table th:nth-last-child(2), /* 合并后的操作列 */
+.data-table th:last-child {
+    text-align: center;
+}
+.data-table th:nth-last-child(1) {
+    width: 120px;
+}
+.data-table th:nth-last-child(2) {
+    width: 350px; /* 给多个按钮更多空间 */
 }
