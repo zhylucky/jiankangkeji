@@ -1,43 +1,37 @@
 // 登录表单提交处理
-document.querySelector('.login-form').addEventListener('submit', function(e) {
+document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     // 获取输入值
-    const username = document.querySelector('input[type="text"]').value;
-    const password = document.querySelector('input[type="password"]').value;
-    const captcha = document.querySelector('.captcha-group input').value;
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
 
     // 固定的测试账号
     const testAccount = {
         username: 'admin',
-        password: '123456',
-        captcha: '1234'  // 固定验证码
+        password: '123456'
     };
 
     // 验证账号密码
-    if (username === testAccount.username && 
-        password === testAccount.password && 
-        captcha === testAccount.captcha) {
+    if (username.toLowerCase() === testAccount.username && 
+        password === testAccount.password) {
+        
+        showToast('登录成功，正在跳转...', 'success');
+
         // 登录成功
         localStorage.setItem('userInfo', JSON.stringify({
             username: username,
             isLoggedIn: true
         }));
-        // 跳转到健康管理中心页面
-        window.location.href = '健康管理中心.html';
+
+        // 延迟跳转，让用户看到提示
+        setTimeout(() => {
+            window.location.href = '健康管理中心.html';
+        }, 1500);
+
     } else {
         // 登录失败
-        alert('账号、密码或验证码错误！\n测试账号：admin\n密码：123456\n验证码：1234');
-    }
-});
-
-// 显示/隐藏密码功能
-document.querySelector('.show-password').addEventListener('click', function() {
-    const passwordInput = document.querySelector('input[type="password"]');
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-    } else {
-        passwordInput.type = 'password';
+        showToast('账号或密码错误!', 'error');
     }
 });
 
