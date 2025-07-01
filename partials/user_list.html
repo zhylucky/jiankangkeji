@@ -1,3 +1,6 @@
+<!-- 统计数据卡片容器 -->
+<div class="dashboard-stats-container"></div>
+
 <!-- 搜索和筛选区 -->
 <div class="search-section">
     <div class="search-group">
@@ -85,47 +88,9 @@
     </div>
 </div>
 
-<script>
-    // 这个脚本会在内容加载后被执行
-    (async function() {
-        try {
-            console.log('开始初始化用户列表模块...');
-            
-            // 确保Supabase客户端已准备好
-            if (!supabase) {
-                await new Promise(resolve => setTimeout(resolve, 100)); // 简单等待
-                if (!supabase) throw new Error('Supabase 客户端依然不可用');
-            }
-            
-            // 显示加载提示
-            showToast('正在加载数据...');
-            
-            // 加载用户数据
-            console.log('加载用户数据...');
-            const result = await loadUsers();
-            if (!result.success) {
-                throw new Error('加载用户数据失败');
-            }
-            console.log('用户数据加载完成');
-            
-            // 初始化事件监听
-            console.log('初始化用户列表事件监听...');
-            initEventListeners();
-            console.log('用户列表事件监听初始化完成');
-            
-            // 一次性渲染UI
-            console.log('渲染用户列表界面...');
-            renderTable();
-            await updatePagination();
-            console.log('用户列表界面渲染完成');
-            
-            // 隐藏加载提示
-            showToast('用户列表加载完成');
-            
-            console.log('用户列表模块初始化完成！');
-        } catch (error) {
-            console.error('初始化用户列表模块失败:', error);
-            showToast('初始化用户列表模块失败: ' + error.message);
-        }
-    })();
-</script> 
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>

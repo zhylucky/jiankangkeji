@@ -53,10 +53,8 @@ async function loadUsers() {
         state.users = data || [];
         state.pagination.totalUsers = count || 0;
         
-        // 渲染仪表盘数据，但只在用户列表页面执行
-        if (document.querySelector('.dashboard-stats')) {
-            updateDashboardStats(count, data);
-        }
+        // 数据加载成功后，直接更新统计信息
+        updateDashboardStats(count, data);
         
         return { success: true };
     } catch (error) {
@@ -117,10 +115,11 @@ function renderDashboard() {
         </div>
     `;
 
-    const mainContent = document.querySelector('.main-content');
-    const existingDashboard = mainContent?.querySelector('.dashboard-stats');
-    if (existingDashboard) existingDashboard.remove();
-    mainContent?.insertAdjacentHTML('afterbegin', dashboardHtml);
+    // 渲染到指定的容器
+    const container = document.querySelector('.dashboard-stats-container');
+    if (container) {
+        container.innerHTML = dashboardHtml;
+    }
 }
 
 // 渲染表格
@@ -766,23 +765,36 @@ async function loadContent(url, clickedElement) {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) return;
 
-    mainContent.innerHTML = '<div class="loading"></div>'; // 使用 loading 动画
+    mainContent.innerHTML = '<div class="loading-overlay"><div class="loading-spinner"></div></div>'; // 使用全屏 loading 动画
 
     try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`加载失败: ${response.status}`);
         
-        mainContent.innerHTML = await response.text();
+        const html = await response.text();
         
-        // 每个 partial 自己的初始化逻辑
+        // 1. 插入 HTML
+        mainContent.innerHTML = html;
+        
+        // 2. 查找并执行脚本
+        const scripts = mainContent.querySelectorAll('script');
+        scripts.forEach(script => {
+            const newScript = document.createElement('script');
+            newScript.textContent = script.textContent;
+            // 如果有 src 属性, 也一并复制
+            if (script.src) {
+                newScript.src = script.src;
+            }
+            document.head.appendChild(newScript).parentNode.removeChild(newScript);
+            script.remove(); // 移除页面中已经存在的 script 标签，避免重复
+        });
+        
+        // 3. 用户列表页面需要特殊初始化
         if (url.includes('user_list.html')) {
             await initUserListPage();
-        } else if (url.includes('health_trends.html')) {
-            initHealthTrendsPage(); 
-        } else if (url.includes('data_analysis.html')) {
-            initDataAnalysisPage();
         }
 
+        // 4. 更新侧边栏状态
         if (clickedElement) {
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
             clickedElement.classList.add('active');
@@ -799,6 +811,7 @@ async function initUserListPage() {
     initUserListEventListeners();
     createUserModal(); // 预创建模态框
     await loadAndRenderUsers();
+    renderDashboard(); // 在用户列表页面加载完成后渲染仪表盘
 }
 
 // 统一加载和渲染的函数
@@ -811,21 +824,6 @@ async function loadAndRenderUsers() {
         showToast('数据加载完成');
     }
 }
-
-// (为其他页面预留的初始化函数)
-function initHealthTrendsPage() {
-    // 健康趋势页面的JS逻辑
-    console.log("健康趋势页面已加载");
-}
-
-function initDataAnalysisPage() {
-    // 数据分析页面的JS逻辑
-    console.log("数据分析页面已加载");
-    if(window.initCharts) {
-        window.initCharts();
-    }
-}
-
 
 // 页面首次加载时执行
 document.addEventListener('DOMContentLoaded', () => {
