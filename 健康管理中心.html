@@ -187,6 +187,37 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- 性能优化配置 -->
+    <script src="performance-config.js"></script>
+    <script>
+        // 预连接到Supabase服务器，减少连接时间
+        const linkPreconnect = document.createElement('link');
+        linkPreconnect.rel = 'preconnect';
+        linkPreconnect.href = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
+        document.head.appendChild(linkPreconnect);
+
+        // DNS预解析
+        const linkDnsPrefetch = document.createElement('link');
+        linkDnsPrefetch.rel = 'dns-prefetch';
+        linkDnsPrefetch.href = '//gxohpxiekmpsmkzkcxfc.supabase.co';
+        document.head.appendChild(linkDnsPrefetch);
+
+        // 预加载主脚本
+        const linkPreload = document.createElement('link');
+        linkPreload.rel = 'preload';
+        linkPreload.href = 'JKscript.js';
+        linkPreload.as = 'script';
+        document.head.appendChild(linkPreload);
+
+        // 初始化性能监控
+        window.addEventListener('load', function() {
+            if (window.PerformanceConfig && typeof window.PerformanceConfig.initPerformanceOptimizations === 'function') {
+                window.PerformanceConfig.initPerformanceOptimizations();
+            }
+
+            console.log('🚀 页面加载完成，性能优化已启用');
+        });
+    </script>
     <script src="JKscript.js"></script>
 </body>
 </html>

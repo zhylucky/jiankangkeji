@@ -1,17 +1,75 @@
-// 初始化Supabase客户端
+// 初始化Supabase客户端 - 优化版本
 const supabaseUrl = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4b2hweGlla21wc21remtjeGZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MTg0NDQsImV4cCI6MjA2NTI5NDQ0NH0.sUleRxPQsEMxNqGPWUfZBDbjvDR5huZ7hGQkrHoahqk';
 let supabase;
 
+// 性能优化配置
+const supabaseOptions = {
+    auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false // 减少不必要的URL检查
+    },
+    db: {
+        schema: 'public'
+    },
+    global: {
+        headers: {
+            'x-client-info': 'health-management-system'
+        }
+    },
+    // 连接池配置
+    realtime: {
+        params: {
+            eventsPerSecond: 10
+        }
+    }
+};
+
 try {
     if (window.supabase && typeof window.supabase.createClient === 'function') {
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey, supabaseOptions);
+        console.log('Supabase客户端初始化成功');
     } else {
         throw new Error('Supabase客户端库未正确加载');
     }
 } catch (error) {
     console.error('Supabase初始化失败:', error);
     alert('系统初始化失败：' + error.message);
+}
+
+// 请求缓存机制
+const requestCache = new Map();
+const CACHE_DURATION = 30000; // 30秒缓存
+
+// 缓存辅助函数
+function getCacheKey(table, params) {
+    return `${table}_${JSON.stringify(params)}`;
+}
+
+function getCachedData(key) {
+    const cached = requestCache.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.data;
+    }
+    return null;
+}
+
+function setCachedData(key, data) {
+    requestCache.set(key, {
+        data,
+        timestamp: Date.now()
+    });
+
+    // 清理过期缓存
+    if (requestCache.size > 50) {
+        const now = Date.now();
+        for (const [k, v] of requestCache.entries()) {
+            if (now - v.timestamp > CACHE_DURATION) {
+                requestCache.delete(k);
+            }
+        }
+    }
 }
 
 // =================================
@@ -36,26 +94,56 @@ const state = {
 // 数据获取与处理
 // =================================
 
-// 加载用户数据
+// 优化的用户数据加载函数
 async function loadUsers() {
     try {
         if (!supabase) throw new Error('Supabase客户端未初始化');
-        
+
         const { currentPage, pageSize } = state.pagination;
-        const { data, error, count } = await supabase
-            .from('New_user')
-            .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false })
-            .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
-        
-        if (error) throw error;
-        
-        state.users = data || [];
-        state.pagination.totalUsers = count || 0;
-        
+        const cacheKey = getCacheKey('New_user', { currentPage, pageSize });
+
+        // 检查缓存
+        const cachedData = getCachedData(cacheKey);
+        if (cachedData) {
+            console.log('使用缓存数据');
+            state.users = cachedData.data || [];
+            state.pagination.totalUsers = cachedData.count || 0;
+            updateDashboardStats(cachedData.count, cachedData.data);
+            return { success: true, fromCache: true };
+        }
+
+        // 使用性能优化的查询
+        // 分离计数查询和数据查询以提高性能
+        const [countResult, dataResult] = await Promise.all([
+            supabase
+                .from('New_user')
+                .select('*', { count: 'exact', head: true }),
+            supabase
+                .from('New_user')
+                .select('id, name, gender, age, phone, direction, created_at')
+                .order('created_at', { ascending: false })
+                .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
+        ]);
+
+        console.log(`数据库查询完成`);
+
+        if (countResult.error) throw countResult.error;
+        if (dataResult.error) throw dataResult.error;
+
+        const result = {
+            data: dataResult.data || [],
+            count: countResult.count || 0
+        };
+
+        // 缓存结果
+        setCachedData(cacheKey, result);
+
+        state.users = result.data;
+        state.pagination.totalUsers = result.count;
+
         // 数据加载成功后，直接更新统计信息
-        updateDashboardStats(count, data);
-        
+        updateDashboardStats(result.count, result.data);
+
         return { success: true };
     } catch (error) {
         console.error('加载用户数据失败:', error.message);
@@ -265,36 +353,78 @@ async function changePageSize(size) {
     await loadAndRenderUsers();
 }
 
-// 过滤数据
+// 优化的过滤数据函数
 async function filterData() {
     try {
         if (!supabase) throw new Error('Supabase客户端未初始化');
-        
-        const nameFilter = document.querySelector('.search-inputs input[placeholder="姓名"]').value;
-        const phoneFilter = document.querySelector('.search-inputs input[placeholder="手机号"]').value;
-        const directionFilter = document.querySelector('.filter-select').value;
-        
+
+        const nameFilter = document.querySelector('.search-inputs input[placeholder="姓名"]')?.value?.trim();
+        const phoneFilter = document.querySelector('.search-inputs input[placeholder="手机号"]')?.value?.trim();
+        const directionFilter = document.querySelector('.filter-select')?.value;
+
+        // 创建过滤器缓存键
+        const filterParams = { nameFilter, phoneFilter, directionFilter, page: 1 };
+        const cacheKey = getCacheKey('New_user_filter', filterParams);
+
+        // 检查缓存
+        const cachedData = getCachedData(cacheKey);
+        if (cachedData) {
+            console.log('使用过滤缓存数据');
+            state.users = cachedData.data || [];
+            state.pagination.totalUsers = cachedData.count || 0;
+            state.pagination.currentPage = 1;
+            renderTable();
+            updatePagination();
+            showToast(`找到 ${state.pagination.totalUsers} 条记录 (缓存)`);
+            return;
+        }
+
         state.pagination.currentPage = 1;
-        
-        let query = supabase.from('New_user').select('*', { count: 'exact' });
-        
-        if (nameFilter) query = query.ilike('name', `%${nameFilter}%`);
-        if (phoneFilter) query = query.ilike('phone', `%${phoneFilter}%`);
-        if (directionFilter) query = query.eq('direction', directionFilter);
-        
         const { currentPage, pageSize } = state.pagination;
-        query = query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
-                     .order('created_at', { ascending: false });
-        
+
+        // 优化查询：只选择必要字段，使用索引友好的查询
+        let query = supabase
+            .from('New_user')
+            .select('id, name, gender, age, phone, direction, created_at', { count: 'exact' });
+
+        // 构建查询条件
+        const conditions = [];
+        if (nameFilter) {
+            query = query.ilike('name', `%${nameFilter}%`);
+            conditions.push(`name ilike %${nameFilter}%`);
+        }
+        if (phoneFilter) {
+            query = query.ilike('phone', `%${phoneFilter}%`);
+            conditions.push(`phone ilike %${phoneFilter}%`);
+        }
+        if (directionFilter) {
+            query = query.eq('direction', directionFilter);
+            conditions.push(`direction = ${directionFilter}`);
+        }
+
+        query = query
+            .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
+            .order('created_at', { ascending: false });
+
+        console.log('执行过滤查询:', conditions.join(' AND '));
+
         const { data, error, count } = await query;
+
         if (error) throw error;
-        
-        state.users = data || [];
-        state.pagination.totalUsers = count || 0;
-        
+
+        console.log(`过滤查询已完成`);
+
+        const result = { data: data || [], count: count || 0 };
+
+        // 缓存过滤结果
+        setCachedData(cacheKey, result);
+
+        state.users = result.data;
+        state.pagination.totalUsers = result.count;
+
         renderTable();
         updatePagination();
-        
+
         showToast(`找到 ${state.pagination.totalUsers} 条记录`);
     } catch (error) {
         console.error('过滤数据失败:', error.message);
@@ -523,6 +653,7 @@ async function deleteUser(userId) {
 // =================================
 // 客户档案模态框
 // =================================
+// 优化的用户档案加载函数
 async function openProfileModal(userId) {
     const modal = document.getElementById('profileModal');
     const form = document.getElementById('profileForm');
@@ -530,6 +661,8 @@ async function openProfileModal(userId) {
 
     form.reset();
     document.getElementById('profileUserId').value = userId;
+
+    // 从本地状态获取用户基本信息，避免额外查询
     const user = state.users.find(u => u.id === userId);
     document.getElementById('profileName').textContent = user?.name || 'N/A';
     document.getElementById('profileGender').textContent = user?.gender || 'N/A';
@@ -543,37 +676,73 @@ async function openProfileModal(userId) {
     saveButton.textContent = '加载中...';
 
     try {
-        const { data, error } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('user_id', userId)
-            .limit(1);
+        // 检查缓存
+        const cacheKey = getCacheKey('user_profile', { userId });
+        const cachedProfile = getCachedData(cacheKey);
 
-        if (error) throw error;
-        
-        const profile = data && data.length > 0 ? data[0] : null;
+        let profile;
+
+        if (cachedProfile) {
+            console.log('使用缓存的用户档案数据');
+            profile = cachedProfile;
+        } else {
+            // 性能优化：只选择需要的字段
+            const { data, error } = await supabase
+                .from('user_profiles')
+                .select(`
+                    user_id, created_at, date_of_birth, address, diseases,
+                    medical_history, conditioning_reason, height, weight,
+                    medication_status, conditioning_content, systolic_pressure,
+                    diastolic_pressure, fasting_blood_sugar, glycated_hemoglobin,
+                    self_management_status, payment_status, estimated_time,
+                    other_notes, filler_name, client_source, scheduled_time
+                `)
+                .eq('user_id', userId)
+                .limit(1);
+
+            console.log(`档案加载完成`);
+
+            if (error) throw error;
+
+            profile = data && data.length > 0 ? data[0] : null;
+
+            // 缓存结果
+            if (profile) {
+                setCachedData(cacheKey, profile);
+            }
+        }
 
         if (profile) {
             document.getElementById('profileFilingDate').textContent = `建档日期: ${new Date(profile.created_at).toLocaleDateString()}`;
-            form.profileDob.value = profile.date_of_birth;
-            form.profileAddress.value = profile.address;
-            form.profileDiseases.value = profile.diseases;
-            form.profileMedicalHistory.value = profile.medical_history;
-            form.profileConditioningReason.value = profile.conditioning_reason;
-            form.profileHeight.value = profile.height;
-            form.profileWeight.value = profile.weight;
-            form.profileMedicationStatus.value = profile.medication_status;
-            form.profileSystolic.value = profile.systolic_pressure;
-            form.profileDiastolic.value = profile.diastolic_pressure;
-            form.profileFastingSugar.value = profile.fasting_blood_sugar;
-            form.profileGlycatedHemoglobin.value = profile.glycated_hemoglobin;
-            form.profileSelf_management_status.value = profile.self_management_status;
-            form.profilePaymentStatus.value = profile.payment_status;
-            form.profileEstimatedTime.value = profile.estimated_time;
-            form.profileOtherNotes.value = profile.other_notes;
-            form.profileFiller.value = profile.filler_name;
-            form.profileClientSource.value = profile.client_source;
-            
+
+            // 使用批量赋值优化DOM操作
+            const formFields = {
+                'profileDob': profile.date_of_birth,
+                'profileAddress': profile.address,
+                'profileDiseases': profile.diseases,
+                'profileMedicalHistory': profile.medical_history,
+                'profileConditioningReason': profile.conditioning_reason,
+                'profileHeight': profile.height,
+                'profileWeight': profile.weight,
+                'profileMedicationStatus': profile.medication_status,
+                'profileSystolic': profile.systolic_pressure,
+                'profileDiastolic': profile.diastolic_pressure,
+                'profileFastingSugar': profile.fasting_blood_sugar,
+                'profileGlycatedHemoglobin': profile.glycated_hemoglobin,
+                'profileSelf_management_status': profile.self_management_status,
+                'profilePaymentStatus': profile.payment_status,
+                'profileEstimatedTime': profile.estimated_time,
+                'profileOtherNotes': profile.other_notes,
+                'profileFiller': profile.filler_name,
+                'profileClientSource': profile.client_source
+            };
+
+            // 批量更新表单值
+            Object.entries(formFields).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) element.value = value || '';
+            });
+
             if (profile.scheduled_time) {
                 const d = new Date(profile.scheduled_time);
                 const pad = (num) => num.toString().padStart(2, '0');
@@ -582,11 +751,12 @@ async function openProfileModal(userId) {
             } else {
                 document.getElementById('profileScheduledTime').value = '';
             }
-            
+
+            // 优化复选框处理
             if (profile.conditioning_content?.length > 0) {
-                profile.conditioning_content.forEach(content => {
-                    const checkbox = form.querySelector(`[name="conditioningContent"][value="${content}"]`);
-                    if (checkbox) checkbox.checked = true;
+                const checkboxes = form.querySelectorAll('[name="conditioningContent"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = profile.conditioning_content.includes(checkbox.value);
                 });
             }
         }
@@ -665,21 +835,25 @@ function completeProfile(userId) {
 // 其他模态框与通用函数
 // =================================
 
-// 显示提示消息
-function showToast(message) {
+// 优化的提示消息函数
+function showToast(message, autoHide = true) {
     let toast = document.getElementById('toast');
     if (!toast) {
         toast = document.createElement('div');
         toast.id = 'toast';
         document.body.appendChild(toast);
     }
-    
+
     toast.textContent = message;
     toast.className = 'show';
-    
-    setTimeout(() => {
-        toast.className = toast.className.replace('show', '');
-    }, 3000);
+
+    if (autoHide) {
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, 3000);
+    }
+
+    return toast; // 返回toast元素以便外部控制
 }
 
 // 自定义确认框函数
@@ -814,24 +988,162 @@ async function initUserListPage() {
     renderDashboard(); // 在用户列表页面加载完成后渲染仪表盘
 }
 
-// 统一加载和渲染的函数
+// 优化的统一加载和渲染函数
 async function loadAndRenderUsers() {
-    showToast('正在加载数据...');
+    const loadingToast = showToast('正在加载数据...', false);
+
+    // 使用性能标记
+    performance.mark('loadStart');
+
+    // 先渲染表格骨架屏以提高感知性能
+    renderTableSkeleton();
+
     const result = await loadUsers();
+
     if(result.success) {
-        renderTable();
-        updatePagination();
-        showToast('数据加载完成');
+        // 使用requestAnimationFrame确保在下一帧渲染，避免阻塞主线程
+        window.requestAnimationFrame(() => {
+            renderTable();
+            updatePagination();
+
+            // 清除性能标记
+            performance.clearMarks();
+            performance.clearMeasures();
+
+            console.log(`数据加载和渲染完成`);
+
+            if (loadingToast) {
+                loadingToast.textContent = `数据加载完成`;
+                setTimeout(() => {
+                    loadingToast.className = loadingToast.className.replace('show', '');
+                }, 2000);
+            } else {
+                showToast(`数据加载完成`);
+            }
+        });
+    } else {
+        if (loadingToast) {
+            loadingToast.className = loadingToast.className.replace('show', '');
+        }
+    }
+}
+
+// 渲染表格骨架屏
+function renderTableSkeleton() {
+    const tbody = document.querySelector('.data-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    // 创建骨架行
+    for (let i = 0; i < state.pagination.pageSize; i++) {
+        const row = document.createElement('tr');
+        row.className = 'skeleton-row';
+
+        row.innerHTML = `
+            <td><div class="skeleton-checkbox"></div></td>
+            <td><div class="skeleton-text"></div></td>
+            <td><div class="skeleton-text short"></div></td>
+            <td><div class="skeleton-text short"></div></td>
+            <td><div class="skeleton-text"></div></td>
+            <td><div class="skeleton-tag"></div></td>
+            <td><div class="skeleton-buttons"></div></td>
+            <td><div class="skeleton-icons"></div></td>
+        `;
+
+        tbody.appendChild(row);
+    }
+
+    // 添加骨架屏样式
+    if (!document.getElementById('skeleton-styles')) {
+        const style = document.createElement('style');
+        style.id = 'skeleton-styles';
+        style.textContent = `
+            .skeleton-row td div {
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: skeleton-loading 1.5s infinite;
+                border-radius: 4px;
+                height: 20px;
+            }
+            .skeleton-text { width: 80%; }
+            .skeleton-text.short { width: 40%; }
+            .skeleton-checkbox { width: 16px; height: 16px; border-radius: 3px; }
+            .skeleton-tag { width: 60%; height: 24px; border-radius: 12px; }
+            .skeleton-buttons { width: 90%; height: 32px; border-radius: 4px; }
+            .skeleton-icons { width: 60px; }
+            @keyframes skeleton-loading {
+                0% { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+// 性能监控函数
+function monitorPerformance() {
+    // 监控网络请求性能
+    if (window.PerformanceObserver) {
+        try {
+            const observer = new PerformanceObserver((list) => {
+                list.getEntries().forEach((entry) => {
+                    // 只关注Supabase API请求
+                    if (entry.name.includes('supabase.co') && entry.initiatorType === 'fetch') {
+                        console.log(`API请求: ${entry.name.split('?')[0]}`);
+                        console.log(`  耗时: ${entry.duration.toFixed(2)}ms`);
+                        console.log(`  开始时间: ${entry.startTime.toFixed(2)}ms`);
+                        console.log(`  传输大小: ${(entry.transferSize / 1024).toFixed(2)}KB`);
+
+                        // 记录慢请求
+                        if (entry.duration > 500) {
+                            console.warn(`⚠️ 慢请求检测: ${entry.name.split('?')[0]} (${entry.duration.toFixed(0)}ms)`);
+                        }
+                    }
+                });
+            });
+
+            observer.observe({ entryTypes: ['resource'] });
+            console.log('性能监控已启用');
+        } catch (e) {
+            console.error('性能监控初始化失败:', e);
+        }
+    }
+
+    // 监控长任务
+    if (window.PerformanceObserver) {
+        try {
+            const longTaskObserver = new PerformanceObserver((list) => {
+                list.getEntries().forEach((entry) => {
+                    console.warn(`⚠️ 检测到长任务: ${entry.duration.toFixed(2)}ms`);
+                });
+            });
+
+            longTaskObserver.observe({ entryTypes: ['longtask'] });
+        } catch (e) {
+            console.error('长任务监控初始化失败:', e);
+        }
     }
 }
 
 // 页面首次加载时执行
 document.addEventListener('DOMContentLoaded', () => {
+    console.time('页面初始化');
+
+    // 启用性能监控
+    monitorPerformance();
+
+    // 预热连接到Supabase
+    const linkPreconnect = document.createElement('link');
+    linkPreconnect.rel = 'preconnect';
+    linkPreconnect.href = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
+    document.head.appendChild(linkPreconnect);
+
     const initialElement = document.querySelector('.sidebar li.active');
     if (initialElement) {
         loadContent('partials/user_list.html', initialElement);
     }
-    
+
     // 全局ESC关闭模态框
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
@@ -839,5 +1151,20 @@ document.addEventListener('DOMContentLoaded', () => {
             closeProfileModal();
             closeNavigationReportModal();
         }
+    });
+
+    console.timeEnd('页面初始化');
+
+    // 添加网络状态监控
+    window.addEventListener('online', () => {
+        showToast('网络已连接', true);
+        // 网络恢复后可以刷新数据
+        if (document.querySelector('.data-table')) {
+            loadAndRenderUsers();
+        }
+    });
+
+    window.addEventListener('offline', () => {
+        showToast('网络已断开，部分功能可能不可用', true);
     });
 });
