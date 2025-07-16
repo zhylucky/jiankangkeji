@@ -26,7 +26,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 
         // 延迟跳转，让用户看到提示
         setTimeout(() => {
-            window.location.href = '健康管理中心.html';
+            window.location.href = 'health-management.html';
         }, 1500);
 
     } else {

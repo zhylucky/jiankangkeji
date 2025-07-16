@@ -1,0 +1,22 @@
+{
+  "name": "health-management-website",
+  "version": "1.0.0",
+  "description": "健康管理中心官方网站",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server",
+    "build": "echo 'Static site - no build needed'",
+    "start": "live-server"
+  },
+  "keywords": [
+    "health",
+    "management",
+    "website",
+    "static"
+  ],
+  "author": "道贞健康科技",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
