@@ -87,6 +87,20 @@ body, html {
     width: 100%;
     max-width: 450px;
     height: auto;
+    /* 增强的动画效果 */
+    animation:
+        medical-breathe 3s ease-in-out infinite,
+        enhanced-glow 4s ease-in-out infinite,
+        subtle-float 6s ease-in-out infinite;
+    transform-origin: center center;
+    transition: transform 0.3s ease;
+    /* 确保动画可见 */
+    will-change: transform, filter, opacity;
+}
+
+/* 悬停时保持动画继续，仅轻微放大 */
+.illustration-img:hover {
+    transform: scale(1.66);
 }
 
 .right-panel {
@@ -203,6 +217,100 @@ body, html {
 /* 文本样式 */
 .toast-text {
     flex: 1; /* 文本占据剩余空间 */
+}
+
+/* ========== 登录页面插图动画效果 ========== */
+
+/* 增强的医疗呼吸效果 - 更明显的缩放和透明度变化 */
+@keyframes medical-breathe {
+    0%, 100% {
+        transform: scale(2);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(2.1);
+        opacity: 10;
+    }
+}
+
+/* 轻微浮动效果 */
+@keyframes subtle-float {
+    0%, 100% {
+        transform: translateY(10px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* 增强的光晕效果 - 医疗主题配色，更强对比度 */
+@keyframes enhanced-glow {
+    0%, 100% {
+        filter: drop-shadow(0 8px 16px rgba(0, 150, 255, 0.15))
+                drop-shadow(0 4px 8px rgba(0, 200, 150, 0.15));
+    }
+    25% {
+        filter: drop-shadow(0 12px 24px rgba(0, 180, 255, 0.35))
+                drop-shadow(0 6px 12px rgba(0, 220, 180, 0.25));
+    }
+    50% {
+        filter: drop-shadow(0 16px 32px rgba(0, 123, 255, 0.4))
+                drop-shadow(0 8px 16px rgba(0, 255, 200, 0.3));
+    }
+    75% {
+        filter: drop-shadow(0 12px 24px rgba(0, 180, 255, 0.35))
+                drop-shadow(0 6px 12px rgba(0, 220, 180, 0.25));
+    }
+}
+
+/* 响应式优化 - 在小屏幕上减少动画强度 */
+@media (max-width: 768px) {
+    .illustration-img {
+        animation:
+            medical-breathe-mobile 4s ease-in-out infinite,
+            enhanced-glow-mobile 6s ease-in-out infinite,
+            subtle-float-mobile 8s ease-in-out infinite;
+    }
+
+    @keyframes medical-breathe-mobile {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.95;
+        }
+        50% {
+            transform: scale(1.04);
+            opacity: 1;
+        }
+    }
+
+    @keyframes subtle-float-mobile {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-4px);
+        }
+    }
+
+    @keyframes enhanced-glow-mobile {
+        0%, 100% {
+            filter: drop-shadow(0 4px 8px rgba(0, 150, 255, 0.15));
+        }
+        50% {
+            filter: drop-shadow(0 8px 16px rgba(0, 123, 255, 0.25));
+        }
+    }
+}
+
+/* 减少动画偏好设置支持 */
+@media (prefers-reduced-motion: reduce) {
+    .illustration-img {
+        animation: none;
+    }
+
+    .illustration-img:hover {
+        transform: none;
+    }
 }
 /* 添加圆角和阴影 */
 .success-message, .error-message {
