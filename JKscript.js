@@ -669,7 +669,20 @@ async function openProfileModal(userId) {
     document.getElementById('profilePhone').textContent = user?.phone || 'N/A';
     document.getElementById('profileFilingDate').textContent = '建档日期: -';
 
+    // 清空BMI显示，避免显示上一个用户的数据
+    const bmiDisplay = document.getElementById('profileBmi');
+    if (bmiDisplay) {
+        bmiDisplay.textContent = '';
+        bmiDisplay.style.color = '';
+        bmiDisplay.className = 'readonly-field';
+    }
+
     modal.style.display = 'flex';
+
+    // 初始化BMI计算功能
+    setTimeout(() => {
+        initBMICalculation();
+    }, 100);
 
     const saveButton = form.querySelector('.btn-save');
     saveButton.disabled = true;
@@ -759,6 +772,9 @@ async function openProfileModal(userId) {
                     checkbox.checked = profile.conditioning_content.includes(checkbox.value);
                 });
             }
+
+            // 计算并显示BMI
+            calculateAndDisplayBMI();
         }
     } catch (error) {
         console.error('加载档案失败:', error);
@@ -829,6 +845,94 @@ async function saveProfile(event) {
 
 function completeProfile(userId) {
     openProfileModal(userId);
+}
+
+// BMI计算相关函数
+function calculateBMI(height, weight) {
+    if (!height || !weight || height <= 0 || weight <= 0) {
+        return null;
+    }
+
+    // 身高转换为米
+    const heightInMeters = height / 100;
+    // BMI = 体重(kg) / 身高(m)²
+    const bmi = weight / (heightInMeters * heightInMeters);
+
+    return Math.round(bmi * 10) / 10; // 保留一位小数
+}
+
+function getBMICategory(bmi) {
+    if (!bmi) return '';
+
+    if (bmi < 18.5) {
+        return '偏瘦';
+    } else if (bmi < 24) {
+        return '正常';
+    } else if (bmi < 28) {
+        return '偏胖';
+    } else {
+        return '肥胖';
+    }
+}
+
+function calculateAndDisplayBMI() {
+    const heightInput = document.getElementById('profileHeight');
+    const weightInput = document.getElementById('profileWeight');
+    const bmiDisplay = document.getElementById('profileBmi');
+
+    if (!heightInput || !weightInput || !bmiDisplay) return;
+
+    const height = parseFloat(heightInput.value);
+    const weight = parseFloat(weightInput.value);
+
+    // 检查是否有有效的身高和体重数据
+    if (!height || !weight || height <= 0 || weight <= 0 ||
+        isNaN(height) || isNaN(weight)) {
+        // 如果没有有效数据，清空BMI显示
+        bmiDisplay.textContent = '';
+        bmiDisplay.style.color = '';
+        bmiDisplay.className = 'readonly-field';
+        return;
+    }
+
+    const bmi = calculateBMI(height, weight);
+
+    if (bmi) {
+        const category = getBMICategory(bmi);
+        bmiDisplay.textContent = `${bmi} (${category})`;
+
+        // 根据BMI分类添加颜色样式
+        bmiDisplay.className = 'readonly-field bmi-display';
+        if (category === '偏瘦') {
+            bmiDisplay.style.color = '#74b9ff';
+        } else if (category === '正常') {
+            bmiDisplay.style.color = '#00b894';
+        } else if (category === '偏胖') {
+            bmiDisplay.style.color = '#fdcb6e';
+        } else if (category === '肥胖') {
+            bmiDisplay.style.color = '#e17055';
+        }
+    } else {
+        bmiDisplay.textContent = '';
+        bmiDisplay.style.color = '';
+        bmiDisplay.className = 'readonly-field';
+    }
+}
+
+// 初始化BMI计算事件监听器
+function initBMICalculation() {
+    const heightInput = document.getElementById('profileHeight');
+    const weightInput = document.getElementById('profileWeight');
+
+    if (heightInput && weightInput) {
+        // 添加输入事件监听器
+        heightInput.addEventListener('input', calculateAndDisplayBMI);
+        weightInput.addEventListener('input', calculateAndDisplayBMI);
+
+        // 添加失去焦点事件监听器
+        heightInput.addEventListener('blur', calculateAndDisplayBMI);
+        weightInput.addEventListener('blur', calculateAndDisplayBMI);
+    }
 }
 
 // =================================

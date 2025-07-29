@@ -237,62 +237,263 @@ main {
 /* 下载部分样式 */
 .download-section {
     background: var(--white);
+    padding: 5rem 2rem;
+}
+
+.download-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.download-header h2 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.download-header i {
+    margin-left: 0.5rem;
+    color: var(--secondary-color);
 }
 
 .download-container {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: stretch; /* 让子项高度一致 */
     gap: 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
-.download-info {
+.app-info-card,
+.qr-code-section {
+    flex: 1 1 0%;
+    max-width: 480px;
+    min-width: 380px;
+    min-height: 420px;
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.app-info-card:hover,
+.qr-code-section:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+/* 保证二维码卡片内容居中 */
+.qr-code-section {
+    align-items: center;
+    text-align: center;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.qr-code-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255, 152, 0, 0.12) 0%, rgba(255, 193, 7, 0.08) 40%, rgba(255, 224, 130, 0.04) 70%, transparent 100%);
+    z-index: 1;
+    pointer-events: none;
+    border-radius: 20px;
+}
+
+.qr-code-section > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* 保证App卡片内容居中 */
+.app-info-card {
+    align-items: center;
+    text-align: center;
+    padding: 2.5rem;
+}
+
+
+
+.app-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.app-icon img {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.app-details {
     text-align: center;
 }
 
-.download-info h3 {
+.app-name {
     font-size: 1.8rem;
     color: var(--primary-color);
-    margin-bottom: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
 }
 
-.download-button {
+.app-description {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.app-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.android-download-btn {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    background: var(--primary-color);
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: var(--white);
     text-decoration: none;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    margin-top: 1.5rem;
-    transition: background 0.3s;
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-.download-button:hover {
-    background: var(--secondary-color);
+.android-download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
-.qr-code {
-    text-align: center;
+.android-download-btn i {
+    font-size: 1.2rem;
 }
+
+.system-requirement {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+
 
 .qr-code-img {
-    width: 120px;
-    height: 120px;
-    padding: 8px;
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
     background: var(--white);
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease; /* 添加过渡效果 */
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+    border: 2px solid rgba(255, 193, 7, 0.1);
+    margin-bottom: 1.5rem;
 }
-    
+
 .qr-code-img:hover {
-    transform: scale(1.3); /* 鼠标悬停时放大1.2倍 */
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3);
+    border-color: rgba(255, 193, 7, 0.2);
 }
-.qr-code p {
-    margin-top: 0.5rem;
-    color: var(--light-text);
+
+.qr-code-info h4 {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    position: relative;
+}
+
+.qr-code-info h4::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, #ff9800, #ffc107);
+    border-radius: 1px;
+}
+
+.qr-code-info p {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.device-support {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #e8f4fd;
+    color: #1976d2;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+    }
+    100% {
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+}
+
+.app-info-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.qr-code-section {
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.android-download-btn {
+    animation: pulse 2s infinite;
+}
+
+.android-download-btn:hover {
+    animation: none;
 }
 
 /* 页脚样式 */
@@ -313,6 +514,29 @@ footer {
     .download-container {
         flex-direction: column;
         gap: 2rem;
+        align-items: center;
+    }
+
+    .app-info-card,
+    .qr-code-section {
+        max-width: 100%;
+        min-width: unset;
+        min-height: unset;
+        padding: 2rem;
+    }
+
+    .app-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .download-header h2 {
+        font-size: 2rem;
+    }
+
+    .qr-code-img {
+        width: 140px;
+        height: 140px;
     }
 
     .featured-title {

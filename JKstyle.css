@@ -1661,6 +1661,24 @@ body {
     border-radius: 4px;
 }
 
+/* BMI显示样式 */
+.bmi-display {
+    font-weight: bold !important;
+    font-size: 15px !important;
+    padding: 10px 12px !important;
+    border-radius: 6px !important;
+    background-color: #f8f9fa !important;
+    border: 2px solid #e9ecef !important;
+    transition: all 0.3s ease !important;
+    text-align: center !important;
+}
+
+.bmi-display:not(:empty) {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-color: currentColor !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
 .checkbox-group, .inline-inputs {
     display: flex;
     gap: 15px;
