@@ -1003,9 +1003,9 @@ function openNavigationReportModal(userId) {
     const reportList = document.getElementById('navigationReportList');
 
     const reports = [
-        { date: '2025-02-13 14:56:19', status: '已完成', type: '常规检查' },
-        { date: '2025-02-13 11:52:32', status: '已完成', type: '血糖监测' },
-        { date: '2025-02-12 09:41:27', status: '已完成', type: '常规检查' },
+        { date: '2025-02-13 14:56:19', status: '已完成', type: '导航报告' },
+        { date: '2025-02-13 11:52:32', status: '已完成', type: '导航报告' },
+        { date: '2025-02-12 09:41:27', status: '已完成', type: '导航报告' },
     ];
 
     reportList.innerHTML = reports.map(report => `

@@ -27,7 +27,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         // 延迟跳转，让用户看到提示
         setTimeout(() => {
             window.location.href = 'health-management.html';
-        }, 700);
+        }, 500);
 
     } else {
         // 登录失败

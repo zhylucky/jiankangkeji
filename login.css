@@ -173,6 +173,114 @@ body, html {
     color: #0056b3; /* 悬停时加深 */
 }
 
+/* 悬浮提示样式 */
+.contact-item {
+    position: relative;
+}
+
+.contact-item::after {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 15px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+/* 电话咨询悬浮提示 */
+.phone-contact::after {
+    content: attr(data-phone);
+    background-color: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.phone-contact::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 7px;
+    border: 6px solid transparent;
+    border-left-color: #333;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+/* 联系我们悬浮提示 */
+.qr-contact::after {
+    content: '';
+    background-image: url('qr-sample.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    background-color: white;
+    border: 2px solid #e0e0e0;
+}
+
+/* 悬浮时显示提示 */
+.contact-item:hover::after,
+.contact-item:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 响应式优化 - 在小屏幕上调整悬浮提示位置 */
+@media (max-width: 768px) {
+    .contact-item::after {
+        right: auto;
+        left: 100%;
+        margin-right: 0;
+        margin-left: 15px;
+    }
+    
+    .phone-contact::before {
+        right: auto;
+        left: 100%;
+        margin-right: 0;
+        margin-left: 7px;
+        border-left-color: transparent;
+        border-right-color: #333;
+    }
+    
+    .qr-contact::after {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* 确保悬浮提示在移动设备上也能正常显示 */
+@media (max-width: 480px) {
+    .contact-buttons {
+        display: flex;
+    }
+    
+    .contact-item::after {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    
+    .qr-contact::after {
+        width: 80px;
+        height: 80px;
+    }
+}
+
 /* 小弹窗样式 */
 .toast {
     position: fixed;
