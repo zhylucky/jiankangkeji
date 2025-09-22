@@ -57,7 +57,6 @@
     function preloadCriticalResources() {
         const criticalImages = [
             'dzlogo.png',
-            'phone.png',
             'health-pro-qr.jpg'
         ];
         
