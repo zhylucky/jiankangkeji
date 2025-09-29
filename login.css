@@ -221,7 +221,7 @@ body, html {
 /* 联系我们悬浮提示 */
 .qr-contact::after {
     content: '';
-    background-image: url('qr-sample.png');
+    background-image: url('images/qr-sample.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;

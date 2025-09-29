@@ -1292,6 +1292,16 @@ body {
     padding: 24px 28px;
 }
 
+#sleepReportModal .modal-content {
+    max-width: 900px !important;
+    width: 98% !important;
+}
+#sleepReportModal .report-table th,
+#sleepReportModal .report-table td {
+    font-size: 20px;
+    padding: 24px 28px;
+}
+
 .modal-header {
     display: flex;
     justify-content: center;   /* 水平居中 */
@@ -1837,4 +1847,217 @@ body {
 }
 .data-table th:nth-last-child(2) {
     width: 350px; /* 给多个按钮更多空间 */
+}
+
+/* 报告选择器样式 */
+.report-selector {
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.report-selector label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.report-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    background-color: #fff;
+    font-size: 16px;
+    color: #333;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+}
+
+.report-select:focus {
+    border-color: #2196F3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.report-select:hover {
+    border-color: #999;
+}
+
+.report-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.view-report-btn {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+    outline: none;
+}
+
+.view-report-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1976D2, #1565C0);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.view-report-btn:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.view-report-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(33, 150, 243, 0.3);
+}
+
+/* 报告下拉菜单样式 */
+/* 报告下拉菜单样式 - Ant Design风格 */
+.report-dropdown-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    color: #1677ff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    overflow: visible;
+    min-width: 110px;
+}
+
+.report-dropdown-btn:hover {
+    color: #4096ff;
+    border-color: #4096ff;
+    background: #f5f5f5;
+}
+
+.report-dropdown-btn .dropdown-arrow {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+    color: #8c8c8c;
+    margin-left: auto;
+}
+
+.report-dropdown-btn:hover .dropdown-arrow {
+    color: #4096ff;
+}
+
+.report-dropdown-btn.active .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.report-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+    z-index: 9999;
+    overflow: hidden;
+    min-width: 140px;
+    padding: 4px 0;
+    /* 确保不被父元素裁切 */
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.88);
+    white-space: nowrap;
+    line-height: 22px;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.dropdown-item:active {
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+.dropdown-item i {
+    width: 14px;
+    font-size: 14px;
+    color: #8c8c8c;
+    text-align: center;
+}
+
+.dropdown-item:hover i {
+    color: #1677ff;
+}
+
+.dropdown-item span {
+    flex: 1;
+}
+
+/* 优化按钮样式，使其支持下拉菜单 */
+.action-btn.report-dropdown-btn {
+    position: relative;
+    overflow: visible; /* 确保下拉菜单不被裁切 */
+}
+
+/* 确保表格行不会遮挡下拉菜单 */
+.data-table tr {
+    position: relative;
+    z-index: 1;
+}
+
+.data-table tr:hover {
+    z-index: 2;
+}
+
+.action-cell {
+    position: relative;
+    overflow: visible;
+}
+
+/* 确保表格容器不会裁切下拉菜单 */
+.data-table {
+    overflow: visible;
+}
+
+.table-container {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .report-dropdown {
+        min-width: 100px;
+        font-size: 13px;
+    }
+    
+    .dropdown-item {
+        padding: 10px 12px;
+    }
 }

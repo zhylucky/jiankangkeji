@@ -56,8 +56,8 @@
     // 关键资源预加载
     function preloadCriticalResources() {
         const criticalImages = [
-            'dzlogo.png',
-            'health-pro-qr.jpg'
+            'images/dzlogo.png',
+            'images/health-pro-qr.png'
         ];
         
         criticalImages.forEach(src => {

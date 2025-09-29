@@ -151,6 +151,20 @@ nav ul li a:hover {
     box-shadow: var(--shadow-lg) !important;
 }
 
+/* 老版健康管理中心按钮样式 - 橙色区分 */
+.nav-button.legacy {
+    background: linear-gradient(135deg, #f35d06 0%, #e65f05fb 100%) !important;
+    color: var(--bg-primary) !important;
+    border: 2px solid #ff9800 !important;
+}
+
+.nav-button.legacy:hover {
+    background: linear-gradient(135deg, #f57c00 0%, #e65100 100%) !important;
+    border-color: #f57c00 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(255, 152, 0, 0.3) !important;
+}
+
 /* 下拉菜单 */
 .nav-dropdown {
     position: relative;
@@ -499,8 +513,8 @@ nav ul li a:hover {
 }
 
 .video-card__title {
-    font-size: 1.4rem;
-    font-weight: 600;
+    font-size: 1.3rem;
+    font-weight: 700;
     margin-bottom: var(--spacing-sm);
 }
 

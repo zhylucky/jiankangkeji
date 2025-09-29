@@ -136,7 +136,11 @@ const NETWORK_CONFIG = {
 
 // 初始化性能优化
 function initPerformanceOptimizations() {
-    console.log('🚀 初始化Supabase性能优化...');
+    // 生产环境日志控制
+    const IS_PRODUCTION = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const debugLog = IS_PRODUCTION ? () => {} : console.log;
+    
+    debugLog('🚀 初始化Supabase性能优化...');
     
     // 1. 设置DNS预解析和预连接
     setupNetworkOptimizations();
@@ -145,15 +149,21 @@ function initPerformanceOptimizations() {
     initSmartCache();
     
     // 3. 设置请求拦截器
-    setupRequestInterceptor();
+    if (!IS_PRODUCTION) {
+        setupRequestInterceptor();
+    }
     
     // 4. 初始化性能监控
-    initPerformanceMonitoring();
+    if (!IS_PRODUCTION) {
+        initPerformanceMonitoring();
+    }
     
     // 5. 设置连接池监控
-    setupConnectionPoolMonitoring();
+    if (!IS_PRODUCTION) {
+        setupConnectionPoolMonitoring();
+    }
     
-    console.log('✅ Supabase性能优化初始化完成');
+    debugLog('✅ Supabase性能优化初始化完成');
 }
 
 // 设置网络优化
@@ -270,7 +280,9 @@ function initSmartCache() {
 // 请求拦截器
 function setupRequestInterceptor() {
     // 这里可以添加请求拦截逻辑
-    console.log('📡 请求拦截器已设置');
+    if (typeof console !== 'undefined' && console.log) {
+        console.log('📡 请求拦截器已设置');
+    }
 }
 
 // 性能监控
@@ -290,14 +302,18 @@ function initPerformanceMonitoring() {
             
             // 记录慢查询
             if (duration > PERFORMANCE_CONFIG.slowQueryThreshold) {
-                console.warn(`🐌 慢查询检测: ${url} (${duration.toFixed(2)}ms)`);
+                if (typeof console !== 'undefined' && console.warn) {
+                    console.warn(`🐌 慢查询检测: ${url} (${duration.toFixed(2)}ms)`);
+                }
             }
             
             return response;
         } catch (error) {
             const endTime = performance.now();
             const duration = endTime - startTime;
-            console.error(`❌ 请求失败: ${url} (${duration.toFixed(2)}ms)`, error);
+            if (typeof console !== 'undefined' && console.error) {
+                console.error(`❌ 请求失败: ${url} (${duration.toFixed(2)}ms)`, error);
+            }
             throw error;
         }
     };
@@ -308,7 +324,7 @@ function setupConnectionPoolMonitoring() {
     // 定期报告缓存统计
     if (PERFORMANCE_CONFIG.reporting.enabled) {
         setInterval(() => {
-            if (smartCache) {
+            if (smartCache && typeof console !== 'undefined' && console.log) {
                 const stats = smartCache.getStats();
                 console.log('📊 缓存统计:', stats);
             }
@@ -343,7 +359,9 @@ function createBatchProcessor(operation, config) {
             const currentBatch = [...batch];
             batch = [];
             
-            console.log(`🔄 执行批量${operation}:`, currentBatch.length, '项');
+            if (typeof console !== 'undefined' && console.log) {
+                console.log(`🔄 执行批量${operation}:`, currentBatch.length, '项');
+            }
             // 这里执行实际的批量操作
         }
     };

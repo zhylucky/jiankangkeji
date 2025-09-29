@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="dzlogo.png">
+    <link rel="icon" href="images/dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO 基础信息 -->
@@ -15,17 +15,17 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.lifetide.cn/">
+    <meta property="og:url" content="https://jkkeji.netlify.app/">
     <meta property="og:title" content="健康科技 - AI驱动的精准健康管理">
     <meta property="og:description" content="医疗级监测技术，智能健康分析，24/7健康守护。提供个人、企业、医疗机构全场景健康管理解决方案。">
-    <meta property="og:image" content="https://www.lifetide.cn/dzlogo.png">
+    <meta property="og:image" content="https://jkkeji.netlify.app/dzlogo.png">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://www.lifetide.cn/">
+    <meta property="twitter:url" content="https://jkkeji.netlify.app/dzlogo.png">
     <meta property="twitter:title" content="健康科技 - AI驱动的精准健康管理">
     <meta property="twitter:description" content="医疗级监测技术，智能健康分析，24/7健康守护。">
-    <meta property="twitter:image" content="https://www.lifetide.cn/dzlogo.png">
+    <meta property="twitter:image" content="https://jkkeji.netlify.app/dzlogo.png">
     
     <!-- 结构化数据 -->
     <script type="application/ld+json">
@@ -33,8 +33,8 @@
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "健康科技",
-        "url": "https://www.lifetide.cn",
-        "logo": "https://www.lifetide.cn/dzlogo.png",
+        "url": "https://jkkeji.netlify.app/",
+        "logo": "https://jkkeji.netlify.app/dzlogo.png",
         "description": "AI驱动的精准健康管理解决方案提供商",
         "foundingDate": "2020",
         "founder": {
@@ -47,10 +47,6 @@
             "contactType": "customer service",
             "availableLanguage": "Chinese"
         },
-        "sameAs": [
-            "https://weixin.qq.com/",
-            "https://weibo.com/"
-        ],
         "hasOfferCatalog": {
             "@type": "OfferCatalog",
             "name": "健康管理产品及服务",
@@ -86,27 +82,29 @@
                 "@type": "ListItem",
                 "position": 1,
                 "name": "首页",
-                "item": "https://www.lifetide.cn/"
+                "item": "https://jkkeji.netlify.app/"
             }
         ]
     }
     </script>
     <!-- 预加载关键资源 -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     
     <!-- 样式表 -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="ai-chat.css">
+    <!-- Font Awesome 图标库 -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- 导航栏 -->
     <nav role="navigation" aria-label="主导航">
         <div class="logo">
-            <img src="dzlogo.png" alt="健康科技标志">
+            <img src="images/dzlogo.png" alt="健康科技标志">
             <div class="logo-text">
                 <div class="logo-text-cn">健康科技</div>
                 <div class="logo-text-en">Health Technology</div>
@@ -114,7 +112,9 @@
         </div>
         <ul role="menubar">
             <li role="none"><a href="#home" class="nav-active" role="menuitem" aria-current="page">首页</a></li>        
-            <li role="none"><a href="login.html" class="nav-button" role="menuitem">健康管理中心</a></li>
+            <li role="none"><a href="login.html" class="nav-button" role="menuitem">新版健康管理中心</a></li>
+            <!-- <li role="none"><a href="http://management.lifetide.cn/login" class="nav-button" role="menuitem">后台管理系统</a></li> -->
+            <li role="none"><a href="http://anxiety.lifetide.cn/login/" class="nav-button legacy" role="menuitem">老版健康管理中心</a></li>
         </ul>
         <!-- 移动端菜单按钮 -->
         <button class="mobile-menu-toggle" aria-label="切换移动端菜单" aria-expanded="false">
@@ -154,7 +154,7 @@
                 </div>
                 <div class="hero-visual" role="img" aria-label="产品展示和功能演示">
                     <div class="hero-image">
-                        <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png" alt="个人健康精英Pro+手机应用界面展示" class="phone-mockup">
+                        <img src="images/pro.png" alt="个人健康精英Pro+手机应用界面展示" class="phone-mockup">
                         <div class="floating-card card-1" role="note" aria-label="心率监测数据">
                             <i class="fas fa-heart" aria-hidden="true"></i>
                             <div class="card-content">
@@ -196,7 +196,7 @@
                 <div class="featured-media">
                     <div class="video-card video-card--cctv">
                         <div class="video-card__logo">
-                            <img src="logo.jpg" alt="发现者栏目Logo">
+                            <img src="images/logo.png" alt="发现者栏目Logo">
                         </div>
                         <div class="video-card__info">
                             <h3 class="video-card__title">央视《发现者》栏目:生命潮®《数字健康之路》</h3>
@@ -282,7 +282,7 @@
                     <!-- 产品视频卡片 -->
                     <div class="video-card video-card--pro">
                         <div class="video-card__logo">
-                            <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png" alt="个人健康管家Pro+ Logo">
+                            <img src="images//pro.png" alt="个人健康管家Pro+ Logo">
                         </div>
                         <div class="video-card__info">
                             <h3 class="video-card__title">个人健康精英Pro+</h3>
@@ -307,7 +307,7 @@
                 <div class="download-container">
                     <div class="app-info-card">
                         <div class="app-icon">
-                            <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png" alt="健康管家Pro+ App图标">
+                            <img src="images/pro.png" alt="健康管家Pro+ App图标">
                         </div>
                         <div class="app-details">
                             <h3 class="app-name">个人健康精英Pro+</h3>
@@ -331,7 +331,7 @@
                         </div>
                     </div>
                     <div class="qr-code-section">
-                        <img src="health-pro-qr.jpg" alt="下载二维码" class="qr-code-img">
+                        <img src="images/health-pro-qr.png" alt="下载个人健康精英Pro" class="qr-code-img">
                         <div class="qr-code-info">
                             <h4>扫描二维码下载</h4>
                             <p>使用手机扫描二维码打开H5官网下载</p>
@@ -356,7 +356,7 @@
                 <ul role="list">
                     <li><a href="#download" aria-label="下载个人健康精英Pro+应用">APP下载</a></li>
                     <li><a href="products.html" aria-label="查看产品功能介绍">功能介绍</a></li>
-                    <li><a href="cases.html" aria-label="查看成功案例">成功案例</a></li>
+                    <li><a href="cases.html" aria-label="查看成功案例">后续开放</a></li>
                 </ul>
             </div>
             <div class="footer-section">
@@ -394,6 +394,9 @@
     <!-- 性能优化脚本 -->
     <script src="performance-optimizer.js" defer></script>
     <script src="mobile-nav.js" defer></script>
-    <script src="style.js" defer></script>
+    <script src="index.js" defer></script>
+    <!-- AI聊天组件 -->
+    <script src="ai-chat-config.js"></script>
+    <script src="ai-chat.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+        <link rel="icon" href="../images/dzlogo.png">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>睡眠质量评价报告</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "SimHei", sans-serif;
+        }
+        
+        body {
+            color: #333;
+            line-height: 1.5;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .report-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a6dcc 0%, #0d4d9c 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 50px;
+            width: auto;
+            margin-right: 15px;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .report-info {
+            font-size: 14px;
+            text-align: right;
+        }
+        
+        .patient-info {
+            padding: 15px 20px;
+            background-color: #f0f7ff;
+            border-bottom: 1px solid #ddd;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            min-width: 80px;
+        }
+        
+        .page {
+            padding: 20px;
+            page-break-after: always;
+            position: relative;
+        }
+        
+        .page:last-child {
+            page-break-after: auto;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #1a6dcc;
+            color: #0d4d9c;
+        }
+        
+        .summary-box {
+            background-color: #f9f9f9;
+            border-left: 4px solid #1a6dcc;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        /* 修改为竖列排版 */
+        .warning-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .warning-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background-color: #fff9f9;
+            border-radius: 4px;
+            border-left: 3px solid #e74c3c;
+        }
+        
+        .warning-item.no-warning {
+            background-color: #f0fff0;
+            border-left: 3px solid #2ecc71;
+        }
+        
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .score-table th {
+            background-color: #1a6dcc;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .score-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .score-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .detail-table th, .detail-table td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .detail-table th {
+            background-color: #f0f7ff;
+            font-weight: bold;
+        }
+        
+        .detail-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .signature-area {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed #ccc;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            margin-top: 20px;
+        }
+        
+        .page-number {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 新增页面地址样式 */
+        .page-url {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            font-size: 12px;
+            color: #666;
+            /* 打印时隐藏 */
+            display: none;
+        }
+        
+        @media print {
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+            
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .report-container {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: none;
+                margin: 0;
+            }
+            
+            .header {
+                background: #1a6dcc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* 打印时调整页面间距，使内容更紧凑 */
+            .page {
+                padding: 10px;
+                margin: 0;
+            }
+            
+            .patient-info {
+                padding: 10px 15px;
+                gap: 5px;
+            }
+            
+            .summary-box {
+                margin: 10px 0;
+                padding: 10px;
+            }
+            
+            .warning-list {
+                margin: 10px 0;
+                gap: 5px;
+            }
+            
+            .warning-item {
+                padding: 5px;
+            }
+            
+            .score-table {
+                margin: 10px 0;
+            }
+            
+            .score-table th, .score-table td {
+                padding: 8px 5px;
+            }
+            
+            .detail-table {
+                margin: 10px 0;
+            }
+            
+            .detail-table th, .detail-table td {
+                padding: 6px 8px;
+            }
+            
+            /* 打印时隐藏页面地址 */
+            .page-url {
+                display: none !important;
+            }
+        }
+        
+        /* 屏幕显示时显示页面地址 */
+        @media screen {
+            .page-url {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- 第1页 -->
+        <div class="page">
+            <div class="header">
+                <div class="logo-container">
+                    <!-- 这里放置logo图片 -->
+                    <img src="../images/pro.png" alt="生命潮" class="logo">
+                    <div class="title">生命潮@BBS睡眠质量主客观双百分联合评价报告</div>
+                </div>
+                <div class="report-info">
+                    报告编号: 119953<br>
+                    
+                </div>
+            </div>
+            
+            <div class="patient-info">
+                <div class="info-item"><span class="info-label">管理师/医生:  海大力</div>
+                <div class="info-item"><span class="info-label">姓名: 海大力</div>
+                <div class="info-item"><span class="info-label">性别: 男</div>
+                <div class="info-item"><span class="info-label">年龄: 33</div>
+                <div class="info-item"><span class="info-label">身高: 170.0cm</div>
+                <div class="info-item"><span class="info-label">体重: 60.0kg</div>
+                <div class="info-item"><span class="info-label">测评时长: 1小时14分23秒</div>
+                <div class="info-item"><span class="info-label">科室: 北京协和医院睡眠科室</div>
+            </div>
+            
+            <div class="section-title">报告总结 & 医嘱</div>
+            
+            <div class="summary-box">
+                <p>根据BBS睡眠质量评估，您的睡眠质量总体评价为一般，存在一些需要关注的睡眠问题。建议调整作息时间，改善睡眠环境，必要时咨询专业医生。</p>
+            </div>
+            
+            <div class="section-title">危险项提示</div>
+            
+            <!-- 修改为竖列排版 -->
+            <div class="warning-list">
+                <div class="warning-item no-warning">
+                    <span>心电图QRS波群混乱或消失: 无</span>
+                </div>
+                <div class="warning-item no-warning">
+                    <span>室颤/房颤: 无</span>
+                </div>
+                <div class="warning-item no-warning">
+                    <span>呼吸暂停持续时间≥40秒，或整晚累计时间≥30分钟: 无</span>
+                </div>
+                <div class="warning-item no-warning">
+                    <span>呼吸阻滞持续时间≥30分钟，或整晚累计时间≥90分钟: 无</span>
+                </div>
+                <div class="warning-item no-warning">
+                    <span>SpO2≤85%: 无</span>
+                </div>
+                <div class="warning-item no-warning">
+                    <span>行走梦游: 无</span>
+                </div>
+            </div>
+            
+            <div class="footer">
+                本报告供诊断参考
+            </div>
+            <div class="page-number">第1页，共4页</div>
+        </div>
+        
+        <!-- 第2页 -->
+        <div class="page">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="../images/dzlogo.png" alt="生命潮" class="logo">
+                    <div class="title">睡眠质量评分</div>
+                </div>
+                <div class="report-info">
+                    报告编号: 119953<br>
+                </div>
+            </div>
+            
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th>BBS-自评量表</th>
+                        <th>总得分（满分100）</th>
+                        <th>睡眠效率（满分6）</th>
+                        <th>睡眠质量（满分46）</th>
+                        <th>睡眠干扰（满分48）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td></td>
+                        <td>61.5</td>
+                        <td>4</td>
+                        <td>20</td>
+                        <td>37.5</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th>BBS-AI评估量表</th>
+                        <th>总得分（满分100）</th>
+                        <th>睡眠风险（满分34）</th>
+                        <th>睡眠事件（满分32）</th>
+                        <th>睡眠概况（满分34）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>*当有危险时，请根据得分仅供参考</td>
+                        <td>46</td>
+                        <td>29</td>
+                        <td>11</td>
+                        <td>6</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="section-title">医嘱</div>
+            
+            <div class="summary-box">
+                <p>根据评估结果，建议您：</p>
+                <ul>
+                    <li>建立规律的睡眠时间表，尽量每天同一时间上床和起床</li>
+                    <li>睡前避免使用电子设备，创造安静、黑暗的睡眠环境</li>
+                    <li>避免在睡前摄入咖啡因或大量食物</li>
+                    <li>如有持续睡眠问题，建议咨询专业睡眠医生</li>
+                </ul>
+            </div>
+            
+            <div class="signature-area">
+                <div>
+                    <p>医生（签字）：___________________</p>
+                </div>
+                <div>
+                    <p>日期（签字）：___________________</p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                本报告供诊断参考
+            </div>
+            <div class="page-number">第2页，共4页</div>
+        </div>
+        
+        <!-- 第3页 - 自评报告 -->
+        <div class="page">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="../images/dzlogo.png" alt="生命潮" class="logo">
+                    <div class="title">BBS 睡眠质量主客观双百分评价报告</div>
+                </div>
+                <div class="report-info">
+                    报告编号: 119953<br>
+                </div>
+            </div>
+            
+            <div class="section-title">一：自评报告</div>
+            
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>评价维度</th>
+                        <th>自评条目</th>
+                        <th>自评</th>
+                        <th>等级</th>
+                        <th>得分</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="2">睡眠效率</td>
+                        <td>1. 实际睡者时长（小时）</td>
+                        <td>1</td>
+                        <td>优</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>2. 熄灯后，到达睡眠的时长（分钟）</td>
+                        <td>1</td>
+                        <td>98%（效率值）</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td rowspan="5">睡眠质量</td>
+                        <td>3. 睡眠药物</td>
+                        <td>1个单位剂量</td>
+                        <td>良</td>
+                        <td>6</td>
+                    </tr>
+                    <tr>
+                        <td>4. 醒后疲劳或不适应</td>
+                        <td>非常疲劳或不适</td>
+                        <td>很差</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>5. 睡眠中途醒来的次数</td>
+                        <td>3次及以上</td>
+                        <td>很差</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>6. 当晚醒后再放入眠的难易程度</td>
+                        <td>无法</td>
+                        <td>很差</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>7. 昨晚睡的怎样</td>
+                        <td>很差</td>
+                        <td>很差</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="6">睡眠干扰</td>
+                        <td>8. 起夜次数</td>
+                        <td>3次以上</td>
+                        <td>很差</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>9. 做梦情况</td>
+                        <td>有噩梦</td>
+                        <td>很差</td>
+                        <td>1.5</td>
+                    </tr>
+                    <tr>
+                        <td>10. 呼吸不畅、咳嗽、打鼾、磨牙</td>
+                        <td>无上述情况</td>
+                        <td>优</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>11. 睡眠中睡眠状态不适应、怠慢、轻度、低血压、头痛等症状</td>
+                        <td>无上述情况</td>
+                        <td>优</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>12. 睡眠环境的影响、偏好、过度、严重、误导、厌食或肥胖者</td>
+                        <td>无上述情况</td>
+                        <td>优</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>13. 睡前的饥饿或饱腹状况</td>
+                        <td>无上述情况</td>
+                        <td>优</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align: right; font-weight: bold;">总分</td>
+                        <td style="font-weight: bold;">61.5</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="text-align: center; font-weight: bold;">一般</td>
+                    </tr>
+                </tbody>
+            </table>
+    
+            <div class="footer">
+                本报告供诊断参考
+            </div>
+            <div class="page-number">第3页，共4页</div>
+        </div>
+        
+        <!-- 第4页 - AI评估报告 -->
+        <div class="page">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="../images/dzlogo.png" alt="生命潮" class="logo">
+                    <div class="title">BBS 睡眠质量主客观双百分评价报告</div>
+                </div>
+                <div class="report-info">
+                    报告编号: 119953<br>
+                </div>
+            </div>
+            
+            <div class="section-title">二：AI 评估报告</div>
+            
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>分析维度</th>
+                        <th>分析条目</th>
+                        <th>判断</th>
+                        <th>等级</th>
+                        <th>得分</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="6">睡眠风险</td>
+                        <td>心电图ST段改变</td>
+                        <td>无</td>
+                        <td>优</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>心律失常</td>
+                        <td>无心律失常</td>
+                        <td>优</td>
+                        <td>6</td>
+                    </tr>
+                    <tr>
+                        <td>呼吸暂停</td>
+                        <td>10秒<持续时间<20秒，或整晚累计时间<5分钟</td>
+                        <td>良</td>
+                        <td>6</td>
+                    </tr>
+                    <tr>
+                        <td>呼吸阻滞：慢性缺氧</td>
+                        <td>持续时间≤5分钟，或整晚累计时间<10分钟</td>
+                        <td>良</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>血氧饱和度</td>
+                        <td>Sp02-97%-95%</td>
+                        <td>良</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>意识障碍风险</td>
+                        <td>无</td>
+                        <td>优</td>
+                        <td>6</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="5">睡眠事件</td>
+                        <td>翻身频次</td>
+                        <td>每小时≥10次，4小时<1次</td>
+                        <td>很差</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>翻身模式</td>
+                        <td>3级复式翻身>4次以上</td>
+                        <td>很差</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>躯体休眠</td>
+                        <td>每小时4-9次</td>
+                        <td>差</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>睡眠姿态</td>
+                        <td>>45度角坐睡，整晚>45分钟</td>
+                        <td>很差</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>睡眠态焦虑水平</td>
+                        <td>60≤SDNN<100</td>
+                        <td>差</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="4">睡眠概况</td>
+                        <td>入眠时间</td>
+                        <td>>30分钟</td>
+                        <td>很差</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>睡眠时长</td>
+                        <td>整晚无睡眠</td>
+                        <td>非常差</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>起夜次数</td>
+                        <td>2次</td>
+                        <td>差</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>深度睡眠时长</td>
+                        <td>深度睡眠时长占睡眠时长比<5%>
+                        <td>很差</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align: right; font-weight: bold;">总分</td>
+                        <td style="font-weight: bold;">46</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="text-align: center; font-weight: bold;">差</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                本报告供诊断参考
+            </div>
+            <div class="page-number">第4页，共4页</div>
+        </div>
+    </div>
+</body>
+</html>

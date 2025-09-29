@@ -2,20 +2,18 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="dzlogo.png">
+    <link rel="icon" href="images/dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>健康管理中心</title>
     <link rel="stylesheet" href="JKstyle.css">
+    <link rel="stylesheet" href="ai-chat.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <!-- 顶部导航 -->
 <nav class="top-nav">
     <div class="nav-left">
-        <img src="logo.png" alt="Logo" class="logo">
+        <img src="images/dzlogo.png" alt="Logo" class="logo">
         <h1>健康管理中心</h1>
     </div>
     <div class="nav-right">
@@ -36,15 +34,14 @@
             <div class="menu-group">
                 <div class="menu-title">用户管理</div>
                 <ul>
-                    <li class="active" onclick="loadContent('partials/user_list.html', this)"><i class="fas fa-users"></i> 用户列表</li>
-                    <li><i class="fas fa-trash"></i> 已删除列表</li>
+                    <li class="active" onclick="loadContent('partialshtml/user_list.html', this)"><i class="fas fa-users"></i> 用户列表</li>
                 </ul>
             </div>
             <div class="menu-group">
                 <div class="menu-title">数据统计</div>
                 <ul>
-                    <li onclick="loadContent('partials/health_trends.html', this)"><i class="fas fa-chart-line"></i> 健康趋势</li>
-                    <li onclick="loadContent('partials/data_analysis.html', this)"><i class="fas fa-chart-pie"></i> 数据分析</li>
+                    <li onclick="loadContent('partialshtml/health_trends.html', this)"><i class="fas fa-chart-line"></i> 健康趋势</li>
+                    <li onclick="loadContent('partialshtml/data_analysis.html', this)"><i class="fas fa-chart-pie"></i> 数据分析</li>
                 </ul>
             </div>
         </aside>
@@ -76,6 +73,31 @@
         </div>
     </div>
 
+    <!-- 睡眠报告列表模态框 -->
+    <div id="sleepReportModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>睡眠报告列表</h3>
+                <button class="close-btn" onclick="closeSleepReportModal()" aria-label="关闭">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>测评日期</th>
+                            <th>报告类型</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sleepReportList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- 导航报告列表模态框 -->
     <div id="navigationReportModal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
@@ -101,18 +123,30 @@
         </div>
     </div>
 
-    <!-- 导航报告详细模态框 -->
+    <!-- 报告选择模态框 -->
     <div id="detailedReportModal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>导航报告详细信息</h3>
+                <h3>选择查看报告类型</h3>
                 <button class="close-btn" onclick="closeDetailedReportModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="report-details">
-                    <h3>报告详细信息</h3>
+                    <h3>请选择要查看的报告类型</h3>
                     <div class="report-content">
-                        <p>报告下载地址: <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf" target="_blank">点击查看报告</a></p>
+                        <div class="report-selector">
+                            <label for="reportType">报告类型:</label>
+                            <select id="reportType" class="report-select">
+                                <option value="">请选择报告类型</option>
+                                <option value="sleep">睡眠报告</option>
+                                <option value="navigation">导航报告</option>
+                            </select>
+                        </div>
+                        <div class="report-actions">
+                            <button id="viewReportBtn" class="view-report-btn" onclick="viewSelectedReport()" disabled>
+                                查看报告
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -186,7 +220,24 @@
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- ECharts统一加载器 -->
+    <script src="echarts-loader.js"></script>
+    <!-- 预加载ECharts库，提升图表页面打开速度 -->
+    <script>
+        // 页面加载完成后立即预加载ECharts
+        document.addEventListener('DOMContentLoaded', function() {
+            // 延迟1秒后预加载，避免影响首屏加载
+            setTimeout(() => {
+                if (window.EChartsLoader) {
+                    window.EChartsLoader.loadECharts().then(() => {
+                        console.log('✨ ECharts预加载完成，图表将快速显示');
+                    }).catch(err => {
+                        console.warn('⚠️ ECharts预加载失败:', err);
+                    });
+                }
+            }, 1000);
+        });
+    </script>
     <!-- 性能优化配置 -->
     <script src="performance-config.js"></script>
     <script>
@@ -218,6 +269,61 @@
             console.log('🚀 页面加载完成，性能优化已启用');
         });
     </script>
+    
+    <!-- 报告选择器功能 -->
+    <script>
+        // 添加下拉框变化事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            const reportSelect = document.getElementById('reportType');
+            const viewButton = document.getElementById('viewReportBtn');
+            
+            if (reportSelect && viewButton) {
+                reportSelect.addEventListener('change', function() {
+                    // 当选择了报告类型时，启用按钮
+                    viewButton.disabled = !this.value;
+                });
+            }
+        });
+        
+        // 查看选中的报告
+        function viewSelectedReport() {
+            const reportType = document.getElementById('reportType').value;
+            
+            if (!reportType) {
+                alert('请先选择报告类型');
+                return;
+            }
+            
+            // 关闭当前模态框
+            closeDetailedReportModal();
+            
+            // 根据选择的报告类型打开相应的页面
+            if (reportType === 'sleep') {
+                // 睡眠报告 - 在新标签页中打开本地报告
+                window.open('partialshtml/Roomreport.html', '_blank');
+            } else if (reportType === 'navigation') {
+                // 导航报告 - 在新标签页中打开PDF文件
+                window.open('https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf', '_blank');
+            }
+        }
+        
+        // 关闭报告选择模态框
+        function closeDetailedReportModal() {
+            const modal = document.getElementById('detailedReportModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // 重置选择框
+                const reportSelect = document.getElementById('reportType');
+                const viewButton = document.getElementById('viewReportBtn');
+                if (reportSelect) reportSelect.value = '';
+                if (viewButton) viewButton.disabled = true;
+            }
+        }
+    </script>
+    
     <script src="JKscript.js"></script>
+    <!-- AI聊天组件 -->
+    <script src="ai-chat-config.js"></script>
+    <script src="ai-chat.js" defer></script>
 </body>
 </html>

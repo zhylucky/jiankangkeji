@@ -1,42 +1,63 @@
-// 初始化Supabase客户端 - 优化版本
+// Supabase配置
 const supabaseUrl = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4b2hweGlla21wc21remtjeGZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MTg0NDQsImV4cCI6MjA2NTI5NDQ0NH0.sUleRxPQsEMxNqGPWUfZBDbjvDR5huZ7hGQkrHoahqk';
 let supabase;
 
-// 性能优化配置
-const supabaseOptions = {
-    auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false // 减少不必要的URL检查
-    },
-    db: {
-        schema: 'public'
-    },
-    global: {
-        headers: {
-            'x-client-info': 'health-management-system'
-        }
-    },
-    // 连接池配置
-    realtime: {
-        params: {
-            eventsPerSecond: 10
-        }
+// Supabase按需加载器
+async function loadSupabase() {
+    if (supabase) {
+        return supabase; // 已经初始化
     }
-};
-
-try {
-    if (window.supabase && typeof window.supabase.createClient === 'function') {
+    
+    // 检查是否已加载Supabase库
+    if (typeof window.supabase === 'undefined') {
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+    
+    // 性能优化配置
+    const supabaseOptions = {
+        auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: false // 减少不必要的URL检查
+        },
+        db: {
+            schema: 'public'
+        },
+        global: {
+            headers: {
+                'x-client-info': 'health-management-system'
+            }
+        },
+        // 连接池配置
+        realtime: {
+            params: {
+                eventsPerSecond: 10
+            }
+        }
+    };
+    
+    try {
         supabase = window.supabase.createClient(supabaseUrl, supabaseKey, supabaseOptions);
-        console.log('Supabase客户端初始化成功');
-    } else {
-        throw new Error('Supabase客户端库未正确加载');
+        debugLog('Supabase客户端初始化成功');
+        return supabase;
+    } catch (error) {
+        console.error('Supabase初始化失败:', error);
+        throw error;
     }
-} catch (error) {
-    console.error('Supabase初始化失败:', error);
-    alert('系统初始化失败：' + error.message);
 }
+
+// 生产环境日志控制
+const IS_PRODUCTION = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const debugLog = IS_PRODUCTION ? () => {} : console.log;
+const debugError = IS_PRODUCTION ? () => {} : console.error;
+const debugWarn = IS_PRODUCTION ? () => {} : console.warn;
 
 // 请求缓存机制
 const requestCache = new Map();
@@ -97,7 +118,9 @@ const state = {
 // 优化的用户数据加载函数
 async function loadUsers() {
     try {
-        if (!supabase) throw new Error('Supabase客户端未初始化');
+        // 确保Supabase已加载
+        const supabaseClient = await loadSupabase();
+        if (!supabaseClient) throw new Error('Supabase客户端未初始化');
 
         const { currentPage, pageSize } = state.pagination;
         const cacheKey = getCacheKey('New_user', { currentPage, pageSize });
@@ -105,7 +128,7 @@ async function loadUsers() {
         // 检查缓存
         const cachedData = getCachedData(cacheKey);
         if (cachedData) {
-            console.log('使用缓存数据');
+            debugLog('使用缓存数据');
             state.users = cachedData.data || [];
             state.pagination.totalUsers = cachedData.count || 0;
             updateDashboardStats(cachedData.count, cachedData.data);
@@ -115,17 +138,17 @@ async function loadUsers() {
         // 使用性能优化的查询
         // 分离计数查询和数据查询以提高性能
         const [countResult, dataResult] = await Promise.all([
-            supabase
+            supabaseClient
                 .from('New_user')
                 .select('*', { count: 'exact', head: true }),
-            supabase
+            supabaseClient
                 .from('New_user')
                 .select('id, name, gender, age, phone, direction, created_at')
                 .order('created_at', { ascending: false })
                 .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
         ]);
 
-        console.log(`数据库查询完成`);
+        debugLog(`数据库查询完成`);
 
         if (countResult.error) throw countResult.error;
         if (dataResult.error) throw dataResult.error;
@@ -146,7 +169,7 @@ async function loadUsers() {
 
         return { success: true };
     } catch (error) {
-        console.error('加载用户数据失败:', error.message);
+        debugError('加载用户数据失败:', error.message);
         showToast('加载用户数据失败: ' + error.message);
         return { success: false, message: error.message };
     }
@@ -235,7 +258,21 @@ function renderTable() {
             <td><span class="direction-tag direction-${user.direction}">${user.direction || ''}</span></td>
             <td class="action-cell">
                 <button class="action-btn" onclick="completeProfile(${user.id})"><i class="fas fa-id-card"></i><span>用户档案</span></button>
-                <button class="action-btn" onclick="openNavigationReportModal(${user.id})"><i class="fas fa-chart-bar"></i><span>导航报告</span></button>
+                <button class="action-btn report-dropdown-btn" onclick="toggleReportDropdown(event, ${user.id})">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>查看报告</span>
+                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    <div class="report-dropdown" id="reportDropdown_${user.id}" style="display: none;">
+                        <div class="dropdown-item" onclick="viewReport(event, 'sleep', ${user.id})">
+                            <i class="fas fa-bed"></i>
+                            <span>睡眠报告</span>
+                        </div>
+                        <div class="dropdown-item" onclick="viewReport(event, 'navigation', ${user.id})">
+                            <i class="fas fa-route"></i>
+                            <span>导航报告</span>
+                        </div>
+                    </div>
+                </button>
             </td>
             <td class="action-cell-single">
                 <button class="icon-btn" onclick="editUser(${user.id})"><i class="fas fa-edit"></i></button>
@@ -247,6 +284,11 @@ function renderTable() {
     });
     
     updateSelectedCount();
+    
+    // 初始化报告下拉菜单悬停事件
+    setTimeout(() => {
+        initReportDropdownHover();
+    }, 100);
 }
 
 // 更新分页控件
@@ -369,7 +411,7 @@ async function filterData() {
         // 检查缓存
         const cachedData = getCachedData(cacheKey);
         if (cachedData) {
-            console.log('使用过滤缓存数据');
+            debugLog('使用过滤缓存数据');
             state.users = cachedData.data || [];
             state.pagination.totalUsers = cachedData.count || 0;
             state.pagination.currentPage = 1;
@@ -406,13 +448,13 @@ async function filterData() {
             .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
             .order('created_at', { ascending: false });
 
-        console.log('执行过滤查询:', conditions.join(' AND '));
+        debugLog('执行过滤查询:', conditions.join(' AND '));
 
         const { data, error, count } = await query;
 
         if (error) throw error;
 
-        console.log(`过滤查询已完成`);
+        debugLog(`过滤查询已完成`);
 
         const result = { data: data || [], count: count || 0 };
 
@@ -427,7 +469,7 @@ async function filterData() {
 
         showToast(`找到 ${state.pagination.totalUsers} 条记录`);
     } catch (error) {
-        console.error('过滤数据失败:', error.message);
+        debugError('过滤数据失败:', error.message);
         showToast('过滤数据失败: ' + error.message);
     }
 }
@@ -449,8 +491,28 @@ async function resetFilter() {
 // 导出数据
 async function exportData() {
     try {
+        // 检查是否已加载XLSX库
+        if (typeof XLSX === 'undefined') {
+            showToast('正在加载导出库...');
+            
+            // 动态加载XLSX库
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/xlsx/dist/xlsx.full.min.js';
+            
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+            
+            showToast('导出库加载完成');
+        }
+        
         showToast('正在导出所有数据...');
-        const { data, error } = await supabase
+        
+        // 确保Supabase已加载
+        const supabaseClient = await loadSupabase();
+        const { data, error } = await supabaseClient
             .from('New_user')
             .select('*')
             .order('created_at', { ascending: false });
@@ -471,7 +533,7 @@ async function exportData() {
         
         showToast('数据导出成功');
     } catch (error) {
-        console.error('导出数据失败:', error.message);
+        debugError('导出数据失败:', error.message);
         showToast('导出数据失败: ' + error.message);
     }
 }
@@ -560,7 +622,10 @@ function closeUserModal() {
 // 保存用户信息
 async function saveUser(e) {
     e.preventDefault();
-    if (!supabase) throw new Error('Supabase客户端未初始化');
+    
+    // 确保Supabase已加载
+    const supabaseClient = await loadSupabase();
+    if (!supabaseClient) throw new Error('Supabase客户端未初始化');
     
     const userId = document.getElementById('userId').value;
     const userData = {
@@ -582,10 +647,10 @@ async function saveUser(e) {
         let query;
         if (userId) {
             // 更新用户
-            query = supabase.from('New_user').update(userData).eq('id', userId);
+            query = supabaseClient.from('New_user').update(userData).eq('id', userId);
         } else {
             // 添加用户
-            query = supabase.from('New_user').insert([userData]);
+            query = supabaseClient.from('New_user').insert([userData]);
         }
         
         const { error } = await query;
@@ -595,11 +660,11 @@ async function saveUser(e) {
         showToast(userId ? '用户更新成功' : '添加用户成功');
         await loadAndRenderUsers();
         // 仪表盘数据也需要更新
-        const { count, data } = await supabase.from('New_user').select('*', { count: 'exact' });
+        const { count, data } = await supabaseClient.from('New_user').select('*', { count: 'exact' });
         updateDashboardStats(count, data);
         
     } catch (error) {
-        console.error('保存用户失败:', error.message);
+        debugError('保存用户失败:', error.message);
         showToast('保存用户失败: ' + error.message);
     }
 }
@@ -624,7 +689,7 @@ function editUser(userId) {
         document.getElementById('userModalTitle').textContent = '编辑用户';
 
     } catch (error) {
-        console.error('打开编辑模态框失败:', error);
+        debugError('打开编辑模态框失败:', error);
         showToast('打开编辑窗口时出错: ' + error.message);
     }
 }
@@ -635,16 +700,18 @@ async function deleteUser(userId) {
         if (!confirmed) return;
         
         try {
-            const { error } = await supabase.from('New_user').delete().eq('id', userId);
+            // 确保Supabase已加载
+            const supabaseClient = await loadSupabase();
+            const { error } = await supabaseClient.from('New_user').delete().eq('id', userId);
             if (error) throw error;
             
             showToast('用户删除成功');
             await loadAndRenderUsers();
-            const { count, data } = await supabase.from('New_user').select('*', { count: 'exact' });
+            const { count, data } = await supabaseClient.from('New_user').select('*', { count: 'exact' });
             updateDashboardStats(count, data);
 
         } catch (error) {
-            console.error('删除用户失败:', error.message);
+            debugError('删除用户失败:', error.message);
             showToast('删除用户失败: ' + error.message);
         }
     });
@@ -696,7 +763,7 @@ async function openProfileModal(userId) {
         let profile;
 
         if (cachedProfile) {
-            console.log('使用缓存的用户档案数据');
+            debugLog('使用缓存的用户档案数据');
             profile = cachedProfile;
         } else {
             // 性能优化：只选择需要的字段
@@ -713,7 +780,7 @@ async function openProfileModal(userId) {
                 .eq('user_id', userId)
                 .limit(1);
 
-            console.log(`档案加载完成`);
+            debugLog(`档案加载完成`);
 
             if (error) throw error;
 
@@ -777,7 +844,7 @@ async function openProfileModal(userId) {
             calculateAndDisplayBMI();
         }
     } catch (error) {
-        console.error('加载档案失败:', error);
+        debugError('加载档案失败:', error);
         showToast(`加载档案失败: ${error.message}`);
     } finally {
         saveButton.disabled = false;
@@ -820,7 +887,7 @@ async function saveProfile(event) {
         scheduled_time: document.getElementById('profileScheduledTime').value ? new Date(document.getElementById('profileScheduledTime').value).toISOString() : null
     };
 
-    console.log('准备保存的档案数据: ', JSON.stringify(profileData, null, 2));
+    debugLog('准备保存的档案数据: ', JSON.stringify(profileData, null, 2));
 
     showToast('正在保存档案...');
     try {
@@ -830,15 +897,15 @@ async function saveProfile(event) {
             .select();
 
         if (error) {
-            console.error('Supabase 保存错误:', error);
+            debugError('Supabase 保存错误:', error);
             throw error;
         }
 
-        console.log('保存成功，返回数据:', data);
+        debugLog('保存成功，返回数据:', data);
         showToast('档案保存成功!');
         closeProfileModal();
     } catch (error) {
-        console.error('保存档案失败:', error);
+        debugError('保存档案失败:', error);
         showToast(`保存档案失败: ${error.message}`);
     }
 }
@@ -998,21 +1065,118 @@ function showCustomConfirm(message, callback) {
     confirmBtn.focus();
 }
 
-function openNavigationReportModal(userId) {
-    const modal = document.getElementById('navigationReportModal');
-    const reportList = document.getElementById('navigationReportList');
+// 新增：查看报告
+function viewReport(event, reportType, userId) {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    // 关闭下拉菜单
+    const dropdown = document.getElementById(`reportDropdown_${userId}`);
+    if (dropdown) {
+        dropdown.style.display = 'none';
+    }
+    
+    // 根据报告类型打开相应页面
+    if (reportType === 'sleep') {
+        // 打开睡眠报告列表模态框
+        openSleepReportModal(userId);
+    } else if (reportType === 'navigation') {
+        // 打开导航报告列表模态框
+        openNavigationReportModal(userId);
+    }
+}
 
+// 新增：打开睡眠报告列表模态框
+function openSleepReportModal(userId) {
+    const modal = document.getElementById('sleepReportModal');
+    const reportList = document.getElementById('sleepReportList');
+
+    // 模拟报告数据
     const reports = [
-        { date: '2025-02-13 14:56:19', status: '已完成', type: '导航报告' },
-        { date: '2025-02-13 11:52:32', status: '已完成', type: '导航报告' },
-        { date: '2025-02-12 09:41:27', status: '已完成', type: '导航报告' },
+        { date: '2025-02-13 14:56:19', type: '睡眠报告', status: '已完成' },
+        { date: '2025-02-13 11:52:32', type: '睡眠报告', status: '已完成' },
+        { date: '2025-02-12 09:41:27', type: '睡眠报告', status: '已完成' },
     ];
 
     reportList.innerHTML = reports.map(report => `
         <tr>
             <td>${report.date}</td>
             <td><span class="report-type">${report.type}</span></td>
-            <td><span class="status-badge 已完成">${report.status}</span></td>
+            <td><span class="status-badge ${report.status}">${report.status}</span></td>
+            <td><button class="btn-view" onclick="viewSleepReport('${report.date}')">查看</button></td>
+        </tr>
+    `).join('');
+    
+    modal.style.display = 'flex';
+}
+
+// 新增：查看具体的睡眠报告
+function viewSleepReport(date) {
+    // 关闭睡眠报告列表模态框
+    closeSleepReportModal();
+    // 在新标签页中打开睡眠报告
+    window.open('partialshtml/Roomreport.html', '_blank');
+}
+
+// 新增：关闭睡眠报告模态框
+function closeSleepReportModal() {
+    const modal = document.getElementById('sleepReportModal');
+    if(modal) modal.style.display = 'none';
+}
+
+// 新增：切换报告下拉菜单
+function toggleReportDropdown(event, userId) {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const button = event.currentTarget;
+    
+    // 关闭所有其他下拉菜单
+    document.querySelectorAll('.report-dropdown').forEach(dropdown => {
+        if (dropdown.id !== `reportDropdown_${userId}`) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    // 移除所有其他按钮的active状态
+    document.querySelectorAll('.report-dropdown-btn').forEach(btn => {
+        if (btn !== button) {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // 切换当前下拉菜单
+    const dropdown = document.getElementById(`reportDropdown_${userId}`);
+    if (dropdown) {
+        const isVisible = dropdown.style.display === 'block';
+        dropdown.style.display = isVisible ? 'none' : 'block';
+        
+        // 切换按钮状态和箭头方向
+        if (isVisible) {
+            button.classList.remove('active');
+        } else {
+            button.classList.add('active');
+        }
+    }
+}
+
+// 修改：打开导航报告列表模态框
+function openNavigationReportModal(userId) {
+    const modal = document.getElementById('navigationReportModal');
+    const reportList = document.getElementById('navigationReportList');
+
+    // 模拟报告数据
+    const reports = [
+        { date: '2025-02-13 14:56:19', type: '导航报告', status: '已完成' },
+        { date: '2025-02-13 11:52:32', type: '导航报告', status: '已完成' },
+        { date: '2025-02-12 09:41:27', type: '导航报告', status: '已完成' },
+    ];
+
+    reportList.innerHTML = reports.map(report => `
+        <tr>
+            <td>${report.date}</td>
+            <td><span class="report-type">${report.type}</span></td>
+            <td><span class="status-badge ${report.status}">${report.status}</span></td>
             <td><button class="btn-view" onclick="viewNavigationReport('${report.date}')">查看</button></td>
         </tr>
     `).join('');
@@ -1020,14 +1184,87 @@ function openNavigationReportModal(userId) {
     modal.style.display = 'flex';
 }
 
+// 修改：查看导航报告
+function viewNavigationReport(date) {
+    // 关闭导航报告列表模态框
+    closeNavigationReportModal();
+    // 在新标签页中打开导航报告PDF
+    window.open('https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf', '_blank');
+}
+
+// 修改：关闭导航报告模态框
 function closeNavigationReportModal() {
     const modal = document.getElementById('navigationReportModal');
     if(modal) modal.style.display = 'none';
 }
 
-function viewNavigationReport(date) {
-    const pdfUrl = "https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf";
-    window.open(pdfUrl, '_blank');
+// 点击页面其他地方时关闭所有下拉菜单
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.report-dropdown-btn')) {
+        document.querySelectorAll('.report-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+        // 移除所有按钮的active状态
+        document.querySelectorAll('.report-dropdown-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+    }
+});
+
+// 初始化悬停事件监听器
+function initReportDropdownHover() {
+    // 为所有报告下拉按钮添加悬停事件
+    document.querySelectorAll('.report-dropdown-btn').forEach(btn => {
+        let hoverTimeout;
+        let hideTimeout;
+        
+        btn.addEventListener('mouseenter', function() {
+            clearTimeout(hideTimeout);
+            const dropdown = this.querySelector('.report-dropdown');
+            if (dropdown) {
+                // 先关闭其他下拉菜单
+                document.querySelectorAll('.report-dropdown').forEach(d => {
+                    if (d !== dropdown) d.style.display = 'none';
+                });
+                document.querySelectorAll('.report-dropdown-btn').forEach(b => {
+                    if (b !== this) b.classList.remove('active');
+                });
+                
+                // 300ms延迟显示
+                hoverTimeout = setTimeout(() => {
+                    dropdown.style.display = 'block';
+                    this.classList.add('active');
+                }, 300);
+            }
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            clearTimeout(hoverTimeout);
+            const dropdown = this.querySelector('.report-dropdown');
+            
+            hideTimeout = setTimeout(() => {
+                if (dropdown && !dropdown.matches(':hover')) {
+                    dropdown.style.display = 'none';
+                    this.classList.remove('active');
+                }
+            }, 100);
+        });
+        
+        // 为下拉菜单添加悬停事件，保持显示
+        const dropdown = btn.querySelector('.report-dropdown');
+        if (dropdown) {
+            dropdown.addEventListener('mouseenter', function() {
+                clearTimeout(hideTimeout);
+            });
+            
+            dropdown.addEventListener('mouseleave', function() {
+                hideTimeout = setTimeout(() => {
+                    this.style.display = 'none';
+                    btn.classList.remove('active');
+                }, 100);
+            });
+        }
+    });
 }
 
 function logout() {
@@ -1079,7 +1316,7 @@ async function loadContent(url, clickedElement) {
         }
 
     } catch (error) {
-        console.error('加载内容时出错:', error);
+        debugError('加载内容时出错:', error);
         mainContent.innerHTML = `<div class="error-message">页面加载失败。</div>`;
     }
 }
@@ -1090,6 +1327,7 @@ async function initUserListPage() {
     createUserModal(); // 预创建模态框
     await loadAndRenderUsers();
     renderDashboard(); // 在用户列表页面加载完成后渲染仪表盘
+    initReportDropdownHover(); // 初始化报告下拉菜单悬停事件
 }
 
 // 优化的统一加载和渲染函数
@@ -1114,7 +1352,7 @@ async function loadAndRenderUsers() {
             performance.clearMarks();
             performance.clearMeasures();
 
-            console.log(`数据加载和渲染完成`);
+            debugLog(`数据加载和渲染完成`);
 
             if (loadingToast) {
                 loadingToast.textContent = `数据加载完成`;
@@ -1194,10 +1432,10 @@ function monitorPerformance() {
                 list.getEntries().forEach((entry) => {
                     // 只关注Supabase API请求
                     if (entry.name.includes('supabase.co') && entry.initiatorType === 'fetch') {
-                        console.log(`API请求: ${entry.name.split('?')[0]}`);
-                        console.log(`  耗时: ${entry.duration.toFixed(2)}ms`);
-                        console.log(`  开始时间: ${entry.startTime.toFixed(2)}ms`);
-                        console.log(`  传输大小: ${(entry.transferSize / 1024).toFixed(2)}KB`);
+                        debugLog(`API请求: ${entry.name.split('?')[0]}`);
+                        debugLog(`  耗时: ${entry.duration.toFixed(2)}ms`);
+                        debugLog(`  开始时间: ${entry.startTime.toFixed(2)}ms`);
+                        debugLog(`  传输大小: ${(entry.transferSize / 1024).toFixed(2)}KB`);
 
                         // 记录慢请求
                         if (entry.duration > 500) {
@@ -1245,7 +1483,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const initialElement = document.querySelector('.sidebar li.active');
     if (initialElement) {
-        loadContent('partials/user_list.html', initialElement);
+        loadContent('partialshtml/user_list.html', initialElement);
     }
 
     // 全局ESC关闭模态框

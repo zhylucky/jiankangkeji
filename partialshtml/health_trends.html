@@ -1,0 +1,394 @@
+<!-- 数据概览卡片 -->
+<div class="dashboard-stats">
+    <div class="stat-card total">
+        <i class="fas fa-users"></i>
+        <div class="stat-info">
+            <span class="stat-value">24</span>
+            <span class="stat-label">总用户数</span>
+        </div>
+    </div>
+    <div class="stat-card diabetes">
+        <i class="fas fa-heartbeat"></i>
+        <div class="stat-info">
+            <span class="stat-value">8</span>
+            <span class="stat-label">糖代谢用户</span>
+        </div>
+    </div>
+    <div class="stat-card sub-health">
+        <i class="fas fa-stethoscope"></i>
+        <div class="stat-info">
+            <span class="stat-value">8</span>
+            <span class="stat-label">亚健康用户</span>
+        </div>
+    </div>
+    <div class="stat-card other">
+        <i class="fas fa-user-md"></i>
+        <div class="stat-info">
+            <span class="stat-value">8</span>
+            <span class="stat-label">其他用户</span>
+        </div>
+    </div>
+</div>
+
+<!-- 用户选择区域 -->
+<div class="user-select-section">
+    <div class="select-group">
+        <label>选择用户：</label>
+        <select id="userSelect" class="user-select">
+            <option value="">全部用户</option>
+            <option value="1">张三</option>
+            <option value="2">李四</option>
+            <option value="3">王五</option>
+            <!-- 其他用户选项 -->
+        </select>
+    </div>
+    <div class="select-group">
+        <label>时间范围：</label>
+        <select id="timeRange" class="time-range">
+            <option value="week">近一周</option>
+            <option value="month">近一月</option>
+            <option value="year">近一年</option>
+        </select>
+    </div>
+</div>
+
+<!-- 趋势图表区域 -->
+<div class="trend-charts">
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3>用户增长趋势</h3>
+            <div class="chart-controls">
+                <select class="time-range">
+                    <option value="week">近一周</option>
+                    <option value="month">近一月</option>
+                    <option value="year">近一年</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <div id="userGrowthChart" class="chart"></div>
+            <div class="chart-loading" id="userGrowthChart-loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载图表...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3>健康指标趋势</h3>
+            <div class="chart-controls">
+                <select class="metric-select">
+                    <option value="bmi">BMI指数</option>
+                    <option value="bloodPressure">血压</option>
+                    <option value="bloodSugar">血糖</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <div id="healthMetricsChart" class="chart"></div>
+            <div class="chart-loading" id="healthMetricsChart-loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载图表...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3>用户年龄分布</h3>
+        </div>
+        <div class="chart-wrapper">
+            <div id="ageDistributionChart" class="chart"></div>
+            <div class="chart-loading" id="ageDistributionChart-loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载图表...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3>调理方向分布</h3>
+        </div>
+        <div class="chart-wrapper">
+            <div id="directionDistributionChart" class="chart"></div>
+            <div class="chart-loading" id="directionDistributionChart-loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载图表...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 用户选择区域样式 */
+.user-select-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0; /* 调整 margin */
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.select-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.select-group label {
+    color: #333;
+    font-weight: 500;
+}
+
+.user-select, .time-range, .metric-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+    font-size: 14px;
+    min-width: 150px;
+}
+
+.user-select:focus, .time-range:focus, .metric-select:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+/* 图表加载动画样式 */
+.chart-wrapper {
+    position: relative;
+    min-height: 400px;
+}
+
+.chart-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    transition: opacity 0.3s ease;
+}
+
+.chart-loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2196F3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.chart-loading p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+</style>
+
+<script>
+    (function() {
+        // 初始化图表
+        async function initCharts() {
+            const startTime = Date.now();
+            try {
+                // 检查ECharts是否已经预加载
+                const isEChartsLoaded = window.EChartsLoader && window.EChartsLoader.isLoaded();
+                
+                if (!isEChartsLoaded) {
+                    // 如果未预加载，显示加载状态
+                    showAllLoadingStates();
+                    console.log('🔄 ECharts未预加载，正在加载...');
+                } else {
+                    console.log('⚡ ECharts已预加载，即将快速显示图表');
+                }
+                
+                // 使用统一的ECharts加载器初始化多个图表
+                const chartsConfig = [
+                    {
+                        id: 'userGrowthChart',
+                        option: {
+                            title: { text: '用户增长趋势', left: 'center' },
+                            tooltip: { trigger: 'axis' },
+                            xAxis: { type: 'category', data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] },
+                            yAxis: { type: 'value' },
+                            series: [{ data: [20, 21, 22, 23, 24, 24, 24], type: 'line', smooth: true, areaStyle: {} }]
+                        }
+                    },
+                    {
+                        id: 'healthMetricsChart',
+                        option: {
+                            title: { text: '健康指标趋势', left: 'center' },
+                            tooltip: { trigger: 'axis' },
+                            legend: { data: ['正常', '异常'], bottom: 0 },
+                            xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月', '6月'] },
+                            yAxis: { type: 'value' },
+                            series: [ 
+                                { name: '正常', type: 'line', data: [15, 16, 17, 18, 19, 20] }, 
+                                { name: '异常', type: 'line', data: [5, 4, 3, 2, 1, 0] } 
+                            ]
+                        }
+                    },
+                    {
+                        id: 'ageDistributionChart',
+                        option: {
+                            title: { text: '用户年龄分布', left: 'center' },
+                            tooltip: { trigger: 'item' },
+                            legend: { orient: 'vertical', left: 'left' },
+                            series: [ { 
+                                type: 'pie', 
+                                radius: '50%', 
+                                data: [ 
+                                    { value: 8, name: '20-30岁' }, 
+                                    { value: 10, name: '31-40岁' }, 
+                                    { value: 4, name: '41-50岁' }, 
+                                    { value: 2, name: '50岁以上' } 
+                                ], 
+                                emphasis: { 
+                                    itemStyle: { 
+                                        shadowBlur: 10, 
+                                        shadowOffsetX: 0, 
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)' 
+                                    } 
+                                } 
+                            } ]
+                        }
+                    },
+                    {
+                        id: 'directionDistributionChart',
+                        option: {
+                            title: { text: '调理方向分布', left: 'center' },
+                            tooltip: { trigger: 'item' },
+                            legend: { orient: 'vertical', left: 'left' },
+                            series: [ { 
+                                type: 'pie', 
+                                radius: '50%', 
+                                data: [ 
+                                    { value: 8, name: '糖代谢' }, 
+                                    { value: 8, name: '亚健康' }, 
+                                    { value: 8, name: '其他' } 
+                                ], 
+                                emphasis: { 
+                                    itemStyle: { 
+                                        shadowBlur: 10, 
+                                        shadowOffsetX: 0, 
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)' 
+                                    } 
+                                } 
+                            } ]
+                        }
+                    }
+                ];
+                
+                // 使用统一加载器批量初始化图表
+                await window.EChartsLoader.initCharts(chartsConfig);
+                
+                // 隐藏加载状态
+                hideAllLoadingStates();
+                
+                // 显示成功信息
+                const loadTime = isEChartsLoaded ? '即时' : '约' + (Date.now() - startTime) + 'ms';
+                console.log(`✅ 图表初始化完成 (耗时: ${loadTime})`);
+                
+            } catch (error) {
+                console.error('初始化图表失败:', error);
+                hideAllLoadingStates();
+                showErrorState();
+            }
+        }
+        
+        // 显示所有加载状态
+        function showAllLoadingStates() {
+            const loadingElements = document.querySelectorAll('.chart-loading');
+            loadingElements.forEach(el => {
+                el.style.display = 'flex';
+                el.classList.remove('hidden');
+                // 添加加载提示文本
+                const textEl = el.querySelector('p');
+                if (textEl) {
+                    textEl.textContent = 'ECharts加载中...';
+                }
+            });
+        }
+        
+        // 隐藏所有加载状态
+        function hideAllLoadingStates() {
+            const loadingElements = document.querySelectorAll('.chart-loading');
+            loadingElements.forEach(el => {
+                el.classList.add('hidden');
+                setTimeout(() => {
+                    el.style.display = 'none';
+                }, 300); // 等待动画结束
+            });
+        }
+        
+        // 显示错误状态
+        function showErrorState() {
+            const loadingElements = document.querySelectorAll('.chart-loading');
+            loadingElements.forEach(el => {
+                el.innerHTML = `
+                    <div style="color: #f44336; text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 12px;">⚠️</div>
+                        <p>图表加载失败，请刷新页面重试</p>
+                    </div>
+                `;
+            });
+        }
+
+        // 添加事件监听
+        function addEventListeners() {
+            const userSelect = document.getElementById('userSelect');
+            const timeRange = document.getElementById('timeRange');
+            
+            if (userSelect) {
+                userSelect.addEventListener('change', updateCharts);
+            }
+            if (timeRange) {
+                timeRange.addEventListener('change', updateCharts);
+            }
+        }
+
+        function updateCharts() {
+            // 此处暂时保留为空，因为当前是静态数据
+            // 未来可以根据选择的用户和时间范围动态获取数据并更新图表
+            console.log('更新图表...');
+        }
+        
+        // 初始化
+        async function init() {
+            await initCharts();
+            addEventListeners();
+        }
+        
+        // 页面加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script> 

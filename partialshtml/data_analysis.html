@@ -1,0 +1,429 @@
+<!-- 数据概览卡片 -->
+<div class="dashboard-stats">
+    <div class="stat-card total">
+        <i class="fas fa-users"></i>
+        <div class="stat-info">
+            <span class="stat-value">24</span>
+            <span class="stat-label">总用户数</span>
+        </div>
+    </div>
+    <div class="stat-card diabetes">
+        <i class="fas fa-heartbeat"></i>
+        <div class="stat-info">
+            <span class="stat-value">8</span>
+            <span class="stat-label">糖代谢用户</span>
+        </div>
+    </div>
+    <div class="stat-card sub-health">
+        <i class="fas fa-stethoscope"></i>
+        <div class="stat-info">
+            <span class="stat-value">8</span>
+            <span class="stat-label">亚健康用户</span>
+        </div>
+    </div>
+    <div class="stat-card other">
+        <i class="fas fa-user-md"></i>
+        <div class="stat-info">
+            <span class="stat-value">8</span>
+            <span class="stat-label">其他用户</span>
+        </div>
+    </div>
+</div>
+
+<!-- 用户选择区域 -->
+<div class="user-select-section">
+    <div class="select-group">
+        <label>选择用户：</label>
+        <select id="userSelect" class="user-select">
+            <option value="">全部用户</option>
+            <option value="1">张三</option>
+            <option value="2">李四</option>
+            <option value="3">王五</option>
+            <!-- 其他用户选项 -->
+        </select>
+    </div>
+    <div class="select-group">
+        <label>时间范围：</label>
+        <select id="timeRange" class="time-range">
+            <option value="week">近一周</option>
+            <option value="month">近一月</option>
+            <option value="year">近一年</option>
+        </select>
+    </div>
+</div>
+
+<!-- 数据分析区域 -->
+<div class="analysis-section">
+    <!-- 健康指标分析 -->
+    <div class="analysis-card">
+        <div class="card-header">
+            <h3>健康指标分析</h3>
+            <div class="card-controls">
+                <select class="metric-select">
+                    <option value="bmi">BMI指数</option>
+                    <option value="bloodPressure">血压</option>
+                    <option value="bloodSugar">血糖</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="chart-wrapper">
+                <div id="healthMetricsAnalysisChart" class="chart"></div>
+                <div class="chart-loading" id="healthMetricsAnalysisChart-loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载图表...</p>
+                </div>
+            </div>
+            <div class="analysis-summary">
+                <div class="summary-item">
+                    <span class="label">平均值</span>
+                    <span class="value">24.5</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">中位数</span>
+                    <span class="value">23.8</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">标准差</span>
+                    <span class="value">2.3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户画像分析 -->
+    <div class="analysis-card">
+        <div class="card-header">
+            <h3>用户画像分析</h3>
+        </div>
+        <div class="card-content">
+            <div class="chart-wrapper">
+                <div id="userProfileChart" class="chart"></div>
+                <div class="chart-loading" id="userProfileChart-loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载图表...</p>
+                </div>
+            </div>
+            <div class="analysis-summary">
+                <div class="summary-item">
+                    <span class="label">主要年龄段</span>
+                    <span class="value">31-40岁</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">性别比例</span>
+                    <span class="value">1:1</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">平均年龄</span>
+                    <span class="value">38.5岁</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 健康风险分析 -->
+    <div class="analysis-card">
+        <div class="card-header">
+            <h3>健康风险分析</h3>
+        </div>
+        <div class="card-content">
+            <div class="chart-wrapper">
+                <div id="healthRiskChart" class="chart"></div>
+                <div class="chart-loading" id="healthRiskChart-loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载图表...</p>
+                </div>
+            </div>
+            <div class="analysis-summary">
+                <div class="summary-item">
+                    <span class="label">高风险用户</span>
+                    <span class="value">3人</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">中风险用户</span>
+                    <span class="value">8人</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">低风险用户</span>
+                    <span class="value">13人</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 调理效果分析 -->
+    <div class="analysis-card">
+        <div class="card-header">
+            <h3>调理效果分析</h3>
+            <div class="card-controls">
+                <select class="time-range">
+                    <option value="month">近一月</option>
+                    <option value="quarter">近三月</option>
+                    <option value="year">近一年</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="chart-wrapper">
+                <div id="treatmentEffectChart" class="chart"></div>
+                <div class="chart-loading" id="treatmentEffectChart-loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载图表...</p>
+                </div>
+            </div>
+            <div class="analysis-summary">
+                <div class="summary-item">
+                    <span class="label">改善率</span>
+                    <span class="value">75%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">稳定率</span>
+                    <span class="value">20%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">待改善</span>
+                    <span class="value">5%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 样式与 health_trends.html 类似，可以复用或单独定义 */
+.user-select-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 图表加载动画样式 */
+.chart-wrapper {
+    position: relative;
+    min-height: 400px;
+}
+
+.chart-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    transition: opacity 0.3s ease;
+}
+
+.chart-loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2196F3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.chart-loading p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+/* 其他样式 */
+</style>
+
+<script>
+    (function(){
+        // 初始化图表
+        async function initCharts() {
+            const startTime = Date.now();
+            try {
+                // 检查ECharts是否已经预加载
+                const isEChartsLoaded = window.EChartsLoader && window.EChartsLoader.isLoaded();
+                
+                if (!isEChartsLoaded) {
+                    // 如果未预加载，显示加载状态
+                    showAllLoadingStates();
+                    console.log('🔄 ECharts未预加载，正在加载...');
+                } else {
+                    console.log('⚡ ECharts已预加载，即将快速显示图表');
+                }
+                
+                // 使用统一的ECharts加载器初始化多个图表
+                const chartsConfig = [
+                    {
+                        id: 'healthMetricsAnalysisChart',
+                        option: {
+                            title: { text: 'BMI分布', left: 'center' },
+                            tooltip: { trigger: 'axis' },
+                            xAxis: { type: 'category', data: ['偏瘦', '正常', '偏胖', '肥胖'] },
+                            yAxis: { type: 'value' },
+                            series: [{
+                                data: [2, 15, 5, 2],
+                                type: 'bar',
+                                itemStyle: {
+                                    color: function(params) {
+                                        const colors = ['#91cc75', '#5470c6', '#fac858', '#ee6666'];
+                                        return colors[params.dataIndex];
+                                    }
+                                }
+                            }]
+                        }
+                    },
+                    {
+                        id: 'userProfileChart',
+                        option: {
+                            title: { text: '用户性别年龄分布', left: 'center' },
+                            tooltip: { trigger: 'item' },
+                            legend: { orient: 'vertical', left: 'left' },
+                            series: [{
+                                type: 'pie',
+                                radius: ['40%', '70%'],
+                                avoidLabelOverlap: false,
+                                itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+                                label: { show: false, position: 'center' },
+                                emphasis: { label: { show: true, fontSize: '20', fontWeight: 'bold' } },
+                                labelLine: { show: false },
+                                data: [ { value: 12, name: '男性' }, { value: 12, name: '女性' } ]
+                            }]
+                        }
+                    },
+                    {
+                        id: 'healthRiskChart',
+                        option: {
+                            title: { text: '健康风险分布', left: 'center' },
+                            tooltip: { trigger: 'item' },
+                            legend: { orient: 'vertical', left: 'left' },
+                            series: [{
+                                type: 'pie',
+                                radius: '50%',
+                                data: [ { value: 3, name: '高风险' }, { value: 8, name: '中风险' }, { value: 13, name: '低风险' } ],
+                                emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
+                            }]
+                        }
+                    },
+                    {
+                        id: 'treatmentEffectChart',
+                        option: {
+                            title: { text: '调理效果趋势', left: 'center' },
+                            tooltip: { trigger: 'axis' },
+                            legend: { data: ['改善', '稳定', '待改善'], bottom: 0 },
+                            xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月', '6月'] },
+                            yAxis: { type: 'value' },
+                            series: [
+                                { name: '改善', type: 'line', data: [15, 16, 17, 18, 19, 20] },
+                                { name: '稳定', type: 'line', data: [5, 4, 3, 2, 1, 0] },
+                                { name: '待改善', type: 'line', data: [2, 2, 2, 2, 2, 2] }
+                            ]
+                        }
+                    }
+                ];
+                
+                // 使用统一加载器批量初始化图表
+                await window.EChartsLoader.initCharts(chartsConfig);
+                
+                // 隐藏加载状态
+                hideAllLoadingStates();
+                
+                // 显示成功信息
+                const loadTime = isEChartsLoaded ? '即时' : '约' + (Date.now() - startTime) + 'ms';
+                console.log(`✅ 图表初始化完成 (耗时: ${loadTime})`);
+                
+            } catch (error) {
+                console.error('初始化图表失败:', error);
+                hideAllLoadingStates();
+                showErrorState();
+            }
+        }
+        
+        // 显示所有加载状态
+        function showAllLoadingStates() {
+            const loadingElements = document.querySelectorAll('.chart-loading');
+            loadingElements.forEach(el => {
+                el.style.display = 'flex';
+                el.classList.remove('hidden');
+                // 添加加载提示文本
+                const textEl = el.querySelector('p');
+                if (textEl) {
+                    textEl.textContent = 'ECharts加载中...';
+                }
+            });
+        }
+        
+        // 隐藏所有加载状态
+        function hideAllLoadingStates() {
+            const loadingElements = document.querySelectorAll('.chart-loading');
+            loadingElements.forEach(el => {
+                el.classList.add('hidden');
+                setTimeout(() => {
+                    el.style.display = 'none';
+                }, 300);
+            });
+        }
+        
+        // 显示错误状态
+        function showErrorState() {
+            const loadingElements = document.querySelectorAll('.chart-loading');
+            loadingElements.forEach(el => {
+                el.innerHTML = `
+                    <div style="color: #f44336; text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 12px;">⚠️</div>
+                        <p>图表加载失败，请刷新页面重试</p>
+                    </div>
+                `;
+            });
+        }
+
+        // 添加事件监听
+        function addEventListeners() {
+            const userSelect = document.getElementById('userSelect');
+            const timeRange = document.getElementById('timeRange');
+            
+            if (userSelect) {
+                userSelect.addEventListener('change', updateCharts);
+            }
+            if (timeRange) {
+                timeRange.addEventListener('change', updateCharts);
+            }
+        }
+
+        function updateCharts() {
+            // 此处暂时保留为空，因为当前是静态数据
+            // 未来可以根据选择的用户和时间范围动态获取数据并更新图表
+            console.log('更新图表...');
+        }
+        
+        // 初始化
+        async function init() {
+            await initCharts();
+            addEventListeners();
+        }
+        
+        // 页面加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script> 

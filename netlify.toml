@@ -1,0 +1,15 @@
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+[[redirects]]
+  from = "/api/ai"
+  to = "/.netlify/functions/ai-proxy"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+
+[dev]
+  functions = "netlify/functions"
+  publish = "."

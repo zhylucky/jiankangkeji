@@ -4,9 +4,10 @@
   "description": "健康管理中心官方网站",
   "main": "index.html",
   "scripts": {
-    "dev": "live-server",
+    "dev": "netlify dev",
+    "dev:local": "npx netlify-cli@17.3.0 dev",
     "build": "echo 'Static site - no build needed'",
-    "start": "live-server"
+    "start": "netlify dev"
   },
   "keywords": [
     "health",
