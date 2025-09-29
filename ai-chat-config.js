@@ -10,11 +10,11 @@ const AI_CHAT_CONFIG = {
     model: 'Qwen/Qwen3-8B', 
     
     // 聊天配置
-    maxMessages: 6, // 减少上下文消息数量以提高响应速度
+    maxMessages: 7, // 减少上下文消息数量以提高响应速度
     
     // API性能优化参数
     performanceSettings: {
-        maxTokens: 1000, // 限制最大token数以提高响应速度
+        maxTokens: 2000, // 限制最大token数以提高响应速度
         temperature: 0.7, // 适度的创造性
         topP: 0.9, // nucleus采样
         enableThinking: false // 明确关闭思考模式
