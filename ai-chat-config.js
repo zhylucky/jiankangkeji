@@ -10,22 +10,22 @@ const AI_CHAT_CONFIG = {
     model: 'Qwen/Qwen3-8B', 
     
     // 聊天配置
-    maxMessages: 9, // 上下文消息数量
+    maxMessages: 6, // 减少上下文消息数量以提高响应速度
     
     // API性能优化参数
     performanceSettings: {
-        maxTokens: 2000, 
-        temperature: 0.3, 
-        topP: 0.8, 
-        enableThinking: false // 
+        maxTokens: 1500, // 限制最大token数以提高响应速度
+        temperature: 0.7, // 适度的创造性
+        topP: 0.9, // nucleus采样
+        enableThinking: false
     },
 
-    // 联网搜索配置
+    // 联网搜索配置（默认禁用以提升响应速度）
     searchSettings: {
-        enabled: false, // 是否启用联网搜索
-        provider: 'baidu', // 搜索引擎：百度搜索
-        maxResults: 5, // 最大搜索结果数量
-        autoSearch: false, // 是否自动判断需要搜索
+        enabled: false, // 默认禁用搜索以提高响应速度
+        provider: 'baidu', 
+        maxResults: 3, 
+        autoSearch: true, 
         searchKeywords: ['最新', '今天', '现在', '当前', '新闻', '近期', '实时', '今年', '2024', '2025'] // 触发搜索的关键词
     },
     

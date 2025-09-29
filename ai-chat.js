@@ -289,14 +289,14 @@ class AIChatWidget {
         }
     }
     
-    // 调用 AI 的函数 - 安全版本
+    // 调用 AI 的函数 - 安全版本（性能优化版）
     async callAIAPI(userMessage, searchResults = '') {
         try {
             // 如果有搜索结果，将其添加到系统提示中
             let enhancedSystemPrompt = this.systemPrompt;
             
-            // 获取当前实时时间
-            const currentTime = await this.getCurrentTime();
+            // 获取当前时间（使用本地时间）
+            const currentTime = this.getCurrentTime();
             
             if (searchResults) {
                 enhancedSystemPrompt += `
@@ -330,13 +330,7 @@ ${searchResults}
                 }
             ];
             
-            // 通过Netlify Function调用AI API
-            console.log('正在调用Netlify Function:', this.functionUrl);
-            console.log('请求数据:', {
-                messages: messageHistory,
-                model: this.model
-            });
-            
+            // 通过Netlify Function调用AI API（移除调试日志以提高性能）
             const response = await fetch(this.functionUrl, {
                 method: 'POST',
                 headers: {
@@ -348,16 +342,12 @@ ${searchResults}
                 })
             });
 
-            console.log('Function响应状态:', response.status);
-            
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Function响应错误:', errorText);
                 throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}\n详细信息: ${errorText}`);
             }
 
             const data = await response.json();
-            console.log('Function响应数据:', data);
             
             // 返回AI的回复内容
             if (data.choices && data.choices[0] && data.choices[0].message) {
@@ -366,7 +356,6 @@ ${searchResults}
                 throw new Error('AI响应格式不正确: ' + JSON.stringify(data));
             }
         } catch (error) {
-            console.error('调用AI失败:', error);
             throw new Error('调用AI失败: ' + error.message);
         }
     }
@@ -575,24 +564,9 @@ ${snippet}
         }
     }
     
-    // 获取当前实时时间
-    async getCurrentTime() {
-        try {
-            // 优先尝试使用网络时间API
-            const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Shanghai', {
-                signal: AbortSignal.timeout(3000) // 3秒超时
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                const datetime = new Date(data.datetime);
-                return `当前时间是${datetime.getFullYear()}年${datetime.getMonth() + 1}月${datetime.getDate()}日 ${datetime.getHours()}:${datetime.getMinutes().toString().padStart(2, '0')}`;
-            }
-        } catch (error) {
-            console.warn('网络时间获取失败，使用本地时间:', error);
-        }
-        
-        // 如果网络时间获取失败，使用本地时间
+    // 获取当前本地时间（优化版本）
+    getCurrentTime() {
+        // 直接使用本地时间，避免网络请求
         const now = new Date();
         return `当前时间是${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     }
