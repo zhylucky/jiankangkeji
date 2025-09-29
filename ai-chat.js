@@ -254,20 +254,42 @@ class AIChatWidget {
                 }
             }
             
-            // 调用AI API（通过Netlify Function代理）
+            // 调用AI API（流式响应）
             const response = await this.callAIAPI(message, searchResults);
             
-            // 处理响应（支持思考过程）
-            const aiMsg = {
-                role: 'assistant',
-                content: response.content,
-                reasoningContent: response.reasoningContent
-            };
-            this.addMessage(aiMsg);
-            this.messages.push(aiMsg);
-            
-            // 移除打字指示器
+            // 隐藏打字指示器
             this.hideTypingIndicator();
+            
+            // 如果返回的是对象（包含思考内容），则创建支持思考内容显示的消息容器
+            if (typeof response === 'object' && response.reasoning !== undefined) {
+                // 创建支持思考内容显示的消息容器
+                const messageContainers = this.createStreamingMessageWithReasoning(response.reasoning);
+                
+                // 流式显示回答内容
+                let fullContent = '';
+                const content = this.formatContent(response.content);
+                for (let i = 0; i < content.length; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 10)); // 控制流式显示速度
+                    fullContent += content[i];
+                    this.updateStreamingMessage(messageContainers.answerContainer, fullContent);
+                }
+                
+                // 保存消息
+                const aiMsg = {
+                    role: 'assistant',
+                    content: response.content
+                };
+                this.addMessage(aiMsg);
+                this.messages.push(aiMsg);
+            } else {
+                // 传统方式显示消息
+                const aiMsg = {
+                    role: 'assistant',
+                    content: this.formatContent(response)
+                };
+                this.addMessage(aiMsg);
+                this.messages.push(aiMsg);
+            }
             
         } catch (error) {
             console.error('AI API调用失败:', error);
@@ -350,12 +372,11 @@ ${searchResults}
 
             const data = await response.json();
             
-            // 返回AI的回复内容，包括思考过程
+            // 返回AI的回复内容和思考内容
             if (data.choices && data.choices[0] && data.choices[0].message) {
-                const aiMessage = data.choices[0].message;
                 return {
-                    content: aiMessage.content,
-                    reasoningContent: aiMessage.reasoning_content || aiMessage.reasoningContent
+                    content: data.choices[0].message.content,
+                    reasoning: data.choices[0].message.reasoning_content || ''
                 };
             } else {
                 throw new Error('AI响应格式不正确: ' + JSON.stringify(data));
@@ -365,44 +386,73 @@ ${searchResults}
         }
     }
     
-    // 优化内容格式，去除多余的空格和换行
+    // 优化内容格式，去除多余的空格和换行，并改善列表格式
     formatContent(content) {
-        return content
-            .replace(/\n{3,}/g, '\n\n') // 将多个连续换行替换为最多两个
-            .replace(/[ \t]{2,}/g, ' ') // 将多个连续空格替换为一个
-            .replace(/^\s+|\s+$/g, '') // 去除开头和结尾的空白字符
-            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // 简单的加粗处理
-            .replace(/\n/g, '<br>'); // 换行处理
-    }
-
-    // 格式化包含思考过程的内容
-    formatContentWithReasoning(content, reasoningContent) {
-        let formattedContent = this.formatContent(content);
+        // 先处理换行，将连续的换行符替换为单个换行符
+        let formattedContent = content
+            .replace(/\n{3,}/g, '\n\n')
+            .replace(/[ \t]{2,}/g, ' ')
+            .replace(/^\s+|\s+$/g, '');
         
-        // 如果有思考过程，添加可展开的思考部分
-        if (reasoningContent && reasoningContent.trim()) {
-            // 清理思考内容
-            const cleanReasoning = reasoningContent
-                .replace(/^\s+|\s+$/g, '')
-                .replace(/\n{3,}/g, '\n\n')
-                .replace(/[ \t]{2,}/g, ' ');
+        // 按行分割处理
+        const lines = formattedContent.split('\n');
+        const processedLines = [];
+        
+        // 用于跟踪多级列表的缩进级别
+        let currentIndentLevel = 0;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
             
-            if (cleanReasoning) {
-                formattedContent += `
-                <div class="reasoning-section">
-                    <div class="reasoning-toggle" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
-                        <span class="reasoning-arrow">▼</span> 思考过程
-                    </div>
-                    <div class="reasoning-content" style="display: none;">
-                        <pre>${cleanReasoning}</pre>
-                    </div>
-                </div>`;
+            // 跳过空行
+            if (!line) {
+                // 只添加一个br标签来表示换行
+                if (processedLines.length > 0 && !processedLines[processedLines.length - 1].endsWith('<br>')) {
+                    processedLines.push('<br>');
+                }
+                continue;
+            }
+            
+            // 处理数字列表 (1. 2. 3. 等)
+            if (/^(\d+)\.\s+(.+)$/.test(line)) {
+                const match = line.match(/^(\d+)\.\s+(.+)$/);
+                processedLines.push(`<div class="numbered-item"><span class="number">${match[1]}.</span><span class="content">${match[2]}</span></div>`);
+                currentIndentLevel = 0; // 重置缩进级别
+            }
+            // 处理中文数字列表 (一、二、三 等)
+            else if (/^([一二三四五六七八九])、\s*(.+)$/.test(line)) {
+                const match = line.match(/^([一二三四五六七八九])、\s*(.+)$/);
+                processedLines.push(`<div class="chinese-numbered-item"><span class="chinese-number">${match[1]}、</span><span class="content">${match[2]}</span></div>`);
+                currentIndentLevel = 0; // 重置缩进级别
+            }
+            // 处理带缩进的子列表项 (用于多级列表)
+            else if (/^\s{2,}(\d+)\.\s+(.+)$/.test(line)) {
+                const match = line.match(/^\s{2,}(\d+)\.\s+(.+)$/);
+                processedLines.push(`<div class="sub-numbered-item"><span class="sub-number">${match[1]}.</span><span class="sub-content">${match[2]}</span></div>`);
+                currentIndentLevel = 1; // 设置缩进级别
+            }
+            // 处理罗马数字列表 (i. ii. iii. 等)
+            else if (/^([ivx]+)\.\s+(.+)$/.test(line)) {
+                const match = line.match(/^([ivx]+)\.\s+(.+)$/);
+                processedLines.push(`<div class="roman-numbered-item"><span class="roman-number">${match[1]}.</span><span class="content">${match[2]}</span></div>`);
+                currentIndentLevel = 0; // 重置缩进级别
+            }
+            // 处理加粗文本
+            else if (line.includes('**')) {
+                const boldFormatted = line.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                processedLines.push(`<div class="text-line">${boldFormatted}</div>`);
+                currentIndentLevel = 0; // 重置缩进级别
+            }
+            // 普通文本行
+            else {
+                processedLines.push(`<div class="text-line">${line}</div>`);
+                currentIndentLevel = 0; // 重置缩进级别
             }
         }
         
-        return formattedContent;
+        return processedLines.join('');
     }
-
+    
     addMessage(message) {
         const messageDiv = document.createElement('div');
         // 将role为'assistant'的消息显示为'ai'样式
@@ -418,10 +468,8 @@ ${searchResults}
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${displayRole}`;
         
-        // 检查是否包含思考过程
-        if (message.reasoningContent) {
-            bubble.innerHTML = this.formatContentWithReasoning(message.content, message.reasoningContent);
-        } else if (message.content.includes('<br>') || message.content.includes('<strong>')) {
+        // 如果内容包含HTML标签，使用innerHTML，否则使用textContent
+        if (message.content.includes('<br>') || message.content.includes('<strong>')) {
             bubble.innerHTML = message.content;
         } else {
             bubble.textContent = message.content;
@@ -604,6 +652,84 @@ ${snippet}
         // 直接使用本地时间，避免网络请求
         const now = new Date();
         return `当前时间是${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // 创建流式消息容器（支持思考内容显示）
+    createStreamingMessageWithReasoning(reasoningContent = '') {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message ai';
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'chat-avatar ai';
+        avatar.innerHTML = ''; // 使用背景图片显示头像
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ai';
+        
+        // 如果有思考内容，创建可展开的思考区域
+        if (reasoningContent) {
+            const reasoningContainer = document.createElement('div');
+            reasoningContainer.className = 'reasoning-container';
+            
+            const reasoningHeader = document.createElement('div');
+            reasoningHeader.className = 'reasoning-header';
+            reasoningHeader.innerHTML = `
+                <span>思考过程</span>
+                <button class="reasoning-toggle" title="展开/收起思考过程">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            `;
+            
+            const reasoningContentDiv = document.createElement('div');
+            reasoningContentDiv.className = 'reasoning-content';
+            reasoningContentDiv.style.display = 'none'; // 默认收起
+            reasoningContentDiv.textContent = reasoningContent;
+            
+            // 添加展开/收起功能
+            const toggleButton = reasoningHeader.querySelector('.reasoning-toggle');
+            toggleButton.addEventListener('click', () => {
+                const isVisible = reasoningContentDiv.style.display === 'block';
+                reasoningContentDiv.style.display = isVisible ? 'none' : 'block';
+                const icon = toggleButton.querySelector('i');
+                icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+            });
+            
+            reasoningContainer.appendChild(reasoningHeader);
+            reasoningContainer.appendChild(reasoningContentDiv);
+            bubble.appendChild(reasoningContainer);
+        }
+        
+        // 添加回答内容区域
+        const answerContainer = document.createElement('div');
+        answerContainer.className = 'answer-container';
+        answerContainer.innerHTML = '<span class="stream-cursor"></span>';
+        
+        bubble.appendChild(answerContainer);
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+        
+        this.messagesContainer.appendChild(messageDiv);
+        this.scrollToBottom();
+        
+        return {
+            messageDiv,
+            reasoningContainer: bubble.querySelector('.reasoning-content'),
+            answerContainer
+        };
+    }
+    
+    // 更新流式消息（节流优化）
+    updateStreamingMessage(bubble, content) {
+        // 使用requestAnimationFrame节流更新，提升性能
+        if (!this.updateTimer) {
+            this.updateTimer = requestAnimationFrame(() => {
+                // 查找回答容器并更新内容
+                const answerContainer = bubble.querySelector('.answer-container') || bubble;
+                answerContainer.innerHTML = content + '<span class="stream-cursor"></span>';
+                this.scrollToBottom();
+                this.updateTimer = null;
+            });
+        }
     }
     
     // 显示搜索指示器

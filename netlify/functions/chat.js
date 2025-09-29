@@ -41,7 +41,7 @@ exports.handler = async function(event, context) {
       throw new Error('请求体为空');
     }
 
-    const { messages, model } = JSON.parse(event.body);
+    const { messages, model, enableReasoning = true } = JSON.parse(event.body);
     
     // 验证参数
     if (!messages || !Array.isArray(messages)) {
@@ -68,7 +68,8 @@ exports.handler = async function(event, context) {
         // 性能优化参数
         max_tokens: 1000,  // 限制最大token数以提高响应速度
         temperature: 0.7,  // 适度的创造性
-        top_p: 0.9        // nucleus采样
+        top_p: 0.9,        // nucleus采样
+        enable_reasoning: enableReasoning  // 启用思考模式以获取reasoning_content
       }),
       // 设置超时时间
       timeout: 30000 // 30秒超时
@@ -89,7 +90,6 @@ exports.handler = async function(event, context) {
       throw new Error(`响应数据解析失败: ${parseError.message} - 原始响应: ${responseText}`);
     }
     
-    // 确保返回完整的响应数据，包括思考过程
     return {
       statusCode: 200,
       headers,
