@@ -10,13 +10,13 @@ const AI_CHAT_CONFIG = {
     model: 'Qwen/Qwen3-8B', 
     
     // 聊天配置
-    maxMessages: 6, // 减少上下文消息数量以提高响应速度
+    maxMessages: 7, // 减少上下文消息数量以提高响应速度
     
     // API性能优化参数
     performanceSettings: {
         maxTokens: 1500, // 限制最大token数以提高响应速度
-        temperature: 0.7, // 适度的创造性
-        topP: 0.9, // nucleus采样
+        temperature: 0.6, // 适度的创造性
+        topP: 0.8, // nucleus采样
         enableThinking: false
     },
 
@@ -47,7 +47,7 @@ const AI_CHAT_CONFIG = {
 - 需要超出训练数据截止时间的信息
 
 对于常规健康咨询，优先使用内置知识库。搜索结果需结合专业判断进行整合分析，确保信息准确可靠。
-保持回答的专业性和实用性，为用户提供有价值的健康管理建议。`,
+回答时不要使用过多的标记符号、编号或复杂的格式，保持内容的可读性。`,
 
     // 界面配置
     ui: {

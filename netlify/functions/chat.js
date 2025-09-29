@@ -89,6 +89,7 @@ exports.handler = async function(event, context) {
       throw new Error(`响应数据解析失败: ${parseError.message} - 原始响应: ${responseText}`);
     }
     
+    // 确保返回完整的响应数据，包括思考过程
     return {
       statusCode: 200,
       headers,

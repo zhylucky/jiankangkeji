@@ -257,10 +257,11 @@ class AIChatWidget {
             // 调用AI API（通过Netlify Function代理）
             const response = await this.callAIAPI(message, searchResults);
             
-            // 处理响应
+            // 处理响应（支持思考过程）
             const aiMsg = {
                 role: 'assistant',
-                content: this.formatContent(response)
+                content: response.content,
+                reasoningContent: response.reasoningContent
             };
             this.addMessage(aiMsg);
             this.messages.push(aiMsg);
@@ -349,9 +350,13 @@ ${searchResults}
 
             const data = await response.json();
             
-            // 返回AI的回复内容
+            // 返回AI的回复内容，包括思考过程
             if (data.choices && data.choices[0] && data.choices[0].message) {
-                return data.choices[0].message.content;
+                const aiMessage = data.choices[0].message;
+                return {
+                    content: aiMessage.content,
+                    reasoningContent: aiMessage.reasoning_content || aiMessage.reasoningContent
+                };
             } else {
                 throw new Error('AI响应格式不正确: ' + JSON.stringify(data));
             }
@@ -369,7 +374,35 @@ ${searchResults}
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // 简单的加粗处理
             .replace(/\n/g, '<br>'); // 换行处理
     }
-    
+
+    // 格式化包含思考过程的内容
+    formatContentWithReasoning(content, reasoningContent) {
+        let formattedContent = this.formatContent(content);
+        
+        // 如果有思考过程，添加可展开的思考部分
+        if (reasoningContent && reasoningContent.trim()) {
+            // 清理思考内容
+            const cleanReasoning = reasoningContent
+                .replace(/^\s+|\s+$/g, '')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/[ \t]{2,}/g, ' ');
+            
+            if (cleanReasoning) {
+                formattedContent += `
+                <div class="reasoning-section">
+                    <div class="reasoning-toggle" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none';">
+                        <span class="reasoning-arrow">▼</span> 思考过程
+                    </div>
+                    <div class="reasoning-content" style="display: none;">
+                        <pre>${cleanReasoning}</pre>
+                    </div>
+                </div>`;
+            }
+        }
+        
+        return formattedContent;
+    }
+
     addMessage(message) {
         const messageDiv = document.createElement('div');
         // 将role为'assistant'的消息显示为'ai'样式
@@ -385,8 +418,10 @@ ${searchResults}
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${displayRole}`;
         
-        // 如果内容包含HTML标签，使用innerHTML，否则使用textContent
-        if (message.content.includes('<br>') || message.content.includes('<strong>')) {
+        // 检查是否包含思考过程
+        if (message.reasoningContent) {
+            bubble.innerHTML = this.formatContentWithReasoning(message.content, message.reasoningContent);
+        } else if (message.content.includes('<br>') || message.content.includes('<strong>')) {
             bubble.innerHTML = message.content;
         } else {
             bubble.textContent = message.content;
