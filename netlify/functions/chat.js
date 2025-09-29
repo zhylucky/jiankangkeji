@@ -41,7 +41,7 @@ exports.handler = async function(event, context) {
       throw new Error('请求体为空');
     }
 
-    const { messages, model, enableReasoning = true } = JSON.parse(event.body);
+    const { messages, model } = JSON.parse(event.body);
     
     // 验证参数
     if (!messages || !Array.isArray(messages)) {
@@ -54,6 +54,24 @@ exports.handler = async function(event, context) {
       throw new Error('API密钥未配置，请在Netlify环境变量中设置SILICONFLOW_API_KEY或AI_API_KEY');
     }
     
+    // 构建请求参数
+    const requestBody = {
+      model: model || 'Qwen/Qwen3-8B',
+      messages: messages,
+      stream: false,
+      // 性能优化参数
+      max_tokens: 1500,  // 限制最大token数以提高响应速度
+      temperature: 0.7,  // 适度的创造性
+      top_p: 0.9        // nucleus采样
+    };
+    
+    // 明确关闭思考模式（如果API支持）
+    if (model && model.includes('Qwen')) {
+      // 阿里云Qwen模型可能支持的参数
+      requestBody.enable_search = false;  // 禁用搜索
+      requestBody.enable_thinking = false;  // 禁用思考模式
+    }
+    
     // 使用环境变量中的 API Key
     const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
       method: 'POST',
@@ -61,16 +79,7 @@ exports.handler = async function(event, context) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: model || 'Qwen/Qwen3-8B',
-        messages: messages,
-        stream: false,
-        // 性能优化参数
-        max_tokens: 1000,  // 限制最大token数以提高响应速度
-        temperature: 0.7,  // 适度的创造性
-        top_p: 0.9,        // nucleus采样
-        enable_reasoning: enableReasoning  // 启用思考模式以获取reasoning_content
-      }),
+      body: JSON.stringify(requestBody),
       // 设置超时时间
       timeout: 30000 // 30秒超时
     });
