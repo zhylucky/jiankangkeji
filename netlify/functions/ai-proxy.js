@@ -52,8 +52,11 @@ exports.handler = async (event, context) => {
       };
     }
     
+    // 检查是否需要流式响应
+    const stream = requestData.stream || false;
+    
     // 构建转发到AI服务的请求
-    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+    const fetchOptions = {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -61,28 +64,59 @@ exports.handler = async (event, context) => {
         'User-Agent': 'Netlify-Functions-AI-Proxy'
       },
       body: JSON.stringify(requestData)
-    });
-
-    // 获取响应数据
-    const responseData = await response.json();
-    const responseHeaders = {};
-    
-    // 转发必要的响应头
-    for (const [key, value] of response.headers.entries()) {
-      if (key.toLowerCase().startsWith('content-') || 
-          key.toLowerCase() === 'x-request-id') {
-        responseHeaders[key] = value;
-      }
-    }
-    
-    // 添加CORS头
-    responseHeaders['Access-Control-Allow-Origin'] = '*';
-    
-    return {
-      statusCode: response.status,
-      body: JSON.stringify(responseData),
-      headers: responseHeaders,
     };
+    
+    // 如果是流式请求，需要特殊处理
+    if (stream) {
+      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', fetchOptions);
+      
+      // 对于流式响应，直接转发
+      const responseHeaders = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+      };
+      
+      // 转发其他必要的响应头
+      for (const [key, value] of response.headers.entries()) {
+        if (key.toLowerCase().startsWith('content-') || 
+            key.toLowerCase() === 'x-request-id') {
+          responseHeaders[key] = value;
+        }
+      }
+      
+      return {
+        statusCode: response.status,
+        body: response.body,
+        headers: responseHeaders,
+        isBase64Encoded: false
+      };
+    } else {
+      // 非流式响应处理
+      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', fetchOptions);
+
+      // 获取响应数据
+      const responseData = await response.json();
+      const responseHeaders = {};
+      
+      // 转发必要的响应头
+      for (const [key, value] of response.headers.entries()) {
+        if (key.toLowerCase().startsWith('content-') || 
+            key.toLowerCase() === 'x-request-id') {
+          responseHeaders[key] = value;
+        }
+      }
+      
+      // 添加CORS头
+      responseHeaders['Access-Control-Allow-Origin'] = '*';
+      
+      return {
+        statusCode: response.status,
+        body: JSON.stringify(responseData),
+        headers: responseHeaders,
+      };
+    }
   } catch (error) {
     console.error('Proxy error:', error);
     
