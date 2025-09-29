@@ -331,6 +331,12 @@ ${searchResults}
             ];
             
             // 通过Netlify Function调用AI API
+            console.log('正在调用Netlify Function:', this.functionUrl);
+            console.log('请求数据:', {
+                messages: messageHistory,
+                model: this.model
+            });
+            
             const response = await fetch(this.functionUrl, {
                 method: 'POST',
                 headers: {
@@ -342,20 +348,25 @@ ${searchResults}
                 })
             });
 
+            console.log('Function响应状态:', response.status);
+            
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`API请求失败: ${response.status} ${response.statusText}\n详细信息: ${errorText}`);
+                console.error('Function响应错误:', errorText);
+                throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}\n详细信息: ${errorText}`);
             }
 
             const data = await response.json();
+            console.log('Function响应数据:', data);
             
             // 返回AI的回复内容
             if (data.choices && data.choices[0] && data.choices[0].message) {
                 return data.choices[0].message.content;
             } else {
-                throw new Error('AI响应格式不正确');
+                throw new Error('AI响应格式不正确: ' + JSON.stringify(data));
             }
         } catch (error) {
+            console.error('调用AI失败:', error);
             throw new Error('调用AI失败: ' + error.message);
         }
     }
