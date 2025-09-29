@@ -22,10 +22,10 @@ const AI_CHAT_CONFIG = {
 
     // 联网搜索配置
     searchSettings: {
-        enabled: true, // 是否启用联网搜索
+        enabled: false, // 是否启用联网搜索
         provider: 'baidu', // 搜索引擎：百度搜索
         maxResults: 5, // 最大搜索结果数量
-        autoSearch: true, // 是否自动判断需要搜索
+        autoSearch: false, // 是否自动判断需要搜索
         searchKeywords: ['最新', '今天', '现在', '当前', '新闻', '近期', '实时', '今年', '2024', '2025'] // 触发搜索的关键词
     },
     
