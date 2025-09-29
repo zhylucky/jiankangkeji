@@ -22,16 +22,7 @@ class AIChatWidget {
         
         if (window.AI_CHAT_CONFIG) {
             this.config = window.AI_CHAT_CONFIG;
-            
-            // 检查当前运行环境
-            const isLocalhost = typeof window !== 'undefined' && 
-                (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-            
-            // 在localhost环境下，我们仍然使用代理端点以保持一致性
-            // 但在生产环境中，我们依赖Netlify Functions
-            this.apiUrl = '/api/ai'; // 统一使用代理端点
-            this.apiKey = ''; // 使用代理时不需要在前端设置密钥
-            
+            this.functionUrl = this.config.functionUrl || '/.netlify/functions/chat';
             this.model = this.config.model;
             this.systemPrompt = this.config.systemPrompt;
             this.maxMessages = this.config.maxMessages || 6;
@@ -42,8 +33,7 @@ class AIChatWidget {
             this.searchEnabled = this.searchConfig.enabled || false;
         } else {
             // 使用默认配置
-            this.apiUrl = '/api/ai';
-            this.apiKey = '';
+            this.functionUrl = '/.netlify/functions/chat';
             this.model = 'Qwen/Qwen3-8B';
             this.systemPrompt = '你是一个专业的健康管理AI助手。';
             this.maxMessages = 10;
@@ -225,13 +215,6 @@ class AIChatWidget {
             return;
         }
         
-        // 检查API密钥（仅在直接调用API时需要检查）
-        if (!this.apiKey && (this.apiUrl !== '/api/ai')) {
-            const errorMsg = this.config?.ui?.errorMessages?.noApiKey || '请先配置AI服务密钥';
-            this.showError(errorMsg);
-            return;
-        }
-        
         // 设置请求状态
         this.isRequestPending = true;
         
@@ -271,20 +254,19 @@ class AIChatWidget {
                 }
             }
             
-            // 调用AI API（流式响应）
+            // 调用AI API（通过Netlify Function代理）
             const response = await this.callAIAPI(message, searchResults);
             
-            // 流式响应已经在handleStreamResponse中处理了显示
-            // 这里只需要保存消息历史
+            // 处理响应
             const aiMsg = {
                 role: 'assistant',
                 content: this.formatContent(response)
             };
+            this.addMessage(aiMsg);
             this.messages.push(aiMsg);
             
-            // 移除流式光标
-            const cursor = this.messagesContainer.querySelector('.stream-cursor');
-            if (cursor) cursor.remove();
+            // 移除打字指示器
+            this.hideTypingIndicator();
             
         } catch (error) {
             console.error('AI API调用失败:', error);
@@ -307,18 +289,17 @@ class AIChatWidget {
         }
     }
     
+    // 调用 AI 的函数 - 安全版本
     async callAIAPI(userMessage, searchResults = '') {
-        // 构建请求数据，优化性能参数
-        const config = this.config?.performanceSettings || {};
-        
-        // 如果有搜索结果，将其添加到系统提示中
-        let enhancedSystemPrompt = this.systemPrompt;
-        
-        // 获取当前实时时间
-        const currentTime = await this.getCurrentTime();
-        
-        if (searchResults) {
-            enhancedSystemPrompt += `
+        try {
+            // 如果有搜索结果，将其添加到系统提示中
+            let enhancedSystemPrompt = this.systemPrompt;
+            
+            // 获取当前实时时间
+            const currentTime = await this.getCurrentTime();
+            
+            if (searchResults) {
+                enhancedSystemPrompt += `
 
 最新网络信息：
 ${searchResults}
@@ -326,15 +307,14 @@ ${searchResults}
 请基于上述最新信息和你的知识库综合回答用户问题。
 
 重要提醒：${currentTime}，请确保时间信息的准确性。`;
-        } else {
-            enhancedSystemPrompt += `
+            } else {
+                enhancedSystemPrompt += `
 
 重要提醒：${currentTime}，请确保时间信息的准确性。`;
-        }
-        
-        const requestData = {
-            model: this.model,
-            messages: [
+            }
+            
+            // 构建消息历史
+            const messageHistory = [
                 {
                     role: 'system',
                     content: enhancedSystemPrompt
@@ -348,120 +328,35 @@ ${searchResults}
                     role: 'user',
                     content: userMessage
                 }
-            ],
-            // 性能优化参数
-            stream: true,
-            max_tokens: config.maxTokens || 2000,
-            temperature: config.temperature || 0.3,
-            top_p: config.topP || 0.8,
-            enable_thinking: config.enableThinking || false
-        };
-        
-        // 根据使用的API端点决定是否需要Authorization头
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        };
-        
-        // 如果使用直接API调用，则添加Authorization头
-        if (this.apiUrl !== '/api/ai' && this.apiKey) {
-            options.headers['Authorization'] = `Bearer ${this.apiKey}`;
-        }
-        
-        const response = await fetch(this.apiUrl, options);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API请求失败: ${response.status} ${response.statusText}\n详细信息: ${errorText}`);
-        }
-        
-        // 处理流式响应
-        return await this.handleStreamResponse(response);
-    }
-    
-    async handleStreamResponse(response) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullContent = '';
-        
-        // 隐藏打字指示器，创建流式消息容器
-        this.hideTypingIndicator();
-        const streamingMsg = this.createStreamingMessage();
-        
-        try {
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const data = line.slice(6).trim();
-                        if (data === '[DONE]') {
-                            return fullContent;
-                        }
-                        
-                        try {
-                            const parsed = JSON.parse(data);
-                            if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
-                                const content = parsed.choices[0].delta.content || '';
-                                if (content) {
-                                    fullContent += content;
-                                    // 更新流式显示，优化排版
-                                    this.updateStreamingMessage(streamingMsg, this.formatContent(fullContent));
-                                }
-                            }
-                        } catch (e) {
-                            // 忽略无法解析的数据块
-                        }
-                    }
-                }
+            ];
+            
+            // 通过Netlify Function调用AI API
+            const response = await fetch(this.functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    messages: messageHistory,
+                    model: this.model
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API请求失败: ${response.status} ${response.statusText}\n详细信息: ${errorText}`);
+            }
+
+            const data = await response.json();
+            
+            // 返回AI的回复内容
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                return data.choices[0].message.content;
+            } else {
+                throw new Error('AI响应格式不正确');
             }
         } catch (error) {
-            throw new Error('流式响应处理失败: ' + error.message);
-        } finally {
-            reader.releaseLock();
-        }
-        
-        return fullContent;
-    }
-    
-    // 创建流式消息容器
-    createStreamingMessage() {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'chat-message ai';
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'chat-avatar ai';
-        avatar.innerHTML = ''; // 使用背景图片显示头像
-        
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble ai';
-        bubble.innerHTML = '<span class="stream-cursor"></span>';
-        
-        messageDiv.appendChild(avatar);
-        messageDiv.appendChild(bubble);
-        
-        this.messagesContainer.appendChild(messageDiv);
-        this.scrollToBottom();
-        
-        return bubble;
-    }
-    
-    // 更新流式消息（节流优化）
-    updateStreamingMessage(bubble, content) {
-        // 使用requestAnimationFrame节流更新，提升性能
-        if (!this.updateTimer) {
-            this.updateTimer = requestAnimationFrame(() => {
-                bubble.innerHTML = content + '<span class="stream-cursor"></span>';
-                this.scrollToBottom();
-                this.updateTimer = null;
-            });
+            throw new Error('调用AI失败: ' + error.message);
         }
     }
     
@@ -555,11 +450,6 @@ ${searchResults}
         setTimeout(() => {
             this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
         }, 100);
-    }
-    
-    // 设置API密钥
-    setApiKey(apiKey) {
-        this.apiKey = apiKey;
     }
     
     // 添加脉冲效果到悬浮按钮

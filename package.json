@@ -4,10 +4,9 @@
   "description": "健康管理中心官方网站",
   "main": "index.html",
   "scripts": {
-    "dev": "netlify dev",
-    "dev:local": "npx netlify-cli@17.3.0 dev",
+    "dev": "live-server",
     "build": "echo 'Static site - no build needed'",
-    "start": "netlify dev"
+    "start": "live-server"
   },
   "keywords": [
     "health",
@@ -19,5 +18,8 @@
   "license": "MIT",
   "devDependencies": {
     "live-server": "^1.2.2"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
   }
 }

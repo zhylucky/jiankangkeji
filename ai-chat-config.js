@@ -3,17 +3,10 @@
  * 在这里配置您的API密钥和其他设置
  */
 
-// AI服务配置
+// AI服务配置 - 安全版本
 const AI_CHAT_CONFIG = {
-    // 从环境变量获取API密钥，生产环境部署时应通过Netlify环境变量配置
-    apiKey: typeof process !== 'undefined' && process.env ? 
-        (process.env.SILICONFLOW_API_KEY || process.env.AI_API_KEY || process.env.REACT_APP_AI_API_KEY || '') : 
-        (typeof window !== 'undefined' ? 
-            (window.env?.SILICONFLOW_API_KEY || window.env?.AI_API_KEY || '') : 
-            ''),
-    
-    // API相关配置
-    apiUrl: 'https://api.siliconflow.cn/v1/chat/completions',
+    // 不再需要 apiKey，通过Netlify Function代理调用
+    functionUrl: '/.netlify/functions/chat', // Netlify Function 地址
     model: 'Qwen/Qwen3-8B', 
     
     // 聊天配置

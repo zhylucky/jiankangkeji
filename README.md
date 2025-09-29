@@ -1,3 +1,59 @@
+# 健康管理中心官方网站
+
+## 项目概述
+
+这是一个基于HTML、CSS和JavaScript的静态网站，用于健康管理中心的官方网站。该网站包含用户管理、数据统计、客户档案等功能模块。
+
+## 安全配置说明
+
+本项目使用Netlify Functions来安全地处理AI API密钥，避免将敏感信息暴露在前端代码中。
+
+### Netlify部署配置
+
+1. 在Netlify后台设置环境变量：
+   ```
+   Key: SILICONFLOW_API_KEY
+   Secret: your-api-key-here
+   Scopes: All scopes
+   Values: Same value for all deploy contexts
+   ```
+
+2. 确保Netlify Functions目录设置为`netlify/functions`
+
+### 本地开发
+
+1. 安装依赖：
+   ```bash
+   npm install
+   ```
+
+2. 启动开发服务器：
+   ```bash
+   npm start
+   ```
+
+### 项目结构
+
+```
+.
+├── netlify/
+│   └── functions/
+│       └── chat.js          # AI聊天代理函数
+├── partialshtml/            # 页面片段
+├── images/                  # 图片资源
+├── *.html                   # 主要页面文件
+├── *.css                    # 样式文件
+├── *.js                     # JavaScript文件
+└── package.json             # 项目配置文件
+```
+
+### 安全注意事项
+
+1. 永远不要在前端代码中硬编码API密钥
+2. 使用环境变量和后端代理来处理敏感信息
+3. 定期轮换API密钥
+4. 监控API使用情况，防止滥用
+
 # 健康管理中心
 
 这是一个基于HTML、CSS和纯JavaScript构建的前端项目，使用Supabase作为后端服务，提供用户管理、数据可视化等功能。
@@ -15,9 +71,6 @@
 - **数据可视化**:
   - 包含健康趋势和数据分析两大模块。
   - 使用ECharts.js动态生成图表。
-- **AI助手**:
-  - 集成AI聊天助手，提供健康咨询服务
-  - 支持联网搜索最新信息
 - **单页应用 (SPA) 架构**:
   - 页面切换无刷新，提升用户体验。
 
@@ -49,63 +102,14 @@
       ```
     - 将 `YOUR_SUPABASE_URL` 和 `YOUR_SUPABASE_ANON_KEY`替换为您自己Supabase项目 "API" 设置中的 **Project URL** 和 **anon public key**。
 
-3.  **配置AI助手**:
-    - 为了安全起见，项目使用Netlify Functions代理处理AI API请求
-    - API密钥应配置在环境变量中（见下方说明）
-
-4.  **启动本地开发服务器**:
+3.  **启动本地开发服务器**:
     - 确保您的电脑已安装 [Node.js](https://nodejs.org/)。
-    - 安装Netlify CLI工具：
+    - 在项目根目录下打开终端，运行以下命令来安装并启动一个本地服务器：
       ```bash
-      npm install -g netlify-cli
+      npx live-server
       ```
-    - 在项目根目录下打开终端，运行以下命令来启动本地开发服务器：
-      ```bash
-      netlify dev
-      ```
-    - 浏览器将自动打开项目主页。
+    - 浏览器将自动打开项目主页。如果没有，请手动访问终端中显示的地址 (通常是 `http://127.0.0.1:8080`)。
 
-## 🧪 本地开发环境说明
-
-本项目使用统一的安全模式处理所有环境：
-
-- **所有环境** (本地开发和生产部署): 通过 `/api/ai` 代理端点调用AI API
-- **API密钥安全**: 通过环境变量管理，不在前端代码中暴露
-
-详细说明请查看 [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) 文件。
-
-## ☁️ 部署到Netlify
-
-本项目支持部署到Netlify，并通过Netlify Functions安全地处理API密钥。
-
-### 部署步骤：
-
-1. **在Netlify上创建新站点**:
-   - 登录到您的Netlify账户
-   - 点击"New site from Git"并连接到您的代码仓库
-   - 选择包含此项目的分支
-
-2. **配置环境变量**:
-   - 在Netlify项目设置中，进入"Environment variables"
-   - 添加以下环境变量：
-     ```
-     SILICONFLOW_API_KEY=sk-your-actual-api-key-here
-     ```
-   - 保存设置
-
-3. **配置构建设置**:
-   - 构建命令: `# no build command`
-   - 发布目录: `.`
-   - Functions目录: `netlify/functions`
-
-4. **部署**:
-   - 触发部署，Netlify将自动处理构建和部署过程
-
-### 安全说明:
-
-- 通过Netlify Functions代理，API密钥安全地存储在服务器端环境变量中
-- 前端代码不会暴露任何敏感信息
-- 所有AI API请求都通过安全的代理端点处理
 
 ## 🔐 安全性说明 (重要)
 
@@ -129,11 +133,6 @@
 - **数据库优化**:
   - **自动时间戳**: 为`user_profiles`表添加了触发器，实现了`updated_at`字段的自动更新。
   - **字段类型调整**: 根据实际需求放宽了特定字段的类型限制，避免了数据溢出错误。
-- **AI助手优化**:
-  - 集成Netlify Functions代理，安全处理API密钥
-  - 支持联网搜索最新信息
-  - 优化响应性能和用户体验
-  - 统一所有环境的安全模式
 
 ## 项目简介
 生命潮健康管理中心系统是一个用于健康管理的Web应用，提供用户管理、健康趋势分析和数据统计功能。
@@ -151,8 +150,10 @@
 
 ## 安装和运行
 1. 克隆代码库
-2. 安装Netlify CLI: `npm install -g netlify-cli`
-3. 使用Netlify dev启动项目: `netlify dev`
+2. 使用live-server或类似工具启动项目
+   ```bash
+   npx live-server
+   ```
 
 ## 近期修复
 - 修复Supabase依赖问题：
