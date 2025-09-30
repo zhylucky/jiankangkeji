@@ -20,32 +20,32 @@ const RECOMMENDED_INDEXES = {
 const QUERY_OPTIMIZATIONS = {
     // 分页查询优化
     pagination: {
-        defaultPageSize: 10,
+        defaultPageSize: 8, // 减少默认分页大小以提高初始加载速度
         maxPageSize: 50,
-        prefetchNextPage: true
+        prefetchNextPage: false // 禁用预取以减少不必要的查询
     },
     
     // 字段选择优化
     fieldSelection: {
         'New_user': {
             list: 'id, name, gender, age, phone, direction, created_at',
-            detail: '*',
+            detail: 'id, name, gender, age, phone, direction, created_at', // 限制详情页字段
             search: 'id, name, phone, direction, created_at'
         },
         'user_profiles': {
             list: 'user_id, created_at, filler_name',
-            detail: '*'
+            detail: 'user_id, created_at, date_of_birth, address, diseases, medical_history, conditioning_reason, height, weight, medication_status, conditioning_content, systolic_pressure, diastolic_pressure, fasting_blood_sugar, glycated_hemoglobin, self_management_status, payment_status, estimated_time, other_notes, filler_name, client_source, scheduled_time' // 明确指定所有字段
         }
     },
     
     // 缓存配置
     cache: {
-        defaultTTL: 30000, // 30秒
+        defaultTTL: 60000, // 60秒 (增加一倍缓存时间)
         maxSize: 100,
         strategies: {
-            'user_list': { ttl: 60000, priority: 'high' },
-            'user_profile': { ttl: 300000, priority: 'medium' },
-            'dashboard_stats': { ttl: 120000, priority: 'high' }
+            'user_list': { ttl: 120000, priority: 'high' }, // 2分钟
+            'user_profile': { ttl: 600000, priority: 'medium' }, // 10分钟
+            'dashboard_stats': { ttl: 240000, priority: 'high' } // 4分钟
         }
     }
 };
@@ -76,7 +76,7 @@ const CONNECTION_CONFIG = {
 // 性能监控配置
 const PERFORMANCE_CONFIG = {
     // 慢查询阈值
-    slowQueryThreshold: 500, // ms
+    slowQueryThreshold: 1000, // ms (提高到1秒，减少误报)
     
     // 监控指标
     metrics: {
@@ -89,7 +89,7 @@ const PERFORMANCE_CONFIG = {
     // 报告配置
     reporting: {
         enabled: true,
-        interval: 60000, // 1分钟
+        interval: 120000, // 2分钟 (减少监控频率)
         endpoint: null // 可配置发送到监控服务
     }
 };

@@ -32,35 +32,6 @@
    npm start
    ```
 
-### 项目结构
-
-```
-.
-├── netlify/
-│   └── functions/
-│       └── chat.js          # AI聊天代理函数
-├── partialshtml/            # 页面片段
-├── images/                  # 图片资源
-├── *.html                   # 主要页面文件
-├── *.css                    # 样式文件
-├── *.js                     # JavaScript文件
-└── package.json             # 项目配置文件
-```
-
-### 性能优化
-
-1. **响应速度优化**：
-   - 移除了网络时间获取，直接使用本地时间
-   - 默认禁用联网搜索以提高响应速度
-   - 优化了AI API调用参数，限制最大token数
-   - 明确关闭了模型的思考模式
-
-2. **配置优化**：
-   - 减少了消息上下文数量（maxMessages: 6）
-   - 限制了最大token数（maxTokens: 1000）
-   - 关闭了思考模式（enableThinking: false）
-   - 禁用了自动搜索（autoSearch: false）
-
 ### 安全注意事项
 
 1. 永远不要在前端代码中硬编码API密钥

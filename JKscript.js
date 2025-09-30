@@ -11,13 +11,25 @@ async function loadSupabase() {
     
     // 检查是否已加载Supabase库
     if (typeof window.supabase === 'undefined') {
-        await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
+        debugLog('正在加载Supabase库...');
+        try {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                script.onload = () => {
+                    debugLog('Supabase库加载成功');
+                    resolve();
+                };
+                script.onerror = (err) => {
+                    debugError('Supabase库加载失败:', err);
+                    reject(new Error('Supabase库加载失败: ' + err.message));
+                };
+                document.head.appendChild(script);
+            });
+        } catch (error) {
+            showToast('网络错误：无法加载数据库连接库');
+            throw error;
+        }
     }
     
     // 性能优化配置
@@ -48,7 +60,8 @@ async function loadSupabase() {
         debugLog('Supabase客户端初始化成功');
         return supabase;
     } catch (error) {
-        console.error('Supabase初始化失败:', error);
+        debugError('Supabase初始化失败:', error);
+        showToast('数据库连接初始化失败，请检查网络连接');
         throw error;
     }
 }
@@ -131,31 +144,55 @@ async function loadUsers() {
             debugLog('使用缓存数据');
             state.users = cachedData.data || [];
             state.pagination.totalUsers = cachedData.count || 0;
-            updateDashboardStats(cachedData.count, cachedData.data);
+            // 只在第一页时更新仪表盘统计信息，避免重复计算
+            if (currentPage === 1) {
+                updateDashboardStats(cachedData.count, cachedData.data);
+            }
             return { success: true, fromCache: true };
         }
 
         // 使用性能优化的查询
         // 分离计数查询和数据查询以提高性能
-        const [countResult, dataResult] = await Promise.all([
-            supabaseClient
-                .from('New_user')
-                .select('*', { count: 'exact', head: true }),
-            supabaseClient
+        // 只在第一页时执行计数查询，减少数据库压力
+        let countResult = { count: 0, error: null };
+        if (currentPage === 1) {
+            try {
+                countResult = await supabaseClient
+                    .from('New_user')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (countResult.error) {
+                    debugError('计数查询失败:', countResult.error);
+                    // 不抛出错误，继续执行数据查询
+                }
+            } catch (countError) {
+                debugError('计数查询异常:', countError);
+                // 不抛出错误，继续执行数据查询
+            }
+        }
+        
+        let dataResult;
+        try {
+            dataResult = await supabaseClient
                 .from('New_user')
                 .select('id, name, gender, age, phone, direction, created_at')
                 .order('created_at', { ascending: false })
-                .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
-        ]);
+                .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
+        } catch (dataError) {
+            debugError('数据查询异常:', dataError);
+            throw new Error('数据查询失败: ' + dataError.message);
+        }
 
         debugLog(`数据库查询完成`);
 
-        if (countResult.error) throw countResult.error;
-        if (dataResult.error) throw dataResult.error;
+        if (dataResult.error) {
+            debugError('数据查询失败:', dataResult.error);
+            throw new Error('数据查询失败: ' + dataResult.error.message);
+        }
 
         const result = {
             data: dataResult.data || [],
-            count: countResult.count || 0
+            count: (countResult.count !== undefined && countResult.count !== null) ? countResult.count : (state.pagination.totalUsers || 0)
         };
 
         // 缓存结果
@@ -164,14 +201,27 @@ async function loadUsers() {
         state.users = result.data;
         state.pagination.totalUsers = result.count;
 
-        // 数据加载成功后，直接更新统计信息
-        updateDashboardStats(result.count, result.data);
+        // 只在第一页时更新仪表盘统计信息
+        if (currentPage === 1) {
+            updateDashboardStats(result.count, result.data);
+        }
 
         return { success: true };
     } catch (error) {
-        debugError('加载用户数据失败:', error.message);
-        showToast('加载用户数据失败: ' + error.message);
-        return { success: false, message: error.message };
+        debugError('加载用户数据失败:', error);
+        // 提供更友好的错误信息
+        let errorMessage = '加载用户数据失败';
+        if (error.message) {
+            if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
+                errorMessage = '网络连接失败，请检查网络设置';
+            } else if (error.message.includes('Invalid API key')) {
+                errorMessage = '数据库认证失败，请联系管理员';
+            } else {
+                errorMessage = error.message;
+            }
+        }
+        showToast(errorMessage);
+        return { success: false, message: errorMessage };
     }
 }
 
@@ -185,10 +235,6 @@ function updateDashboardStats(totalCount, userData) {
     };
     renderDashboard();
 }
-
-// =================================
-// UI渲染
-// =================================
 
 // 渲染仪表盘
 function renderDashboard() {
@@ -398,6 +444,14 @@ async function changePageSize(size) {
 // 优化的过滤数据函数
 async function filterData() {
     try {
+        // 防止重复调用
+        if (window.filterDataInProgress) {
+            debugLog('过滤数据正在进行中，跳过重复调用');
+            return;
+        }
+        
+        window.filterDataInProgress = true;
+        
         if (!supabase) throw new Error('Supabase客户端未初始化');
 
         const nameFilter = document.querySelector('.search-inputs input[placeholder="姓名"]')?.value?.trim();
@@ -418,6 +472,7 @@ async function filterData() {
             renderTable();
             updatePagination();
             showToast(`找到 ${state.pagination.totalUsers} 条记录 (缓存)`);
+            window.filterDataInProgress = false;
             return;
         }
 
@@ -468,9 +523,22 @@ async function filterData() {
         updatePagination();
 
         showToast(`找到 ${state.pagination.totalUsers} 条记录`);
+        window.filterDataInProgress = false;
     } catch (error) {
-        debugError('过滤数据失败:', error.message);
-        showToast('过滤数据失败: ' + error.message);
+        debugError('过滤数据失败:', error);
+        // 提供更友好的错误信息
+        let errorMessage = '过滤数据失败';
+        if (error.message) {
+            if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
+                errorMessage = '网络连接失败，请检查网络设置';
+            } else if (error.message.includes('Invalid API key')) {
+                errorMessage = '数据库认证失败，请联系管理员';
+            } else {
+                errorMessage = error.message;
+            }
+        }
+        showToast(errorMessage);
+        window.filterDataInProgress = false;
     }
 }
 
@@ -722,9 +790,20 @@ async function deleteUser(userId) {
 // =================================
 // 优化的用户档案加载函数
 async function openProfileModal(userId) {
+    // 防止重复调用
+    if (window.loadingProfileInProgress) {
+        debugLog('用户档案加载正在进行中，跳过重复调用');
+        return;
+    }
+    
+    window.loadingProfileInProgress = true;
+    
     const modal = document.getElementById('profileModal');
     const form = document.getElementById('profileForm');
-    if (!modal || !form) return;
+    if (!modal || !form) {
+        window.loadingProfileInProgress = false;
+        return;
+    }
 
     form.reset();
     document.getElementById('profileUserId').value = userId;
@@ -849,6 +928,7 @@ async function openProfileModal(userId) {
     } finally {
         saveButton.disabled = false;
         saveButton.textContent = '保存档案';
+        window.loadingProfileInProgress = false;
     }
 }
 
@@ -1323,6 +1403,13 @@ async function loadContent(url, clickedElement) {
 
 // 页面初始化函数
 async function initUserListPage() {
+    // 防止重复初始化
+    if (window.userListPageInitialized) {
+        debugLog('用户列表页面已初始化，跳过重复初始化');
+        return;
+    }
+    
+    window.userListPageInitialized = true;
     initUserListEventListeners();
     createUserModal(); // 预创建模态框
     await loadAndRenderUsers();
@@ -1332,41 +1419,53 @@ async function initUserListPage() {
 
 // 优化的统一加载和渲染函数
 async function loadAndRenderUsers() {
+    // 防止重复调用
+    if (window.loadingUsersInProgress) {
+        debugLog('用户数据加载正在进行中，跳过重复调用');
+        return;
+    }
+    
+    window.loadingUsersInProgress = true;
     const loadingToast = showToast('正在加载数据...', false);
 
-    // 使用性能标记
-    performance.mark('loadStart');
+    try {
+        // 使用性能标记
+        performance.mark('loadStart');
 
-    // 先渲染表格骨架屏以提高感知性能
-    renderTableSkeleton();
+        // 先渲染表格骨架屏以提高感知性能
+        renderTableSkeleton();
 
-    const result = await loadUsers();
+        const result = await loadUsers();
 
-    if(result.success) {
-        // 使用requestAnimationFrame确保在下一帧渲染，避免阻塞主线程
-        window.requestAnimationFrame(() => {
-            renderTable();
-            updatePagination();
+        if(result.success) {
+            // 使用requestAnimationFrame确保在下一帧渲染，避免阻塞主线程
+            window.requestAnimationFrame(() => {
+                renderTable();
+                updatePagination();
 
-            // 清除性能标记
-            performance.clearMarks();
-            performance.clearMeasures();
+                // 清除性能标记
+                performance.clearMarks();
+                performance.clearMeasures();
 
-            debugLog(`数据加载和渲染完成`);
+                debugLog(`数据加载和渲染完成`);
 
+                if (loadingToast) {
+                    loadingToast.textContent = `数据加载完成`;
+                    setTimeout(() => {
+                        loadingToast.className = loadingToast.className.replace('show', '');
+                    }, 2000);
+                } else {
+                    showToast(`数据加载完成`);
+                }
+            });
+        } else {
             if (loadingToast) {
-                loadingToast.textContent = `数据加载完成`;
-                setTimeout(() => {
-                    loadingToast.className = loadingToast.className.replace('show', '');
-                }, 2000);
-            } else {
-                showToast(`数据加载完成`);
+                loadingToast.className = loadingToast.className.replace('show', '');
             }
-        });
-    } else {
-        if (loadingToast) {
-            loadingToast.className = loadingToast.className.replace('show', '');
         }
+    } finally {
+        // 确保标志位被重置
+        window.loadingUsersInProgress = false;
     }
 }
 
@@ -1481,10 +1580,13 @@ document.addEventListener('DOMContentLoaded', () => {
     linkPreconnect.href = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
     document.head.appendChild(linkPreconnect);
 
-    const initialElement = document.querySelector('.sidebar li.active');
-    if (initialElement) {
-        loadContent('partialshtml/user_list.html', initialElement);
-    }
+    // 延迟加载用户列表，提高首屏加载速度
+    setTimeout(() => {
+        const initialElement = document.querySelector('.sidebar li.active');
+        if (initialElement) {
+            loadContent('partialshtml/user_list.html', initialElement);
+        }
+    }, 100);
 
     // 全局ESC关闭模态框
     document.addEventListener('keydown', function(e) {
