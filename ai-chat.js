@@ -250,10 +250,16 @@ class AIChatWidget {
                         this.hideSearchingIndicator();
                     }
                 }
-                const response = await this.callAIAPI(message, searchResults);
-                const aiMsg = { role: 'assistant', content: this.formatContent(response) };
-                this.addMessage(aiMsg);
-                this.messages.push(aiMsg);
+                // 线上真实流式模式
+                const enableSSEOnline = this.performanceSettings?.enableSSEOnline === true || (this.config?.performanceSettings?.enableSSEOnline === true);
+                if (enableSSEOnline) {
+                    await this.runOnlineSSEStream(message, searchResults);
+                } else {
+                    const response = await this.callAIAPI(message, searchResults);
+                    const aiMsg = { role: 'assistant', content: this.formatContent(response) };
+                    this.addMessage(aiMsg);
+                    this.messages.push(aiMsg);
+                }
             }
 
             this.hideTypingIndicator();
@@ -648,6 +654,106 @@ ${snippet}
         if (this.searchingIndicator) {
             this.searchingIndicator.remove();
             this.searchingIndicator = null;
+        }
+    }
+
+    // 线上真实流式：通过 Netlify Function (?stream=1) 读取并逐步渲染
+    async runOnlineSSEStream(userMessage, searchResults = '') {
+        // 构建系统提示，与 callAIAPI 一致
+        let enhancedSystemPrompt = this.systemPrompt;
+        const currentTime = this.getCurrentTime();
+        if (searchResults) {
+            enhancedSystemPrompt += `\n\n最新网络信息：\n${searchResults}\n\n请基于上述最新信息和你的知识库综合回答用户问题。\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
+        } else {
+            enhancedSystemPrompt += `\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
+        }
+
+        const messageHistory = [
+            { role: 'system', content: enhancedSystemPrompt },
+            ...this.messages.slice(-this.maxMessages).map(msg => ({
+                role: msg.role === 'ai' ? 'assistant' : msg.role,
+                content: msg.content
+            })),
+            { role: 'user', content: userMessage }
+        ];
+
+        // 准备 UI 容器（与本地流式保持一致的显示）
+        const container = document.createElement('div');
+        container.className = 'chat-message ai';
+        const avatar = document.createElement('div');
+        avatar.className = 'chat-avatar ai';
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ai';
+        container.appendChild(avatar);
+        container.appendChild(bubble);
+        this.messagesContainer.appendChild(container);
+        this.scrollToBottom();
+
+        let accumulated = '';
+        const appendText = (text) => {
+            if (!text) return;
+            accumulated += text;
+            bubble.textContent = accumulated;
+            this.scrollToBottom();
+        };
+
+        // 发起流式请求
+        const resp = await fetch(`${this.functionUrl}?stream=1`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ messages: messageHistory, model: this.model }),
+            cache: 'no-store'
+        });
+
+        if (!resp.ok) {
+            const errText = await resp.text().catch(() => '');
+            throw new Error(`AI服务请求失败: ${resp.status} ${resp.statusText}${errText ? `\n详细信息: ${errText}` : ''}`);
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                // 按 SSE 帧分割：以 \n\n 为帧结束
+                const frames = buffer.split('\n\n');
+                buffer = frames.pop() || '';
+                for (const frame of frames) {
+                    const lines = frame.split('\n');
+                    for (const lineRaw of lines) {
+                        const line = lineRaw.trim();
+                        if (!line.startsWith('data:')) continue;
+                        const payload = line.replace(/^data:\s*/, '');
+                        if (!payload || payload === '[DONE]') continue;
+                        try {
+                            const json = JSON.parse(payload);
+                            const delta = json.choices?.[0]?.delta?.content
+                                ?? json.choices?.[0]?.message?.content
+                                ?? json.delta?.content
+                                ?? '';
+                            appendText(delta);
+                        } catch (e) {
+                            // 不是 JSON 的数据行，忽略
+                        }
+                    }
+                }
+            }
+        } finally {
+            try { reader.releaseLock(); } catch {}
+        }
+
+        // 将最终内容保存到消息记录
+        if (accumulated) {
+            this.messages.push({ role: 'assistant', content: accumulated });
+        } else {
+            // 如果没有任何内容（异常情况），提示错误
+            throw new Error('AI流式响应为空');
         }
     }
 }
