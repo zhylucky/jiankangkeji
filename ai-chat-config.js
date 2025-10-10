@@ -20,7 +20,7 @@ const AI_CHAT_CONFIG = {
         enableThinking: true, // 明确关闭思考模式
         // 仅本地演示使用：不调用后端，模拟流式输出与按钮状态
         demoMode: false,
-        enableSSEDemo: false
+        enableSSEDemo: true
     },
 
     // 联网搜索配置（默认禁用以提升响应速度）
