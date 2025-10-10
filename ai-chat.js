@@ -291,73 +291,97 @@ class AIChatWidget {
     
     // 调用 AI 的函数 - 安全版本（性能优化版）
     async callAIAPI(userMessage, searchResults = '') {
-        try {
-            // 如果有搜索结果，将其添加到系统提示中
-            let enhancedSystemPrompt = this.systemPrompt;
-            
-            // 获取当前时间（使用本地时间）
-            const currentTime = this.getCurrentTime();
-            
-            if (searchResults) {
-                enhancedSystemPrompt += `
-
-最新网络信息：
-${searchResults}
-
-请基于上述最新信息和你的知识库综合回答用户问题。
-
-重要提醒：${currentTime}，请确保时间信息的准确性。`;
-            } else {
-                enhancedSystemPrompt += `
-
-重要提醒：${currentTime}，请确保时间信息的准确性。`;
-            }
-            
-            // 构建消息历史
-            const messageHistory = [
-                {
-                    role: 'system',
-                    content: enhancedSystemPrompt
-                },
-                // 优化：只取最近的消息作为上下文
-                ...this.messages.slice(-this.maxMessages).map(msg => ({
-                    role: msg.role === 'ai' ? 'assistant' : msg.role,
-                    content: msg.content
-                })),
-                {
-                    role: 'user',
-                    content: userMessage
-                }
-            ];
-            
-            // 通过Netlify Function调用AI API（移除调试日志以提高性能）
-            const response = await fetch(this.functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    messages: messageHistory,
-                    model: this.model
-                })
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}\n详细信息: ${errorText}`);
-            }
-
-            const data = await response.json();
-            
-            // 返回AI的回复内容
-            if (data.choices && data.choices[0] && data.choices[0].message) {
-                return data.choices[0].message.content;
-            } else {
-                throw new Error('AI响应格式不正确: ' + JSON.stringify(data));
-            }
-        } catch (error) {
-            throw new Error('调用AI失败: ' + error.message);
+        // 网络离线直接给出友好提示
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+            throw new Error('当前网络不可用，请检查网络连接后重试');
         }
+
+        // 组合系统提示
+        let enhancedSystemPrompt = this.systemPrompt;
+        const currentTime = this.getCurrentTime();
+        if (searchResults) {
+            enhancedSystemPrompt += `\n\n最新网络信息：\n${searchResults}\n\n请基于上述最新信息和你的知识库综合回答用户问题。\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
+        } else {
+            enhancedSystemPrompt += `\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
+        }
+
+        // 构建消息历史（裁剪到最近N条）
+        const messageHistory = [
+            { role: 'system', content: enhancedSystemPrompt },
+            ...this.messages.slice(-this.maxMessages).map(msg => ({
+                role: msg.role === 'ai' ? 'assistant' : msg.role,
+                content: msg.content
+            })),
+            { role: 'user', content: userMessage }
+        ];
+
+        // 超时与重试设置
+        const timeoutMs = 15000; // 15s 超时
+        const maxRetries = 2;    // 最多重试 2 次
+        const baseDelay = 600;   // 初始退避 600ms
+
+        const doRequest = async (attempt) => {
+            // 超时控制
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const response = await fetch(this.functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: messageHistory,
+                        model: this.model
+                    }),
+                    signal: controller.signal,
+                    // 避免某些浏览器缓存 POST
+                    cache: 'no-store'
+                });
+
+                clearTimeout(timer);
+
+                if (!response.ok) {
+                    const errorText = await response.text().catch(() => '');
+                    throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}${errorText ? `\n详细信息: ${errorText}` : ''}`);
+                }
+
+                // 尝试解析 JSON
+                const data = await response.json();
+
+                // 结构校验
+                if (data && Array.isArray(data.choices) && data.choices[0] && data.choices[0].message) {
+                    return data.choices[0].message.content;
+                }
+
+                // 兼容部分返回结构
+                if (data && data.message && typeof data.message.content === 'string') {
+                    return data.message.content;
+                }
+
+                throw new Error('AI响应格式不正确');
+            } catch (err) {
+                clearTimeout(timer);
+
+                const isAbort = err?.name === 'AbortError';
+                const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
+                const isNetwork = /Failed to fetch|NetworkError|网络|fetch/i.test(err?.message || '');
+
+                // 可重试的错误
+                if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, attempt); // 指数退避
+                    await new Promise(r => setTimeout(r, delay));
+                    return doRequest(attempt + 1);
+                }
+
+                // 其他错误或超过重试次数
+                throw new Error(`调用AI失败: ${err.message}`);
+            }
+        };
+
+        return doRequest(0);
     }
     
     // 优化内容格式，去除多余的空格和换行
