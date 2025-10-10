@@ -17,15 +17,18 @@ const AI_CHAT_CONFIG = {
         maxTokens: 2000, // 限制最大token数以提高响应速度
         temperature: 0.7, // 适度的创造性
         topP: 0.9, // nucleus采样
-        enableThinking: false // 明确关闭思考模式
+        enableThinking: true, // 明确关闭思考模式
+        // 仅本地演示使用：不调用后端，模拟流式输出与按钮状态
+        demoMode: false,
+        enableSSEDemo: false
     },
 
     // 联网搜索配置（默认禁用以提升响应速度）
     searchSettings: {
-        enabled: false, // 默认禁用搜索以提高响应速度
+        enabled: true, // 默认禁用搜索以提高响应速度
         provider: 'baidu', 
         maxResults: 3, 
-        autoSearch: false, // 禁用自动搜索
+        autoSearch: true, // 禁用自动搜索
         searchKeywords: ['最新', '今天', '现在', '当前', '新闻', '近期', '实时', '今年', '2024', '2025'] // 触发搜索的关键词
     },
     

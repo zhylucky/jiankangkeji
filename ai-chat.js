@@ -208,70 +208,58 @@ class AIChatWidget {
     async sendMessage() {
         const message = this.inputField.value.trim();
         if (!message) return;
-        
-        // 防止重复请求
         if (this.isRequestPending) {
             this.showError('请等待上一个问题回答完成...');
             return;
         }
-        
-        // 设置请求状态
         this.isRequestPending = true;
-        
-        // 添加用户消息
-        const userMsg = {
-            role: 'user',
-            content: message
-        };
+
+        const userMsg = { role: 'user', content: message };
         this.addMessage(userMsg);
         this.messages.push(userMsg);
-        
-        // 清空输入框
         this.inputField.value = '';
         this.autoResizeTextarea();
-        
-        // 禁用发送按钮
+
+        // 按钮视觉反馈
+        const originalSendHtml = this.sendBtn.innerHTML;
         this.sendBtn.disabled = true;
-        
+        this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // 发送中
+
         // 显示打字指示器
         this.showTypingIndicator();
-        
+
         try {
-            // 验证和清理消息历史
             this.validateAndCleanMessages();
-            
-            // 检查是否需要进行网络搜索
-            let searchResults = '';
-            if (this.searchEnabled && this.shouldSearch(message)) {
-                try {
-                    this.showSearchingIndicator();
-                    searchResults = await this.performWebSearch(message);
-                    this.hideSearchingIndicator();
-                } catch (searchError) {
-                    console.warn('搜索失败:', searchError);
-                    this.hideSearchingIndicator();
-                    // 搜索失败不影响主流程，继续使用AI回答
+
+            // 演示模式：本地模拟流式输出，不调用后端
+            const demoMode = this.performanceSettings?.demoMode === true || (this.config?.performanceSettings?.demoMode === true);
+            const sseDemo = this.performanceSettings?.enableSSEDemo === true || (this.config?.performanceSettings?.enableSSEDemo === true);
+
+            if (demoMode) {
+                await this.runLocalDemoSSE(message, sseDemo);
+            } else {
+                // 正常路径：可选搜索
+                let searchResults = '';
+                if (this.searchEnabled && this.shouldSearch(message)) {
+                    try {
+                        this.showSearchingIndicator();
+                        searchResults = await this.performWebSearch(message);
+                        this.hideSearchingIndicator();
+                    } catch (searchError) {
+                        console.warn('搜索失败:', searchError);
+                        this.hideSearchingIndicator();
+                    }
                 }
+                const response = await this.callAIAPI(message, searchResults);
+                const aiMsg = { role: 'assistant', content: this.formatContent(response) };
+                this.addMessage(aiMsg);
+                this.messages.push(aiMsg);
             }
-            
-            // 调用AI API（通过Netlify Function代理）
-            const response = await this.callAIAPI(message, searchResults);
-            
-            // 处理响应
-            const aiMsg = {
-                role: 'assistant',
-                content: this.formatContent(response)
-            };
-            this.addMessage(aiMsg);
-            this.messages.push(aiMsg);
-            
-            // 移除打字指示器
+
             this.hideTypingIndicator();
-            
         } catch (error) {
             console.error('AI API调用失败:', error);
             this.hideTypingIndicator();
-            
             let errorMsg;
             if (error.message.includes('网络') || error.message.includes('Network')) {
                 errorMsg = this.config?.ui?.errorMessages?.networkError || '网络连接失败，请检查网络后重试';
@@ -280,13 +268,57 @@ class AIChatWidget {
             } else {
                 errorMsg = this.config?.ui?.errorMessages?.unknownError || '出现了未知错误，请重新尝试';
             }
-            
             this.showError(errorMsg);
         } finally {
-            // 重新启用发送按钮和重置请求状态
+            // 恢复按钮状态
             this.sendBtn.disabled = false;
+            this.sendBtn.innerHTML = originalSendHtml;
             this.isRequestPending = false;
         }
+    }
+
+    // 本地演示：模拟SSE流式输出/重试视觉
+    async runLocalDemoSSE(userMessage, enableStream = true) {
+        // 模拟重试视觉：第一次“失败”，触发重试中状态
+        const showRetry = userMessage.includes('重试') || userMessage.toLowerCase().includes('retry');
+        if (showRetry) {
+            this.sendBtn.innerHTML = '<i class="fas fa-rotate"></i>'; // 重试中图标
+            await new Promise(r => setTimeout(r, 600));
+            this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // 再次发送
+        }
+
+        const demoText = `这是本地演示回复：\n- 发送按钮会在发送/重试时展示不同图标\n- ${enableStream ? '当前以流式方式逐字输出' : '当前以整段方式输出'}\n- 真正的线上环境会由后端携带API Key调用AI`;
+
+        if (!enableStream) {
+            const aiMsg = { role: 'assistant', content: this.formatContent(demoText) };
+            this.addMessage(aiMsg);
+            this.messages.push(aiMsg);
+            return;
+        }
+
+        // 流式逐字输出
+        const container = document.createElement('div');
+        container.className = 'chat-message ai';
+        const avatar = document.createElement('div');
+        avatar.className = 'chat-avatar ai';
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ai';
+        container.appendChild(avatar);
+        container.appendChild(bubble);
+        this.messagesContainer.appendChild(container);
+        this.scrollToBottom();
+
+        const tokens = demoText.split('');
+        let acc = '';
+        for (let i = 0; i < tokens.length; i++) {
+            acc += tokens[i];
+            bubble.textContent = acc;
+            this.scrollToBottom();
+            await new Promise(r => setTimeout(r, 15));
+        }
+
+        // 保存消息
+        this.messages.push({ role: 'assistant', content: acc });
     }
     
     // 调用 AI 的函数 - 安全版本（性能优化版）
