@@ -9,22 +9,57 @@ async function loadSupabase() {
         return supabase; // 已经初始化
     }
     
+    // 添加请求超时配置
+    const REQUEST_TIMEOUT = 10000; // 10秒超时
+    
+    // 带超时的请求包装函数
+    const fetchWithTimeout = (url, options = {}, timeout = REQUEST_TIMEOUT) => {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('请求超时')), timeout)
+            )
+        ]);
+    };
+    
     // 检查是否已加载Supabase库
     if (typeof window.supabase === 'undefined') {
         debugLog('正在加载Supabase库...');
         try {
             await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-                script.onload = () => {
-                    debugLog('Supabase库加载成功');
-                    resolve();
+                // 使用国内稳定的CDN镜像，按优先级排序
+                const cdnUrls = [
+                    'https://unpkg.com/@supabase/supabase-js@2',  // unpkg CDN (国内访问最快)
+                    'https://cdnjs.cloudflare.com/ajax/libs/supabase/2.0.0/supabase.min.js',  // Cloudflare CDN (国内访问较快)
+                    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'  // jsdelivr 最后备用
+                ];
+                
+                let currentIndex = 0;
+                
+                const tryLoadScript = () => {
+                    if (currentIndex >= cdnUrls.length) {
+                        reject(new Error('所有CDN源都无法加载Supabase库'));
+                        return;
+                    }
+                    
+                    const script = document.createElement('script');
+                    script.src = cdnUrls[currentIndex];
+                    
+                    script.onload = () => {
+                        debugLog(`Supabase库加载成功 (CDN: ${cdnUrls[currentIndex]})`);
+                        resolve();
+                    };
+                    
+                    script.onerror = (err) => {
+                        debugWarn(`CDN ${currentIndex + 1} 加载失败:`, cdnUrls[currentIndex]);
+                        currentIndex++;
+                        tryLoadScript();
+                    };
+                    
+                    document.head.appendChild(script);
                 };
-                script.onerror = (err) => {
-                    debugError('Supabase库加载失败:', err);
-                    reject(new Error('Supabase库加载失败: ' + err.message));
-                };
-                document.head.appendChild(script);
+                
+                tryLoadScript();
             });
         } catch (error) {
             showToast('网络错误：无法加载数据库连接库');
@@ -151,36 +186,56 @@ async function loadUsers() {
             return { success: true, fromCache: true };
         }
 
-        // 使用性能优化的查询
-        // 分离计数查询和数据查询以提高性能
-        // 只在第一页时执行计数查询，减少数据库压力
+        // 使用性能优化的查询 - 并行执行计数和数据查询
         let countResult = { count: 0, error: null };
+        let dataResult;
+        
+        // 并行执行查询以提高性能
+        const queries = [];
+        
+        // 只在第一页时执行计数查询
         if (currentPage === 1) {
-            try {
-                countResult = await supabaseClient
+            queries.push(
+                supabaseClient
                     .from('New_user')
-                    .select('*', { count: 'exact', head: true });
-                
-                if (countResult.error) {
-                    debugError('计数查询失败:', countResult.error);
-                    // 不抛出错误，继续执行数据查询
-                }
-            } catch (countError) {
-                debugError('计数查询异常:', countError);
-                // 不抛出错误，继续执行数据查询
-            }
+                    .select('*', { count: 'exact', head: true })
+                    .then(result => ({ type: 'count', result }))
+                    .catch(error => ({ type: 'count', error }))
+            );
         }
         
-        let dataResult;
-        try {
-            dataResult = await supabaseClient
+        // 数据查询
+        queries.push(
+            supabaseClient
                 .from('New_user')
                 .select('id, name, gender, age, phone, direction, created_at')
                 .order('created_at', { ascending: false })
-                .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
-        } catch (dataError) {
-            debugError('数据查询异常:', dataError);
-            throw new Error('数据查询失败: ' + dataError.message);
+                .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
+                .then(result => ({ type: 'data', result }))
+                .catch(error => ({ type: 'data', error }))
+        );
+        
+        try {
+            const results = await Promise.all(queries);
+            
+            // 处理查询结果
+            results.forEach(({ type, result, error }) => {
+                if (type === 'count') {
+                    countResult = result || { count: 0, error };
+                    if (countResult.error) {
+                        debugError('计数查询失败:', countResult.error);
+                    }
+                } else if (type === 'data') {
+                    dataResult = result || { data: [], error };
+                    if (dataResult.error) {
+                        debugError('数据查询失败:', dataResult.error);
+                        throw new Error('数据查询失败: ' + dataResult.error.message);
+                    }
+                }
+            });
+        } catch (error) {
+            debugError('并行查询异常:', error);
+            throw new Error('数据查询失败: ' + error.message);
         }
 
         debugLog(`数据库查询完成`);
@@ -279,7 +334,7 @@ function renderDashboard() {
     }
 }
 
-// 渲染表格
+// 渲染表格 - 优化版本，避免长任务
 function renderTable() {
     const tbody = document.querySelector('.data-table tbody');
     if (!tbody) return;
@@ -291,50 +346,67 @@ function renderTable() {
         return;
     }
     
-    state.users.forEach(user => {
-        const row = document.createElement('tr');
-        row.dataset.id = user.id;
+    // 使用 requestAnimationFrame 分解长任务
+    const renderUsers = (users, startIndex = 0, batchSize = 10) => {
+        const endIndex = Math.min(startIndex + batchSize, users.length);
         
-        row.innerHTML = `
-            <td><input type="checkbox" class="user-select" data-id="${user.id}"></td>
-            <td>${user.name || ''}</td>
-            <td>${user.gender || ''}</td>
-            <td>${user.age || ''}</td>
-            <td>${user.phone || ''}</td>
-            <td><span class="direction-tag direction-${user.direction}">${user.direction || ''}</span></td>
-            <td class="action-cell">
-                <button class="action-btn" onclick="completeProfile(${user.id})"><i class="fas fa-id-card"></i><span>用户档案</span></button>
-                <button class="action-btn report-dropdown-btn" onclick="toggleReportDropdown(event, ${user.id})">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>查看报告</span>
-                    <i class="fas fa-chevron-down dropdown-arrow"></i>
-                    <div class="report-dropdown" id="reportDropdown_${user.id}" style="display: none;">
-                        <div class="dropdown-item" onclick="viewReport(event, 'sleep', ${user.id})">
-                            <i class="fas fa-bed"></i>
-                            <span>睡眠报告</span>
+        for (let i = startIndex; i < endIndex; i++) {
+            const user = users[i];
+            const row = document.createElement('tr');
+            row.dataset.id = user.id;
+            
+            row.innerHTML = `
+                <td><input type="checkbox" class="user-select" data-id="${user.id}"></td>
+                <td>${user.name || ''}</td>
+                <td>${user.gender || ''}</td>
+                <td>${user.age || ''}</td>
+                <td>${user.phone || ''}</td>
+                <td><span class="direction-tag direction-${user.direction}">${user.direction || ''}</span></td>
+                <td class="action-cell">
+                    <button class="action-btn" onclick="completeProfile(${user.id})"><i class="fas fa-id-card"></i><span>用户档案</span></button>
+                    <button class="action-btn report-dropdown-btn" onclick="toggleReportDropdown(event, ${user.id})">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>查看报告</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        <div class="report-dropdown" id="reportDropdown_${user.id}" style="display: none;">
+                            <div class="dropdown-item" onclick="viewReport(event, 'sleep', ${user.id})">
+                                <i class="fas fa-bed"></i>
+                                <span>睡眠报告</span>
+                            </div>
+                            <div class="dropdown-item" onclick="viewReport(event, 'navigation', ${user.id})">
+                                <i class="fas fa-route"></i>
+                                <span>导航报告</span>
+                            </div>
                         </div>
-                        <div class="dropdown-item" onclick="viewReport(event, 'navigation', ${user.id})">
-                            <i class="fas fa-route"></i>
-                            <span>导航报告</span>
-                        </div>
-                    </div>
-                </button>
-            </td>
-            <td class="action-cell-single">
-                <button class="icon-btn" onclick="editUser(${user.id})"><i class="fas fa-edit"></i></button>
-                <button class="icon-btn danger" onclick="deleteUser(${user.id})"><i class="fas fa-trash"></i></button>
-            </td>
-        `;
+                    </button>
+                </td>
+                <td class="action-cell-single">
+                    <button class="icon-btn" onclick="editUser(${user.id})"><i class="fas fa-edit"></i></button>
+                    <button class="icon-btn danger" onclick="deleteUser(${user.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        }
         
-        tbody.appendChild(row);
-    });
+        // 如果还有更多用户需要渲染，继续下一批
+        if (endIndex < users.length) {
+            requestAnimationFrame(() => {
+                renderUsers(users, endIndex, batchSize);
+            });
+        } else {
+            // 所有用户渲染完成
+            updateSelectedCount();
+            
+            // 初始化报告下拉菜单悬停事件
+            setTimeout(() => {
+                initReportDropdownHover();
+            }, 100);
+        }
+    };
     
-    updateSelectedCount();
-    
-    // 初始化报告下拉菜单悬停事件
-    setTimeout(() => {
-        initReportDropdownHover();
-    }, 100);
+    // 开始分批渲染
+    renderUsers(state.users);
 }
 
 // 更新分页控件
@@ -410,6 +482,8 @@ function initUserListEventListeners() {
     document.querySelector('.btn-search')?.addEventListener('click', debounce(filterData, 300));
     document.querySelector('.btn-reset')?.addEventListener('click', resetFilter);
     document.querySelector('.btn-export')?.addEventListener('click', exportData);
+    document.querySelector('.btn-batch')?.addEventListener('click', handleBatchOperation);
+    document.querySelector('.btn-refresh')?.addEventListener('click', handleManualRefresh);
     document.querySelector('.page-size')?.addEventListener('change', (e) => changePageSize(parseInt(e.target.value, 10)));
     document.querySelector('.select-all')?.addEventListener('change', function() {
         document.querySelectorAll('.user-select').forEach(checkbox => {
@@ -426,6 +500,67 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
+}
+
+// 批量操作处理函数
+function handleBatchOperation() {
+    const selectedCheckboxes = document.querySelectorAll('.user-select:checked');
+    if (selectedCheckboxes.length === 0) {
+        showToast('请先选择要操作的用户');
+        return;
+    }
+    
+    const selectedIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.dataset.id));
+    showToast(`已选择 ${selectedIds.length} 个用户，批量操作功能开发中...`);
+    
+    // 这里可以添加具体的批量操作逻辑
+    // 例如：批量删除、批量修改标签等
+}
+
+// 手动刷新处理函数
+async function handleManualRefresh() {
+    const refreshBtn = document.querySelector('.btn-refresh');
+    if (!refreshBtn) return;
+    
+    // 添加加载状态
+    const originalContent = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刷新中...';
+    refreshBtn.disabled = true;
+    
+    try {
+        await refreshUserList();
+        showToast('列表刷新成功');
+    } catch (error) {
+        debugError('手动刷新失败:', error);
+        showToast('刷新失败: ' + error.message);
+    } finally {
+        // 恢复按钮状态
+        refreshBtn.innerHTML = originalContent;
+        refreshBtn.disabled = false;
+    }
+}
+
+// 通用的列表刷新函数
+async function refreshUserList() {
+    try {
+        // 清除缓存，确保获取最新数据
+        requestCache.clear();
+        
+        // 重新加载用户列表和仪表盘数据
+        await loadAndRenderUsers();
+        
+        // 更新仪表盘统计数据
+        const supabaseClient = await loadSupabase();
+        const { count, data } = await supabaseClient.from('New_user').select('*', { count: 'exact' });
+        updateDashboardStats(count, data);
+        
+        debugLog('用户列表已自动刷新');
+        return true;
+    } catch (error) {
+        debugError('刷新用户列表失败:', error);
+        showToast('刷新列表失败: ' + error.message);
+        return false;
+    }
 }
 
 // 切换页码
@@ -726,10 +861,9 @@ async function saveUser(e) {
         
         closeUserModal();
         showToast(userId ? '用户更新成功' : '添加用户成功');
-        await loadAndRenderUsers();
-        // 仪表盘数据也需要更新
-        const { count, data } = await supabaseClient.from('New_user').select('*', { count: 'exact' });
-        updateDashboardStats(count, data);
+        
+        // 自动刷新用户列表
+        await refreshUserList();
         
     } catch (error) {
         debugError('保存用户失败:', error.message);
@@ -774,9 +908,9 @@ async function deleteUser(userId) {
             if (error) throw error;
             
             showToast('用户删除成功');
-            await loadAndRenderUsers();
-            const { count, data } = await supabaseClient.from('New_user').select('*', { count: 'exact' });
-            updateDashboardStats(count, data);
+            
+            // 自动刷新用户列表
+            await refreshUserList();
 
         } catch (error) {
             debugError('删除用户失败:', error.message);
@@ -1386,6 +1520,8 @@ async function loadContent(url, clickedElement) {
         
         // 3. 用户列表页面需要特殊初始化
         if (url.includes('user_list.html')) {
+            // 清除之前的初始化状态，确保每次切换都重新加载
+            window.userListPageInitialized = false;
             await initUserListPage();
         }
 
@@ -1403,13 +1539,15 @@ async function loadContent(url, clickedElement) {
 
 // 页面初始化函数
 async function initUserListPage() {
-    // 防止重复初始化
-    if (window.userListPageInitialized) {
-        debugLog('用户列表页面已初始化，跳过重复初始化');
-        return;
-    }
+    // 每次切换到用户列表页面都重新初始化，确保数据刷新
+    debugLog('初始化用户列表页面');
     
-    window.userListPageInitialized = true;
+    // 清除缓存，强制重新加载数据
+    requestCache.clear();
+    
+    // 重置分页状态到第一页
+    state.pagination.currentPage = 1;
+    
     initUserListEventListeners();
     createUserModal(); // 预创建模态框
     await loadAndRenderUsers();
@@ -1529,7 +1667,7 @@ function monitorPerformance() {
         try {
             const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach((entry) => {
-                    // 只关注Supabase API请求
+                    // 监控Supabase API请求
                     if (entry.name.includes('supabase.co') && entry.initiatorType === 'fetch') {
                         debugLog(`API请求: ${entry.name.split('?')[0]}`);
                         debugLog(`  耗时: ${entry.duration.toFixed(2)}ms`);
@@ -1541,11 +1679,27 @@ function monitorPerformance() {
                             console.warn(`⚠️ 慢请求检测: ${entry.name.split('?')[0]} (${entry.duration.toFixed(0)}ms)`);
                         }
                     }
+                    
+                    // 监控CDN加载性能
+                    if (entry.name.includes('unpkg.com') || entry.name.includes('cdn.jsdelivr.net') || entry.name.includes('cdnjs.cloudflare.com')) {
+                        const cdnName = entry.name.includes('unpkg.com') ? 'unpkg' : 
+                                       entry.name.includes('cdn.jsdelivr.net') ? 'jsdelivr' : 'cloudflare';
+                        debugLog(`CDN加载: ${cdnName}`);
+                        debugLog(`  耗时: ${entry.duration.toFixed(2)}ms`);
+                        debugLog(`  传输大小: ${(entry.transferSize / 1024).toFixed(2)}KB`);
+                        
+                        // 记录CDN性能
+                        if (entry.duration > 1000) {
+                            console.warn(`⚠️ CDN加载较慢: ${cdnName} (${entry.duration.toFixed(0)}ms)`);
+                        } else {
+                            console.log(`✅ CDN加载正常: ${cdnName} (${entry.duration.toFixed(0)}ms)`);
+                        }
+                    }
                 });
             });
 
             observer.observe({ entryTypes: ['resource'] });
-            console.log('性能监控已启用');
+            console.log('性能监控已启用 (包含CDN监控)');
         } catch (e) {
             console.error('性能监控初始化失败:', e);
         }
@@ -1574,11 +1728,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // 启用性能监控
     monitorPerformance();
 
-    // 预热连接到Supabase
-    const linkPreconnect = document.createElement('link');
-    linkPreconnect.rel = 'preconnect';
-    linkPreconnect.href = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
-    document.head.appendChild(linkPreconnect);
+    // 预热连接到Supabase服务器和CDN，减少连接时间
+    const preconnectUrls = [
+        'https://gxohpxiekmpsmkzkcxfc.supabase.co',  // Supabase服务器
+        'https://unpkg.com',  // unpkg CDN (国内访问较快)
+        'https://cdn.jsdelivr.net'  // jsdelivr CDN 备用
+    ];
+    
+    preconnectUrls.forEach(url => {
+        const linkPreconnect = document.createElement('link');
+        linkPreconnect.rel = 'preconnect';
+        linkPreconnect.href = url;
+        linkPreconnect.crossOrigin = 'anonymous';
+        document.head.appendChild(linkPreconnect);
+    });
 
     // 延迟加载用户列表，提高首屏加载速度
     setTimeout(() => {
