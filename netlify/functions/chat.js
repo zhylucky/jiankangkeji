@@ -1,5 +1,6 @@
 // netlify/functions/chat.js
 const fetch = require('node-fetch');
+const { PassThrough } = require('stream');
 
 exports.handler = async function(event, context) {
   // 处理预检请求 (OPTIONS)
@@ -28,91 +29,129 @@ exports.handler = async function(event, context) {
     };
   }
 
-  // 处理 CORS（允许前端访问）
-  const headers = {
-    'Content-Type': 'application/json',
+  // 解析是否启用流式
+  const qs = event.queryStringParameters || {};
+  const enableStream = qs.stream === '1' || qs.stream === 'true';
+
+  // CORS 基础头
+  const baseCors = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type'
   };
 
   try {
-    // 检查请求体是否存在
     if (!event.body) {
       throw new Error('请求体为空');
     }
 
     const { messages, model } = JSON.parse(event.body);
-    
-    // 验证参数
+
     if (!messages || !Array.isArray(messages)) {
       throw new Error('messages 参数无效或缺失');
     }
 
-    // 检查环境变量（优先使用SILICONFLOW_API_KEY，兼容AI_API_KEY）
     const apiKey = process.env.SILICONFLOW_API_KEY || process.env.AI_API_KEY;
     if (!apiKey) {
       throw new Error('API密钥未配置，请在Netlify环境变量中设置SILICONFLOW_API_KEY或AI_API_KEY');
     }
-    
-    // 构建请求参数
+
+    // 请求体
     const requestBody = {
       model: model || 'Qwen/Qwen3-8B',
       messages: messages,
-      stream: false,
-      // 性能优化参数
-      max_tokens: 1500,  // 限制最大token数以提高响应速度
-      temperature: 0.7,  // 适度的创造性
-      top_p: 0.9        // nucleus采样
+      stream: !!enableStream,
+      max_tokens: 1500,
+      temperature: 0.7,
+      top_p: 0.9
     };
-    
-    // 明确关闭思考模式（如果API支持）
+
+    // 明确关闭思考/搜索（按需）
     if (model && model.includes('Qwen')) {
-      // 阿里云Qwen模型可能支持的参数
-      requestBody.enable_search = false;  // 禁用搜索
-      requestBody.enable_thinking = false;  // 禁用思考模式
+      requestBody.enable_search = false;
+      requestBody.enable_thinking = false;
     }
-    
-    // 使用环境变量中的 API Key
-    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+
+    const upstream = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify(requestBody),
-      // 设置超时时间
-      timeout: 30000 // 30秒超时
+      timeout: 30000
     });
 
-    // 获取响应文本用于错误处理
-    const responseText = await response.text();
-    
-    if (!response.ok) {
-      throw new Error(`SiliconFlow API请求失败: ${response.status} ${response.statusText} - ${responseText}`);
+    if (!enableStream) {
+      // 非流式：一次性返回 JSON
+      const responseText = await upstream.text();
+      if (!upstream.ok) {
+        throw new Error(`SiliconFlow API请求失败: ${upstream.status} ${upstream.statusText} - ${responseText}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error(`响应数据解析失败: ${e.message} - 原始响应: ${responseText}`);
+      }
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          ...baseCors
+        },
+        body: JSON.stringify(data)
+      };
     }
 
-    // 解析响应
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      throw new Error(`响应数据解析失败: ${parseError.message} - 原始响应: ${responseText}`);
+    // 流式：转发上游 SSE 到客户端
+    // 注意：Netlify Functions 支持以 Node 可读流作为 body 返回
+    if (!upstream.ok) {
+      const errText = await upstream.text().catch(() => '');
+      throw new Error(`SiliconFlow 流式请求失败: ${upstream.status} ${upstream.statusText} - ${errText}`);
     }
-    
+
+    const pass = new PassThrough();
+
+    // 将上游响应体直接管道到下游，保留 data: 行格式
+    upstream.body.on('data', (chunk) => {
+      // chunk 为 Buffer，直接转发即可；也可在此处做过滤或转换
+      pass.write(chunk);
+    });
+
+    upstream.body.on('end', () => {
+      // 结束一个 SSE 流
+      pass.end();
+    });
+
+    upstream.body.on('error', (err) => {
+      // 将错误以 SSE 事件形式通知
+      pass.write(`event: error\n`);
+      pass.write(`data: ${JSON.stringify({ message: err.message })}\n\n`);
+      pass.end();
+    });
+
     return {
       statusCode: 200,
-      headers,
-      body: JSON.stringify(data)
+      headers: {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no', // 关闭代理缓冲，增加实时性
+        ...baseCors
+      },
+      body: pass
     };
   } catch (error) {
     console.error('Function执行错误:', error);
-    
     return {
       statusCode: 500,
-      headers,
-      body: JSON.stringify({ 
-        error: error.message
-      })
+      headers: {
+        'Content-Type': 'application/json',
+        ...baseCors
+      },
+      body: JSON.stringify({ error: error.message })
     };
   }
 };
