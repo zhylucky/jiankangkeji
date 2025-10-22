@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="images/dzlogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App下载中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 40px;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        #appSelect {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        #appSelect:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        #fetchBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        #fetchBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #fetchBtn:active {
+            transform: translateY(0);
+        }
+
+        .app-card {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 35px;
+            margin-top: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 28px;
+            margin-right: 20px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            overflow: hidden;
+        }
+
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+
+        .app-info {
+            flex: 1;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .app-id {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .app-version {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .app-update-date {
+            font-size: 16px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 35px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .qr-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .qr-code {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-code.loading {
+            background: #f0f0f0;
+        }
+
+        .qr-code.error {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .download-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+
+        .download-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .download-link {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            word-break: break-all;
+            font-size: 15px;
+            color: #333;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 16px 35px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            margin: 10px 0;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #2196F3 0%, #0D47A1 100%);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .retry-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            background: #f57c00;
+            transform: translateY(-1px);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .qr-code {
+                width: 200px;
+                height: 200px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .app-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .app-icon {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-download"></i> App下载中心</h1>
+            <p class="subtitle">选择您需要的应用，获取下载链接和二维码</p>
+        </header>
+        
+        <div class="input-section">
+            <h2 class="section-title"><i class="fas fa-search"></i> 选择应用</h2>
+            <div class="input-group">
+                <select id="appSelect">
+                    <option value="">请选择要下载的App</option>
+                    <option value="502">个人健康pro+</option>
+                    <option value="1">睡眠呼吸监测仪</option>
+                    <option value="602">健康测评</option>
+                    <option value="4">心身健康测评系统</option>
+                    <option value="3">促醒监护</option>
+                    <option value="500">个人健康精英版</option>
+                    <option value="504">场效应反馈</option>                  
+                    <option value="508">个人健康精英鸿蒙版</option>
+                </select>
+                <button id="fetchBtn"><i class="fas fa-sync-alt"></i> 获取信息</button>
+            </div>
+            <p>选择App后，系统将通过代理服务器获取下载信息并生成二维码</p>
+        </div>
+        
+        <div id="appCard" class="app-card" style="display: none;">
+            <div class="app-header">
+                <div class="app-icon" id="appIcon">
+                    <img src="" alt="App图标" id="appIconImg" style="width: 100%; height: 100%; border-radius: 20px; object-fit: cover;">
+                </div>
+                <div class="app-info">
+                    <div class="app-title" id="appName">应用名称</div>
+                    <div class="app-id" id="appId">App ID: </div>
+                    <div class="app-version" id="appVersion">版本: </div>
+                    <div class="app-update-date" id="appUpdateDate">更新日期: </div>
+                </div>
+            </div>
+            
+            <div class="qr-container">
+                <h3 class="qr-title"><i class="fas fa-qrcode"></i> 扫描二维码下载</h3>
+                <div class="qr-code loading" id="qrCode">
+                    <div>正在生成二维码...</div>
+                </div>
+            </div>
+            
+            <div class="download-section">
+                <h3 class="download-title"><i class="fas fa-link"></i> 下载链接</h3>
+                <div class="download-link" id="downloadLink">下载链接将在此处显示</div>
+                <a href="#" class="download-btn" id="downloadBtn"><i class="fas fa-download"></i> 直接下载App</a>
+                <button class="copy-btn" id="copyBtn"><i class="fas fa-copy"></i> 复制链接</button>
+            </div>
+            
+            <div id="statusMessage" class="status" style="display: none;"></div>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="feature-title">移动端优化</h3>
+                <p class="feature-desc">专为移动设备设计的界面，扫码下载更便捷</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="feature-title">安全可靠</h3>
+                <p class="feature-desc">通过官方API获取下载链接，确保应用安全性</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="feature-title">快速获取</h3>
+                <p class="feature-desc">一键获取下载链接和二维码，省时省力</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2025 App下载中心 | 提供安全便捷的应用下载服务</p>
+        </footer>
+    </div>
+
+    <!-- 引入qrcode.js库 -->
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    
+    <script>
+        // 全局变量
+        let appCache = {};
+        let currentAppId = null;
+        let isQRCodeLibReady = false;
+        
+        // DOM元素
+        let appSelect, fetchBtn, appCard, appIcon, appName, appId, appVersion, qrCodeContainer, downloadLink, downloadBtn, copyBtn, statusMessage;
+        
+        // 多个备用代理服务器URL
+        const proxyServers = [
+            'https://api.allorigins.win/get?url=',
+            'https://corsproxy.io/?',
+            'https://api.codetabs.com/v1/proxy?quest='
+        ];
+        
+        // API端点基础URL
+        const baseURL = 'https://management.lifetide.cn/path/management/version/get?appId=';
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            appSelect = document.getElementById('appSelect');
+            fetchBtn = document.getElementById('fetchBtn');
+            appCard = document.getElementById('appCard');
+            appIcon = document.getElementById('appIcon');
+            appName = document.getElementById('appName');
+            appId = document.getElementById('appId');
+            appVersion = document.getElementById('appVersion');
+            qrCodeContainer = document.getElementById('qrCode');
+            downloadLink = document.getElementById('downloadLink');
+            downloadBtn = document.getElementById('downloadBtn');
+            copyBtn = document.getElementById('copyBtn');
+            statusMessage = document.getElementById('statusMessage');
+            
+            // 预加载二维码库状态检查
+            preloadQRCodeLibrary();
+            
+            // 绑定事件
+            if (fetchBtn) {
+                fetchBtn.addEventListener('click', onFetchBtnClick);
+            }
+            if (appSelect) {
+                appSelect.addEventListener('change', onAppSelectChange);
+            }
+            if (copyBtn) {
+                copyBtn.addEventListener('click', onCopyBtnClick);
+            }
+        });
+        
+        // 预加载二维码库
+        function preloadQRCodeLibrary() {
+            // 检查QRCode库是否已经加载
+            if (typeof QRCode !== 'undefined') {
+                isQRCodeLibReady = true;
+                console.log('二维码库已准备就绪');
+                return;
+            }
+            
+            // 监听库加载完成
+            const checkInterval = setInterval(() => {
+                if (typeof QRCode !== 'undefined') {
+                    isQRCodeLibReady = true;
+                    clearInterval(checkInterval);
+                    console.log('二维码库加载完成');
+                }
+            }, 100);
+            
+            // 设置超时时间
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (!isQRCodeLibReady) {
+                    console.warn('二维码库加载超时');
+                }
+            }, 5000);
+        }
+        
+        // 获取按钮点击事件
+        function onFetchBtnClick() {
+            const selectedAppId = appSelect ? appSelect.value : '';
+            fetchAppInfo(selectedAppId);
+        }
+        
+        // 下拉菜单变化事件
+        function onAppSelectChange() {
+            const selectedAppId = this.value;
+            if (selectedAppId) {
+                fetchAppInfo(selectedAppId);
+            } else {
+                if (appCard) {
+                    appCard.style.display = 'none';
+                }
+                if (statusMessage) {
+                    statusMessage.style.display = 'none';
+                }
+            }
+        }
+        
+        // 复制链接按钮点击事件
+        function onCopyBtnClick() {
+            if (!currentAppId || !appCache[currentAppId]) {
+                showStatus('请先选择并获取App信息', 'error');
+                return;
+            }
+            
+            const appInfo = appCache[currentAppId];
+            const downloadUrl = appInfo.downloadUrl;
+            
+            if (!downloadUrl) {
+                showStatus('无下载链接可复制', 'error');
+                return;
+            }
+            
+            // 尝试使用现代浏览器API复制
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(downloadUrl).then(() => {
+                    showStatus('链接已复制到剪贴板', 'success');
+                }).catch(err => {
+                    console.error('Clipboard API 复制失败:', err);
+                    fallbackCopyTextToClipboard(downloadUrl);
+                });
+            } else {
+                fallbackCopyTextToClipboard(downloadUrl);
+            }
+        }
+        
+        // 获取App信息 - 使用多个代理服务器重试
+        async function fetchAppInfo(selectedAppId) {
+            if (!selectedAppId) {
+                showStatus('请选择一个App', 'error');
+                return;
+            }
+            
+            // 保存当前App ID
+            currentAppId = selectedAppId;
+            
+            // 检查缓存
+            if (appCache[selectedAppId]) {
+                displayAppInfo(appCache[selectedAppId]);
+                return;
+            }
+            
+            // 显示加载状态
+            if (appCard) {
+                appCard.style.display = 'block';
+            }
+            if (qrCodeContainer) {
+                qrCodeContainer.innerHTML = '<div>正在获取App信息...</div>';
+                qrCodeContainer.className = 'qr-code loading';
+            }
+            showStatus('正在通过代理服务器获取App信息...', 'loading');
+            
+            // 添加一个小延迟，确保UI更新完成
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // 尝试所有代理服务器
+            for (let i = 0; i < proxyServers.length; i++) {
+                try {
+                    const result = await fetchAppInfoWithProxy(proxyServers[i], selectedAppId);
+                    if (result.success) {
+                        return; // 成功获取数据，直接返回
+                    }
+                } catch (error) {
+                    console.error(`使用代理服务器 ${proxyServers[i]} 失败:`, error);
+                    // 如果不是最后一个代理服务器，继续尝试下一个
+                    if (i < proxyServers.length - 1) {
+                        showStatus(`代理服务器 ${i+1} 失败，尝试下一个...`, 'loading');
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒再重试
+                    }
+                }
+            }
+            
+            // 所有代理服务器都失败了
+            showStatus('所有代理服务器都不可用，请稍后重试', 'error');
+            if (qrCodeContainer) {
+                qrCodeContainer.innerHTML = '获取失败';
+                qrCodeContainer.className = 'qr-code error';
+            }
+            if (statusMessage) {
+                statusMessage.innerHTML += ' <button class="retry-btn" onclick="retryFetch()">重试</button>';
+            }
+        }
+        
+        // 使用指定代理服务器获取App信息
+        async function fetchAppInfoWithProxy(proxyURL, selectedAppId) {
+            // 使用代理服务器获取数据
+            const proxyRequestURL = proxyURL + encodeURIComponent(baseURL + selectedAppId);
+            console.log('代理请求URL:', proxyRequestURL);
+            
+            // 添加超时控制
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
+            
+            const response = await fetch(proxyRequestURL, {
+                method: 'GET',
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`代理服务器HTTP错误! 状态码: ${response.status}`);
+            }
+            
+            const proxyData = await response.json();
+            console.log('代理服务器返回数据:', proxyData);
+            
+            // 解析实际的API响应
+            let apiData;
+            try {
+                // 不同代理服务器返回的数据格式可能不同
+                if (proxyData.contents) {
+                    apiData = JSON.parse(proxyData.contents);
+                } else if (proxyData.content) {
+                    apiData = JSON.parse(proxyData.content);
+                } else {
+                    apiData = proxyData;
+                }
+            } catch (parseError) {
+                throw new Error('无法解析API响应数据: ' + parseError.message);
+            }
+            
+            console.log('API实际数据:', apiData);
+            
+            // 检查API响应是否成功
+            if (apiData.code !== 200) {
+                throw new Error('API返回错误: ' + (apiData.message || '未知错误'));
+            }
+            
+            // 提取obj对象中的数据
+            const obj = apiData.obj;
+            if (!obj) {
+                throw new Error('API响应中缺少obj对象');
+            }
+            
+            // 提取必要的字段
+            const name = getAppName(selectedAppId); // 获取应用名称
+            const versionName = obj.versionName || '未知版本';
+            const downloadUrl = obj.downloadUrl || '';
+            const createDate = obj.createDate || ''; // 获取创建/更新日期
+            // 尝试从API响应中获取图标URL，如果没有则使用默认的
+            const iconUrl = obj.iconUrl || obj.appIcon || ''; // 根据实际API字段名调整
+            
+            if (!downloadUrl) {
+                throw new Error('返回数据中未找到有效的下载链接');
+            }
+            
+            // 缓存数据
+            appCache[selectedAppId] = {
+                id: selectedAppId,
+                name: name,
+                version: versionName,
+                downloadUrl: downloadUrl,
+                iconUrl: iconUrl, // 保存图标URL
+                createDate: createDate // 保存创建/更新日期
+            };
+            
+            // 显示App信息
+            displayAppInfo(appCache[selectedAppId]);
+            showStatus('App信息获取成功！', 'success');
+            
+            return { success: true };
+        }
+        
+        // 显示App信息
+        function displayAppInfo(appInfo) {
+            // 更新App信息显示
+            if (appName) {
+                appName.textContent = appInfo.name || '未知应用';
+            }
+            if (appId) {
+                appId.textContent = 'App ID: ' + appInfo.id;
+            }
+            if (appVersion) {
+                appVersion.textContent = '版本: ' + (appInfo.version || '未知版本');
+            }
+            if (appIcon) {
+                // 设置图标
+                const appIconImg = document.getElementById('appIconImg');
+                if (appIconImg) {
+                    // 优先使用从API获取的图标URL，如果没有则使用默认映射
+                    let iconUrl = appInfo.iconUrl;
+                    if (!iconUrl) {
+                        iconUrl = getAppIconUrl(appInfo.id);
+                    }
+                    appIconImg.src = iconUrl;
+                    appIconImg.alt = appInfo.name || 'App图标';
+                }
+            }
+            
+            // 显示更新日期
+            const appUpdateDate = document.getElementById('appUpdateDate');
+            if (appUpdateDate) {
+                if (appInfo.createDate) {
+                    // 格式化日期显示
+                    const formattedDate = formatDateString(appInfo.createDate);
+                    appUpdateDate.textContent = '更新日期: ' + formattedDate;
+                } else {
+                    appUpdateDate.textContent = '更新日期: 未知';
+                }
+            }
+            
+            // 显示卡片
+            if (appCard) {
+                appCard.style.display = 'block';
+            }
+            
+            // 更新下载链接显示
+            if (downloadLink) {
+                downloadLink.textContent = appInfo.downloadUrl || '无下载链接';
+            }
+            
+            // 更新下载按钮链接
+            if (downloadBtn) {
+                downloadBtn.href = appInfo.downloadUrl || '#';
+            }
+            
+            // 如果是移动端，添加download属性
+            if (downloadBtn && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                if (appInfo.downloadUrl) {
+                    downloadBtn.setAttribute('download', '');
+                } else {
+                    downloadBtn.removeAttribute('download');
+                }
+            }
+            
+            // 生成二维码
+            if (appInfo.downloadUrl) {
+                // 确保二维码库已加载并添加适当延迟
+                waitForQRCodeLibrary()
+                    .then(() => {
+                        // 添加延迟确保DOM完全更新
+                        return new Promise(resolve => setTimeout(resolve, 200));
+                    })
+                    .then(() => {
+                        generateQRCode(appInfo.downloadUrl);
+                    })
+                    .catch(error => {
+                        console.error('二维码生成准备失败:', error);
+                        if (qrCodeContainer) {
+                            qrCodeContainer.innerHTML = '二维码生成失败: ' + error.message;
+                            qrCodeContainer.className = 'qr-code error';
+                        }
+                        showStatus('二维码生成失败: ' + error.message, 'error');
+                    });
+            } else {
+                if (qrCodeContainer) {
+                    qrCodeContainer.innerHTML = '无下载链接';
+                    qrCodeContainer.className = 'qr-code error';
+                }
+            }
+        }
+        
+        // 等待二维码库加载完成
+        function waitForQRCodeLibrary() {
+            return new Promise((resolve, reject) => {
+                if (isQRCodeLibReady && typeof QRCode !== 'undefined') {
+                    resolve();
+                    return;
+                }
+                
+                let attempts = 0;
+                const maxAttempts = 50; // 最多等待5秒 (50 * 100ms)
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (isQRCodeLibReady && typeof QRCode !== 'undefined') {
+                        clearInterval(checkInterval);
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        reject(new Error('二维码库加载超时'));
+                    }
+                }, 100);
+            });
+        }
+        
+        // 生成二维码函数
+        function generateQRCode(url) {
+            // 清空之前的二维码
+            if (qrCodeContainer) {
+                qrCodeContainer.innerHTML = '';
+                qrCodeContainer.className = 'qr-code';
+            }
+            
+            try {
+                // 确保QRCode库已加载
+                if (!isQRCodeLibReady || typeof QRCode === 'undefined') {
+                    throw new Error('二维码生成库未准备好');
+                }
+                
+                if (qrCodeContainer) {
+                    new QRCode(qrCodeContainer, {
+                        text: url,
+                        width: 200,
+                        height: 200,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+                
+                showStatus('二维码生成成功！', 'success');
+            } catch (error) {
+                if (qrCodeContainer) {
+                    qrCodeContainer.innerHTML = '二维码生成失败';
+                    qrCodeContainer.className = 'qr-code error';
+                }
+                showStatus('二维码生成失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 获取应用图标URL
+        function getAppIconUrl(appId) {
+            // 这里是示例图标URL，你需要替换为实际的图标地址
+            // 示例格式：'https://your-domain.com/icons/app-{appId}.png'
+            const iconUrls = {
+                '602': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/45ababd37b13ec581dc113bf838d583.png',
+                '508': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png',
+                '502': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png',
+                '1': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
+                '3': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/cuxing.png',
+                '500': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240820145829.png',
+                '504': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240820145829.png',
+                '4': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/HBRV.png'
+            };
+            
+            // 返回特定App的图标URL或默认图标
+            return iconUrls[appId] || 'https://management.lifetide.cn/title.ico';
+        }
+        
+        // 获取应用名称
+        function getAppName(appId) {
+            const appNames = {
+                '602': '健康测评',
+                '508': '个人健康精英鸿蒙版',
+                '502': '个人健康pro+',
+                '1': '睡眠呼吸监测仪',
+                '3': '促醒监护',
+                '500': '个人健康精英版',
+                '504': '场效应反馈',
+                '4': '心身健康测评系统'
+            };
+            return appNames[appId] || '未知应用';
+        }
+        
+        // 格式化日期字符串
+        function formatDateString(dateString) {
+            if (!dateString) return '未知';
+            
+            try {
+                // 尝试解析日期字符串
+                const date = new Date(dateString);
+                if (!isNaN(date.getTime())) {
+                    // 返回格式化的日期字符串 (YYYY-MM-DD)
+                    return date.getFullYear() + '-' + 
+                          String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                          String(date.getDate()).padStart(2, '0');
+                }
+            } catch (e) {
+                console.error('日期解析错误:', e);
+            }
+            
+            // 如果解析失败，返回原始字符串
+            return dateString;
+        }
+        
+        // 重试获取App信息
+        function retryFetch() {
+            if (currentAppId) {
+                fetchAppInfo(currentAppId);
+            }
+        }
+        
+        // 显示状态消息
+        function showStatus(message, type) {
+            if (statusMessage) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status ' + type;
+                statusMessage.style.display = 'block';
+            }
+            
+            // 3秒后自动隐藏成功消息
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (statusMessage) {
+                        statusMessage.style.display = 'none';
+                    }
+                }, 3000);
+            }
+        }
+        
+        // 降级复制方法
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // 避免滚动到底部
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showStatus('链接已复制到剪贴板', 'success');
+                } else {
+                    showStatus('复制失败', 'error');
+                }
+            } catch (err) {
+                console.error('execCommand 复制失败:', err);
+                showStatus('复制失败: ' + err.message, 'error');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+    </script>
+</body>
+</html>
