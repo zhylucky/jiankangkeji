@@ -561,25 +561,6 @@
                 <div class="info-item"><span class="info-label">科室: 北京协和医院睡眠科室</div>
             </div>
 
-            <!-- AI报告总结部分 -->
-            <div class="section-title">AI智能分析总结</div>
-            <div class="ai-analysis-container">
-                <div class="ai-analysis-loading">
-                    <div class="loading-text">🤖 AI正在分析您的睡眠数据...</div>
-                    <div class="loading-progress-bar">
-                        <div class="loading-progress" id="loading-progress"></div>
-                    </div>
-                </div>
-                <div class="ai-analysis-content" id="ai-analysis-content">
-                </div>
-                <div class="ai-analysis-error" id="ai-analysis-error">
-                </div>
-                <button class="generate-ai-analysis-btn" id="generate-ai-analysis" onclick="generateAIAnalysis()">
-                    生成AI智能分析总结
-                </button>
-            </div>
-
-            <div class="group-3-5">
             <h2 class="section-title">危险项提示</h2>
             
             <!-- 修改为竖列排版 -->
@@ -615,9 +596,6 @@
                 </ul>
             </div>
 
-            
-            
-            <!-- 将睡眠质量评分表放在医嘱后，合并显示以减少分页空白 -->
             <h2 class="section-title">睡眠质量评分</h2>
             <table class="score-table merged-score-table">
                 <tr>
@@ -647,24 +625,8 @@
                     <td class="score-value">6</td>
                 </tr>
             </table>
-            
-            <div class="score-tip">*当有危险时，请根据得分仅供参考</div>
-
-            <div class="signature-area">
-                <div>
-                    <p>医生（签字）： <span class="sig-field"></span></p>
-                </div>
-                <div>
-                    <p>日期（签字）： <span class="sig-field"></span></p>
-                </div>
-            </div>
-            </div>
-            </div>
-            
-            <div class="page-number"></div>
-        </div>
-
-        <div style="page-break-before: always;"></div>
+            <div>
+            <div>
 
         <div class="page">
         <div class="header small">
@@ -784,10 +746,12 @@
             <div class="footer">
                 
             </div>
-            <div class="page-number">第3页，共4页</div>
+            <div class="page-number">第2页，共4页</div>
         </div>
         
-        <!-- 第4页 - AI评估报告 -->
+        <div style="page-break-before: always;"></div>
+        
+        <!-- 第3页 - AI评估报告 -->
         <div class="page">
         <div class="header small">
                 <div class="logo-container">
@@ -915,7 +879,52 @@
                 </tbody>
             </table>
             
+            <div class="footer">
+                本报告仅供健康建议参考，具体诊断请咨询专业医生。
+            </div>
+            <div class="page-number">第3页，共4页</div>
+        </div>
+        
+        <div style="page-break-before: always;"></div>
+        
+        <!-- 第4页 - AI智能分析总结 -->
+        <div class="page">
+        <div class="header small">
+                <div class="logo-container">
+                    <img src="../images/dzlogo.png" alt="生命潮" class="logo">
+                    <div class="title">AI 智能分析总结</div>
+                </div>
+                <div class="report-info">
+                    报告编号: 119953<br>
+                </div>
+            </div>
             
+            <!-- AI报告总结部分 -->
+            <div class="section-title">AI智能分析总结</div>
+            <div class="ai-analysis-container">
+                <div class="ai-analysis-loading">
+                    <div class="loading-text">🤖 AI正在分析您的睡眠数据...</div>
+                    <div class="loading-progress-bar">
+                        <div class="loading-progress" id="loading-progress"></div>
+                    </div>
+                </div>
+                <div class="ai-analysis-content" id="ai-analysis-content">
+                </div>
+                <div class="ai-analysis-error" id="ai-analysis-error">
+                </div>
+                <button class="generate-ai-analysis-btn" id="generate-ai-analysis" onclick="generateAIAnalysis()">
+                    生成AI智能分析总结
+                </button>
+            </div>
+            
+            <div class="signature-area">
+                <div>
+                    <p>医生（签字）： <span class="sig-field"></span></p>
+                </div>
+                <div>
+                    <p>日期（签字）： <span class="sig-field"></span></p>
+                </div>
+            </div>
             
             <div class="footer">
                 本报告仅供健康建议参考，具体诊断请咨询专业医生。
@@ -1034,46 +1043,46 @@
                 // 构造发送给AI的提示
                 const aiPrompt = `请根据以下睡眠质量评估报告数据，生成一份综合性的AI分析报告：
                 
-个人信息：
-姓名：${reportData.patientInfo.name}
-性别：${reportData.patientInfo.gender}
-年龄：${reportData.patientInfo.age}岁
-身高：${reportData.patientInfo.height}cm
-体重：${reportData.patientInfo.weight}kg
+                个人信息：
+                姓名：${reportData.patientInfo.name}
+                性别：${reportData.patientInfo.gender}
+                年龄：${reportData.patientInfo.age}岁
+                身高：${reportData.patientInfo.height}cm
+                体重：${reportData.patientInfo.weight}kg
 
-自评报告总分：${reportData.scoreData.selfTotal}
-AI评估报告总分：${reportData.scoreData.aiTotal}
+                自评报告总分：${reportData.scoreData.selfTotal}
+                AI评估报告总分：${reportData.scoreData.aiTotal}
 
-自评报告详情：
-${reportData.selfReportData.map(item => 
-    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
-).join('\n')}
+                自评报告详情：
+                ${reportData.selfReportData.map(item => 
+                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
+                ).join('\n')}
 
-AI评估报告详情：
-${reportData.aiReportData.map(item => 
-    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
-).join('\n')}
+                AI评估报告详情：
+                ${reportData.aiReportData.map(item => 
+                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
+                ).join('\n')}
 
-请结合以上数据，生成一份综合性分析报告，包含以下内容：
-1. 整体睡眠质量评估
-2. 主要问题识别
-3. 改善建议
-4. 需要关注的风险点
+                请结合以上数据，生成一份综合性分析报告，包含以下内容：
+                1. 整体睡眠质量评估
+                2. 主要问题识别
+                3. 改善建议
+                4. 需要关注的风险点
 
-请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
-### 综合睡眠质量分析报告
+                请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
+                ### 综合睡眠质量分析报告
 
-一、整体睡眠质量评估
-[内容]
+                一、整体睡眠质量评估
+                [内容]
 
-二、主要问题识别
-[内容]
+                二、主要问题识别
+                [内容]
 
-三、改善建议
-[内容]
+                三、改善建议
+                [内容]
 
-四、需要关注的风险点
-[内容]`;
+                四、需要关注的风险点
+                [内容]`;
                 
                 // 调用AI API生成分析报告
                 const aiResponse = await callAIAPI(aiPrompt);
