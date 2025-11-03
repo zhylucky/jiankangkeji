@@ -561,18 +561,22 @@
                 <div class="info-item"><span class="info-label">科室: 北京协和医院睡眠科室</div>
             </div>
 
-            <!-- 睡眠质量评分（已移至附页以节省首页空间） -->
-
-            <h2 class="section-title">AI报告总结</h2>
-
-            <div class="summary-box">
-                <ul>
-                    <li>心电学异常：设备在多处心电波形检测项中标注"有"，提示存在短暂或间歇性的心电异常（例如室性/房性早搏、心律失常或 ST 段波形改变等可能性）。具体检测项详见"AI评估报告"表格中的相关心电分析条目。该类信号需由心内科医生复核原始心电波形与记录频率以判定临床意义。</li>
-                    <li>呼吸事件：设备记录到若干呼吸事件（详见第4页AI评估报告表格，摘录值为约 15 次，属轻度至少量事件）。需要判断是否为阻塞性呼吸事件（OSA）或轻度低通气导致的间断性呼吸异常。</li>
-                    <li>低氧事件：本次检测未见严重低氧（报告中 SpO2 ≤85% 一项标注为"无"，详见<a href="#ai-report-table">AI评估报告表格</a>），但设备仍记录有若干短暂低氧/血氧波动事件（详见<a href="#ai-report-table">AI评估报告表格</a>）。需在临床上与连续血氧曲线或 PSG 数据比对确认。</li>
-                    <li>主观/客观不一致：主观自评分数较高（自评 82 分，见第2页"BBS-自评量表"表格），但 AI/设备评分较低（63 分，见第2页"BBS-AI评估量表"表格），提示尽管患者主观感受较好，客观监测仍发现可疑事件，建议综合判断。</li>
-                    <li>其它：问卷（详见<a href="#self-report-table">自评报告表格</a>）或 AI 表格（详见<a href="#ai-report-table">AI评估报告表格</a>）中存在若干条目/分项提示，建议医生在复核时逐条比对并评估其临床相关性。</li>
-                </ul>
+            <!-- AI报告总结部分 -->
+            <div class="section-title">AI智能分析总结</div>
+            <div class="ai-analysis-container">
+                <div class="ai-analysis-loading">
+                    <div class="loading-text">🤖 AI正在分析您的睡眠数据...</div>
+                    <div class="loading-progress-bar">
+                        <div class="loading-progress" id="loading-progress"></div>
+                    </div>
+                </div>
+                <div class="ai-analysis-content" id="ai-analysis-content">
+                </div>
+                <div class="ai-analysis-error" id="ai-analysis-error">
+                </div>
+                <button class="generate-ai-analysis-btn" id="generate-ai-analysis" onclick="generateAIAnalysis()">
+                    生成AI智能分析总结
+                </button>
             </div>
 
             <div class="group-3-5">
@@ -911,23 +915,7 @@
                 </tbody>
             </table>
             
-            <!-- AI报告总结部分 -->
-            <div class="section-title">三：AI智能分析总结</div>
-            <div class="ai-analysis-container">
-                <div class="ai-analysis-loading">
-                    <div class="loading-text">🤖 AI正在分析您的睡眠数据...</div>
-                    <div class="loading-progress-bar">
-                        <div class="loading-progress" id="loading-progress"></div>
-                    </div>
-                </div>
-                <div class="ai-analysis-content" id="ai-analysis-content">
-                </div>
-                <div class="ai-analysis-error" id="ai-analysis-error">
-                </div>
-                <button class="generate-ai-analysis-btn" id="generate-ai-analysis" onclick="generateAIAnalysis()">
-                    生成AI智能分析总结
-                </button>
-            </div>
+            
             
             <div class="footer">
                 本报告仅供健康建议参考，具体诊断请咨询专业医生。
