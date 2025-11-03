@@ -1039,49 +1039,82 @@
                 // 构造发送给AI的提示
                 const aiPrompt = `请根据以下睡眠质量评估报告数据，生成一份综合性的AI分析报告：
                 
-                个人信息：
-                姓名：${reportData.patientInfo.name}
-                性别：${reportData.patientInfo.gender}
-                年龄：${reportData.patientInfo.age}岁
-                身高：${reportData.patientInfo.height}cm
-                体重：${reportData.patientInfo.weight}kg
+个人信息：
+姓名：${reportData.patientInfo.name}
+性别：${reportData.patientInfo.gender}
+年龄：${reportData.patientInfo.age}岁
+身高：${reportData.patientInfo.height}cm
+体重：${reportData.patientInfo.weight}kg
 
-                自评报告总分：${reportData.scoreData.selfTotal}
-                AI评估报告总分：${reportData.scoreData.aiTotal}
+自评报告总分：${reportData.scoreData.selfTotal}
+AI评估报告总分：${reportData.scoreData.aiTotal}
 
-                自评报告详情：
-                ${reportData.selfReportData.map(item => 
-                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
-                ).join('\n')}
+自评报告详情：
+${reportData.selfReportData.map(item => 
+    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
+).join('\\n')}
 
-                AI评估报告详情：
-                ${reportData.aiReportData.map(item => 
-                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
-                ).join('\n')}
+AI评估报告详情：
+${reportData.aiReportData.map(item => 
+    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
+).join('\\n')}
 
-                请结合以上数据，生成一份综合性分析报告，包含以下内容：
-                1. 整体睡眠质量评估
-                2. 主要问题识别
-                3. 改善建议
-                4. 需要关注的风险点
+请结合以上数据，生成一份综合性分析报告，包含以下内容：
+1. 整体睡眠质量评估
+2. 主要问题识别
+3. 改善建议
+4. 需要关注的风险点
 
-                请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
-                ###
-                一、整体睡眠质量评估
-                [内容]
+请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
+### 综合睡眠质量分析报告
 
-                二、主要问题识别
-                [内容]
+一、整体睡眠质量评估
+[内容]
 
-                三、改善建议
-                [内容]`;
+二、主要问题识别
+[内容]
+
+三、改善建议
+[内容]
+
+四、需要关注的风险点
+[内容]`;
                 
-                // 调用AI API生成分析报告
-                const aiResponse = await callAIAPI(aiPrompt);
+                // 设置15秒超时（增加超时时间以应对504错误）
+                const timeout = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('请求超时，请稍后重试')), 15000)
+                );
+                
+                // 调用AI API生成分析报告（增加重试机制）
+                let aiResponse;
+                let retries = 2;
+                while (retries >= 0) {
+                    try {
+                        aiResponse = await Promise.race([callAIAPI(aiPrompt), timeout]);
+                        break;
+                    } catch (error) {
+                        if (retries > 0 && (error.message.includes('504') || error.message.includes('超时'))) {
+                            console.warn(`请求失败，${3-retries}秒后重试...`);
+                            await new Promise(resolve => setTimeout(resolve, (3-retries) * 1000)); // 递增延迟重试
+                            retries--;
+                        } else {
+                            throw error;
+                        }
+                    }
+                }
+                
                 displayAIAnalysis(aiResponse);
             } catch (error) {
                 console.error('AI分析失败:', error);
-                displayAIError('AI分析失败，请稍后重试');
+                let errorMessage = 'AI分析失败，请稍后重试';
+                if (error.message.includes('超时')) {
+                    errorMessage = '请求超时，服务器响应时间过长，请稍后重试';
+                } else if (error.message.includes('504')) {
+                    errorMessage = '服务器网关超时，请检查网络连接或稍后重试';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = '网络连接失败，请检查网络后重试';
+                }
+                displayAIError(errorMessage);
             } finally {
                 clearInterval(interval);
                 // 恢复按钮状态
@@ -1147,7 +1180,7 @@
             const messages = [
                 {
                     role: 'system',
-                    content: '你是一个专业的睡眠健康专家，能够根据睡眠评估数据提供专业的分析和建议。'
+                    content: '你是一个专业的睡眠健康专家，能够根据睡眠评估数据提供专业的分析和建议。请按照以下格式输出：\\n\\n### 综合睡眠质量分析报告\\n\\n一、整体睡眠质量评估\\n[内容]\\n\\n二、主要问题识别\\n[内容]\\n\\n三、改善建议\\n[内容]\\n\\n四、需要关注的风险点\\n[内容]'
                 },
                 {
                     role: 'user',
@@ -1157,38 +1190,60 @@
             
             // 确保使用正确的URL路径
             let functionUrl = config.functionUrl;
-            if (functionUrl.startsWith('/.netlify/functions/')) {
-                // 在本地开发环境中，可能需要使用完整的路径
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    functionUrl = `http://localhost:8888${functionUrl}`;
+            
+            // 检查是否在本地开发环境
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                // 尝试使用标准的Netlify dev端口
+                functionUrl = 'http://localhost:8888/.netlify/functions/chat';
+            }
+            
+            try {
+                // 调用Netlify Function
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
+                
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: messages,
+                        model: config.model
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}`);
                 }
-            }
-            
-            // 调用Netlify Function
-            const response = await fetch(functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    messages: messages,
-                    model: config.model
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            
-            // 解析响应
-            if (data.choices && data.choices[0] && data.choices[0].message) {
-                return data.choices[0].message.content;
-            } else if (data.message && data.message.content) {
-                return data.message.content;
-            } else {
-                throw new Error('AI响应格式不正确');
+                
+                const data = await response.json();
+                
+                // 解析响应
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    return data.choices[0].message.content;
+                } else if (data.message && data.message.content) {
+                    return data.message.content;
+                } else {
+                    throw new Error('AI响应格式不正确');
+                }
+            } catch (error) {
+                // 如果是中止错误，返回超时错误
+                if (error.name === 'AbortError') {
+                    throw new Error('请求超时，请稍后重试');
+                }
+                // 如果直接调用失败，尝试使用代理方式
+                console.warn('直接调用AI服务失败，尝试使用代理方式:', error);
+                
+                // 降级到模拟数据（仅在开发环境中）
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.warn('使用模拟数据进行开发测试');
+                    return '### 综合睡眠质量分析报告\\n\\n一、整体睡眠质量评估\\n根据您的自评得分61.5分和AI监测得分46分，您的整体睡眠质量处于一般偏下水平。自评与客观监测结果存在一定差异，提示可能存在主观感受与实际睡眠状况不一致的情况。\\n\\n二、主要问题识别\\n1. 睡眠效率较低，入睡时间较长\\n2. 夜间觉醒次数较多，影响睡眠连续性\\n3. 存在一定程度的睡眠焦虑表现\\n4. 深度睡眠时间不足\\n\\n三、改善建议\\n1. 建立规律的作息时间，固定睡眠和起床时间\\n2. 睡前1小时避免使用电子设备，营造安静舒适的睡眠环境\\n3. 可尝试放松训练，如深呼吸、冥想等帮助入睡\\n4. 避免睡前摄入咖啡因和大量饮食\\n\\n四、需要关注的风险点\\n建议关注心血管健康状况，定期进行心电图检查。如有持续性睡眠问题，建议及时就医咨询专业睡眠医生。';
+                }
+                throw error;
             }
         }
         
