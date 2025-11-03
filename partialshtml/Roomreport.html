@@ -932,13 +932,13 @@
     <script>
         // 收集报告数据的函数
         function collectReportData() {
-            // 收集个人信息
+            // 动态收集个人信息
             const patientInfo = {
-                name: "海大力",
-                gender: "男",
-                age: 33,
-                height: 170.0,
-                weight: 60.0
+                name: document.querySelector('.patient-info .info-item:nth-child(2) .info-label').nextSibling.textContent.trim(),
+                gender: document.querySelector('.patient-info .info-item:nth-child(3) .info-label').nextSibling.textContent.trim(),
+                age: document.querySelector('.patient-info .info-item:nth-child(4) .info-label').nextSibling.textContent.trim(),
+                height: document.querySelector('.patient-info .info-item:nth-child(5) .info-label').nextSibling.textContent.trim(),
+                weight: document.querySelector('.patient-info .info-item:nth-child(6) .info-label').nextSibling.textContent.trim()
             };
             
             // 收集自评报告数据
@@ -981,8 +981,8 @@
             
             // 收集评分数据
             const scoreData = {
-                selfTotal: 61.5,
-                aiTotal: 46
+                selfTotal: document.querySelector('.merged-score-table .self-title + .score-value').textContent.trim(),
+                aiTotal: document.querySelector('.merged-score-table .ai-title + .score-value').textContent.trim()
             };
             
             return {
@@ -1019,18 +1019,13 @@
                 container.style.display = 'none';
             });
             
-            // 模拟进度条动画
+            // 获取进度条元素
             const progressBars = document.querySelectorAll('.loading-progress');
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 5;
-                progressBars.forEach(bar => {
-                    bar.style.width = `${Math.min(progress, 100)}%`;
-                });
-                if (progress >= 100) {
-                    clearInterval(interval);
-                }
-            }, 100);
+            
+            // 初始化进度条
+            progressBars.forEach(bar => {
+                bar.style.width = '0%';
+            });
             
             try {
                 // 收集报告数据
@@ -1039,42 +1034,46 @@
                 // 构造发送给AI的提示
                 const aiPrompt = `请根据以下睡眠质量评估报告数据，生成一份综合性的AI分析报告：
                 
-                个人信息：
-                姓名：${reportData.patientInfo.name}
-                性别：${reportData.patientInfo.gender}
-                年龄：${reportData.patientInfo.age}岁
-                身高：${reportData.patientInfo.height}cm
-                体重：${reportData.patientInfo.weight}kg
+个人信息：
+姓名：${reportData.patientInfo.name}
+性别：${reportData.patientInfo.gender}
+年龄：${reportData.patientInfo.age}
+身高：${reportData.patientInfo.height}
+体重：${reportData.patientInfo.weight}
 
-                自评报告总分：${reportData.scoreData.selfTotal}
-                AI评估报告总分：${reportData.scoreData.aiTotal}
+自评报告总分：${reportData.scoreData.selfTotal}
+AI评估报告总分：${reportData.scoreData.aiTotal}
 
-                自评报告详情：
-                ${reportData.selfReportData.map(item => 
-                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
-                ).join('\n')}
+自评报告详情：
+${reportData.selfReportData.map(item => 
+    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
+).join('\n')}
 
-                AI评估报告详情：
-                ${reportData.aiReportData.map(item => 
-                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
-                ).join('\n')}
+AI评估报告详情：
+${reportData.aiReportData.map(item => 
+    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
+).join('\n')}
 
-                请结合以上数据，生成一份综合性分析报告，包含以下内容：
-                1. 整体睡眠质量评估
-                2. 主要问题识别
-                3. 改善建议
-                4. 需要关注的风险点
+请结合以上数据，生成一份综合性分析报告，包含以下内容：
+1. 整体睡眠质量评估
+2. 主要问题识别
+3. 改善建议
+4. 需要关注的风险点
 
-                请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
-                ###
-                一、整体睡眠质量评估
-                [内容]
+请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
+### 综合睡眠质量分析报告
 
-                二、主要问题识别
-                [内容]
+一、整体睡眠质量评估
+[内容]
 
-                三、改善建议
-                [内容]`;
+二、主要问题识别
+[内容]
+
+三、改善建议
+[内容]
+
+四、需要关注的风险点
+[内容]`;
                 
                 // 调用AI API生成分析报告
                 const aiResponse = await callAIAPI(aiPrompt);
@@ -1083,7 +1082,6 @@
                 console.error('AI分析失败:', error);
                 displayAIError('AI分析失败，请稍后重试');
             } finally {
-                clearInterval(interval);
                 // 恢复按钮状态
                 buttons.forEach(button => {
                     button.disabled = false;
@@ -1147,7 +1145,7 @@
             const messages = [
                 {
                     role: 'system',
-                    content: '你是一个专业的睡眠健康专家，能够根据睡眠评估数据提供专业的分析和建议。'
+                    content: '你是一个专业的睡眠健康专家，能够根据睡眠评估数据提供专业的分析和建议。请按照以下格式输出：\n\n### 综合睡眠质量分析报告\n\n一、整体睡眠质量评估\n[内容]\n\n二、主要问题识别\n[内容]\n\n三、改善建议\n[内容]\n\n四、需要关注的风险点\n[内容]'
                 },
                 {
                     role: 'user',
@@ -1157,38 +1155,68 @@
             
             // 确保使用正确的URL路径
             let functionUrl = config.functionUrl;
-            if (functionUrl.startsWith('/.netlify/functions/')) {
-                // 在本地开发环境中，可能需要使用完整的路径
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    functionUrl = `http://localhost:8888${functionUrl}`;
+            
+            // 检查是否在本地开发环境
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                // 尝试使用标准的Netlify dev端口
+                functionUrl = 'http://localhost:8888/.netlify/functions/chat';
+            }
+            
+            // 创建AbortController用于超时控制
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
+            
+            try {
+                // 调用Netlify Function
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: messages,
+                        model: config.model
+                    }),
+                    signal: controller.signal // 添加超时控制
+                });
+                
+                // 清除超时计时器
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}`);
                 }
-            }
-            
-            // 调用Netlify Function
-            const response = await fetch(functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    messages: messages,
-                    model: config.model
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            
-            // 解析响应
-            if (data.choices && data.choices[0] && data.choices[0].message) {
-                return data.choices[0].message.content;
-            } else if (data.message && data.message.content) {
-                return data.message.content;
-            } else {
-                throw new Error('AI响应格式不正确');
+                
+                const data = await response.json();
+                
+                // 解析响应
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    return data.choices[0].message.content;
+                } else if (data.message && data.message.content) {
+                    return data.message.content;
+                } else {
+                    throw new Error('AI响应格式不正确');
+                }
+            } catch (error) {
+                // 清除超时计时器
+                clearTimeout(timeoutId);
+                
+                // 处理超时错误
+                if (error.name === 'AbortError') {
+                    throw new Error('请求超时，请稍后重试');
+                }
+                
+                // 如果直接调用失败，尝试使用代理方式
+                console.warn('直接调用AI服务失败，尝试使用代理方式:', error);
+                
+                // 降级到模拟数据（仅在开发环境中）
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.warn('使用模拟数据进行开发测试');
+                    // 抛出错误而不是返回模拟数据，确保在生产环境中不会使用写死的数据
+                    throw new Error('AI服务暂时不可用，请稍后重试');
+                }
+                
+                throw error;
             }
         }
         
