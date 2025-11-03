@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
         <link rel="icon" href="../images/dzlogo.png">
 <head>
@@ -39,6 +39,22 @@
             justify-content: space-between;
             position: relative;
         }
+
+        /* 确保小标题在屏幕显示时也有蓝色背景 */
+        .header.small {
+            background: linear-gradient(135deg, #1a6dcc 0%, #0d4d9c 100%);
+            color: white;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e6eefc;
+        }
+
+        .header.small .title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+        }
+    /* Ensure logo is visible in the compact/small header as well */
+    .header.small .logo { display: inline-block; height:40px; width:auto; margin-right:10px; }
         
         .logo-container {
             display: flex;
@@ -81,29 +97,88 @@
         
         .page {
             padding: 20px;
-            page-break-after: always;
             position: relative;
-        }
-        
-        .page:last-child {
-            page-break-after: auto;
         }
         
         .section-title {
             font-size: 18px;
-            font-weight: bold;
-            margin: 15px 0 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #1a6dcc;
+            font-weight: 700;
+            margin: 18px 0 12px;
             color: #0d4d9c;
+            position: relative;
+            padding-bottom: 6px;
+        }
+
+
+        /* 恢复标题下的蓝色分割线 - 确保在屏幕显示时也可见 */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 18px 0 12px;
+            color: #0d4d9c;
+            position: relative;
+            padding-bottom: 6px;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #1a6dcc 0%, #3b82f6 100%);
+            border-radius: 2px;
+            margin-top: 6px;
         }
         
         .summary-box {
-            background-color: #f9f9f9;
-            border-left: 4px solid #1a6dcc;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 5px 5px 0;
+            background-color: #fafbff;
+            /* 改为内置短横强调条，避免跨页或过长的线条 */
+            padding: 14px 16px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(26,109,204,0.06);
+            position: relative;
+        }
+
+        /* 隐藏之前的 summary-box 装饰条，改用醒目的圆形序号 */
+        .summary-box::before{ display: none; }
+
+        .summary-box ul {
+            margin: 12px 0 0 0;
+            padding-left: 0;
+        }
+
+        .summary-box ul li {
+            margin: 10px 0;
+            line-height: 1.5;
+            position: relative;
+            padding-left: 24px;
+            color: #163a66;
+        }
+        /* 美化 summary-box 内的无序列表（医嘱） */
+        .summary-box ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 8px 0 0 0;
+        }
+
+        .summary-box ul li {
+            position: relative;
+            padding-left: 24px;
+            margin: 8px 0;
+            color: #163a66;
+        }
+
+        .summary-box ul li::before{
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 8px;
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(180deg,#1a6dcc,#3b82f6);
+            border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(16,24,40,0.04);
         }
         
         /* 修改为竖列排版 */
@@ -132,24 +207,45 @@
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
-        
-        .score-table th {
-            background-color: #1a6dcc;
-            color: white;
-            padding: 10px;
+        .merged-score-table .merged-title {
+            font-size: 1.3em;
+            font-weight: 600;
             text-align: center;
+            vertical-align: middle;
+            background: #d6f5d6;
+            color: #234d23;
+            border: 1px solid #b2d8b2;
         }
-        
-        .score-table td {
-            padding: 10px;
+        .merged-score-table .ai-title {
+            background: #fff6d6;
+            color: #7a5a1e;
+            border: 1px solid #e6d8b2;
+        }
+        .merged-score-table .score-header {
+            background: #b3c7e6;
+            color: #234d4d;
+            font-weight: 500;
             text-align: center;
-            border-bottom: 1px solid #ddd;
+            border: 1px solid #a0b3c6;
+            white-space: nowrap;
+            vertical-align: middle;
         }
-        
-        .score-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .merged-score-table .score-value {
+            background: #e6f2ff;
+            color: #234d4d;
+            font-size: 1.1em;
+            text-align: center;
+            border: 1px solid #a0b3c6;
+        }
+        .score-tip {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            text-align: left;
+            font-style: italic;
         }
         
         .detail-table {
@@ -175,11 +271,22 @@
         }
         
         .signature-area {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px dashed #ccc;
+            margin-top: 28px;
+            padding-top: 12px;
+            /* 用细线代替明显虚线，使页面更干净 */
+            border-top: 1px solid rgba(0,0,0,0.06);
             display: flex;
             justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .sig-field {
+            display:inline-block;
+            min-width:220px;
+            border-bottom:1px solid rgba(0,0,0,0.12);
+            padding-bottom:4px;
+            color: rgba(0,0,0,0.6);
         }
         
         .footer {
@@ -209,6 +316,15 @@
             /* 打印时隐藏 */
             display: none;
         }
+
+        /* Group sections 3-5: avoid internal page breaks when printing; do NOT force a new page (avoids extra blank pages) */
+        @media print {
+            .group-3-5 {
+                page-break-inside: avoid;
+                -webkit-column-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
         
         @media print {
             @page {
@@ -228,6 +344,12 @@
                 max-width: none;
                 margin: 0;
             }
+
+            /* 强制打印时显示所有颜色 */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
             
             .header {
                 background: #1a6dcc !important;
@@ -240,6 +362,10 @@
                 padding: 10px;
                 margin: 0;
             }
+            /* Use page-break-before on subsequent .page elements to avoid a trailing blank page */
+            .page + .page {
+                page-break-before: always;
+            }
             
             .patient-info {
                 padding: 10px 15px;
@@ -249,6 +375,11 @@
             .summary-box {
                 margin: 10px 0;
                 padding: 10px;
+            }
+
+            .page-break {
+                page-break-after: always;
+                break-after: page;
             }
             
             .warning-list {
@@ -267,6 +398,29 @@
             .score-table th, .score-table td {
                 padding: 8px 5px;
             }
+
+            /* 改进合并评分表在打印时的布局，避免单元格溢出和右侧拥挤 */
+            .merged-score-table {
+                table-layout: fixed !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                font-size: 12px !important;
+            }
+
+            .merged-score-table th,
+            .merged-score-table td {
+                padding: 6px 4px !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+                hyphens: auto;
+                white-space: normal !important;
+            }
+
+            .merged-score-table .merged-title,
+            .merged-score-table .score-header,
+            .merged-score-table .score-value {
+                white-space: normal !important;
+            }
             
             .detail-table {
                 margin: 10px 0;
@@ -274,6 +428,8 @@
             
             .detail-table th, .detail-table td {
                 padding: 6px 8px;
+                line-height: 1.6;
+                font-size: 13px;
             }
             
             /* 打印时隐藏页面地址 */
@@ -288,13 +444,100 @@
                 display: block;
             }
         }
+        
+        /* AI分析报告样式 */
+        .ai-analysis-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #1a6dcc;
+        }
+        
+        .ai-analysis-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .ai-analysis-loading .loading-text {
+            color: #1a6dcc;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .loading-progress-bar {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            height: 6px;
+            margin: 0 auto;
+            max-width: 300px;
+        }
+        
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #1a6dcc, #3b82f6);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .ai-analysis-content {
+            display: none;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .ai-analysis-error {
+            display: none;
+            color: #dc3545;
+            padding: 15px;
+            background-color: #f8d7da;
+            border-radius: 4px;
+        }
+        
+        .generate-ai-analysis-btn {
+            background: linear-gradient(135deg, #1a6dcc 0%, #0d4d9c 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .generate-ai-analysis-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .generate-ai-analysis-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .ai-analysis-content h4 {
+            color: #1a6dcc;
+            margin-bottom: 10px;
+        }
+        
+        .ai-analysis-content ul {
+            padding-left: 20px;
+        }
+        
+        .ai-analysis-content li {
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="report-container">
         <!-- 第1页 -->
         <div class="page">
-            <div class="header">
+        <div class="header small">  
                 <div class="logo-container">
                     <!-- 这里放置logo图片 -->
                     <img src="../images/pro.png" alt="生命潮" class="logo">
@@ -306,6 +549,7 @@
                 </div>
             </div>
             
+            <h2 class="section-title">个人信息</h2>
             <div class="patient-info">
                 <div class="info-item"><span class="info-label">管理师/医生:  海大力</div>
                 <div class="info-item"><span class="info-label">姓名: 海大力</div>
@@ -316,14 +560,23 @@
                 <div class="info-item"><span class="info-label">测评时长: 1小时14分23秒</div>
                 <div class="info-item"><span class="info-label">科室: 北京协和医院睡眠科室</div>
             </div>
-            
-            <div class="section-title">报告总结 & 医嘱</div>
-            
+
+            <!-- 睡眠质量评分（已移至附页以节省首页空间） -->
+
+            <h2 class="section-title">AI报告总结</h2>
+
             <div class="summary-box">
-                <p>根据BBS睡眠质量评估，您的睡眠质量总体评价为一般，存在一些需要关注的睡眠问题。建议调整作息时间，改善睡眠环境，必要时咨询专业医生。</p>
+                <ul>
+                    <li>心电学异常：设备在多处心电波形检测项中标注"有"，提示存在短暂或间歇性的心电异常（例如室性/房性早搏、心律失常或 ST 段波形改变等可能性）。具体检测项详见"AI评估报告"表格中的相关心电分析条目。该类信号需由心内科医生复核原始心电波形与记录频率以判定临床意义。</li>
+                    <li>呼吸事件：设备记录到若干呼吸事件（详见第4页AI评估报告表格，摘录值为约 15 次，属轻度至少量事件）。需要判断是否为阻塞性呼吸事件（OSA）或轻度低通气导致的间断性呼吸异常。</li>
+                    <li>低氧事件：本次检测未见严重低氧（报告中 SpO2 ≤85% 一项标注为"无"，详见<a href="#ai-report-table">AI评估报告表格</a>），但设备仍记录有若干短暂低氧/血氧波动事件（详见<a href="#ai-report-table">AI评估报告表格</a>）。需在临床上与连续血氧曲线或 PSG 数据比对确认。</li>
+                    <li>主观/客观不一致：主观自评分数较高（自评 82 分，见第2页"BBS-自评量表"表格），但 AI/设备评分较低（63 分，见第2页"BBS-AI评估量表"表格），提示尽管患者主观感受较好，客观监测仍发现可疑事件，建议综合判断。</li>
+                    <li>其它：问卷（详见<a href="#self-report-table">自评报告表格</a>）或 AI 表格（详见<a href="#ai-report-table">AI评估报告表格</a>）中存在若干条目/分项提示，建议医生在复核时逐条比对并评估其临床相关性。</li>
+                </ul>
             </div>
-            
-            <div class="section-title">危险项提示</div>
+
+            <div class="group-3-5">
+            <h2 class="section-title">危险项提示</h2>
             
             <!-- 修改为竖列排版 -->
             <div class="warning-list">
@@ -346,69 +599,8 @@
                     <span>行走梦游: 无</span>
                 </div>
             </div>
-            
-            <div class="footer">
-                本报告供诊断参考
-            </div>
-            <div class="page-number">第1页，共4页</div>
-        </div>
-        
-        <!-- 第2页 -->
-        <div class="page">
-            <div class="header">
-                <div class="logo-container">
-                    <img src="../images/dzlogo.png" alt="生命潮" class="logo">
-                    <div class="title">睡眠质量评分</div>
-                </div>
-                <div class="report-info">
-                    报告编号: 119953<br>
-                </div>
-            </div>
-            
-            <table class="score-table">
-                <thead>
-                    <tr>
-                        <th>BBS-自评量表</th>
-                        <th>总得分（满分100）</th>
-                        <th>睡眠效率（满分6）</th>
-                        <th>睡眠质量（满分46）</th>
-                        <th>睡眠干扰（满分48）</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td></td>
-                        <td>61.5</td>
-                        <td>4</td>
-                        <td>20</td>
-                        <td>37.5</td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <table class="score-table">
-                <thead>
-                    <tr>
-                        <th>BBS-AI评估量表</th>
-                        <th>总得分（满分100）</th>
-                        <th>睡眠风险（满分34）</th>
-                        <th>睡眠事件（满分32）</th>
-                        <th>睡眠概况（满分34）</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>*当有危险时，请根据得分仅供参考</td>
-                        <td>46</td>
-                        <td>29</td>
-                        <td>11</td>
-                        <td>6</td>
-                    </tr>
-                </tbody>
-            </table>
-            
+
             <div class="section-title">医嘱</div>
-            
             <div class="summary-box">
                 <p>根据评估结果，建议您：</p>
                 <ul>
@@ -418,28 +610,63 @@
                     <li>如有持续睡眠问题，建议咨询专业睡眠医生</li>
                 </ul>
             </div>
+
             
+            
+            <!-- 将睡眠质量评分表放在医嘱后，合并显示以减少分页空白 -->
+            <h2 class="section-title">睡眠质量评分</h2>
+            <table class="score-table merged-score-table">
+                <tr>
+                    <td class="merged-title self-title" rowspan="2">BBS-自评量表</td>
+                    <td class="score-header">总得分（满分100）</td>
+                    <td class="score-header">睡眠效率（满分6）</td>
+                    <td class="score-header">睡眠质量（满分46）</td>
+                    <td class="score-header">睡眠干扰（满分48）</td>
+                </tr>
+                <tr>
+                    <td class="score-value">61.5</td>
+                    <td class="score-value">4</td>
+                    <td class="score-value">20</td>
+                    <td class="score-value">37.5</td>
+                </tr>
+                <tr>
+                    <td class="merged-title ai-title" rowspan="2">BBS-AI评估量表</td>
+                    <td class="score-header">总得分（满分100）</td>
+                    <td class="score-header">睡眠风险（满分34）</td>
+                    <td class="score-header">睡眠事件（满分32）</td>
+                    <td class="score-header">睡眠概况（满分34）</td>
+                </tr>
+                <tr>
+                    <td class="score-value">46</td>
+                    <td class="score-value">29</td>
+                    <td class="score-value">11</td>
+                    <td class="score-value">6</td>
+                </tr>
+            </table>
+            
+            <div class="score-tip">*当有危险时，请根据得分仅供参考</div>
+
             <div class="signature-area">
                 <div>
-                    <p>医生（签字）：___________________</p>
+                    <p>医生（签字）： <span class="sig-field"></span></p>
                 </div>
                 <div>
-                    <p>日期（签字）：___________________</p>
+                    <p>日期（签字）： <span class="sig-field"></span></p>
                 </div>
             </div>
-            
-            <div class="footer">
-                本报告供诊断参考
             </div>
-            <div class="page-number">第2页，共4页</div>
+            </div>
+            
+            <div class="page-number"></div>
         </div>
-        
-        <!-- 第3页 - 自评报告 -->
+
+        <div style="page-break-before: always;"></div>
+
         <div class="page">
-            <div class="header">
+        <div class="header small">
                 <div class="logo-container">
                     <img src="../images/dzlogo.png" alt="生命潮" class="logo">
-                    <div class="title">BBS 睡眠质量主客观双百分评价报告</div>
+                    <div class="title">自评报告（附表）</div>
                 </div>
                 <div class="report-info">
                     报告编号: 119953<br>
@@ -448,7 +675,7 @@
             
             <div class="section-title">一：自评报告</div>
             
-            <table class="detail-table">
+            <table class="detail-table" id="self-report-table">
                 <thead>
                     <tr>
                         <th>评价维度</th>
@@ -551,17 +778,17 @@
             </table>
     
             <div class="footer">
-                本报告供诊断参考
+                
             </div>
             <div class="page-number">第3页，共4页</div>
         </div>
         
         <!-- 第4页 - AI评估报告 -->
         <div class="page">
-            <div class="header">
+        <div class="header small">
                 <div class="logo-container">
                     <img src="../images/dzlogo.png" alt="生命潮" class="logo">
-                    <div class="title">BBS 睡眠质量主客观双百分评价报告</div>
+                    <div class="title">AI 评估报告（附表）</div>
                 </div>
                 <div class="report-info">
                     报告编号: 119953<br>
@@ -570,7 +797,7 @@
             
             <div class="section-title">二：AI 评估报告</div>
             
-            <table class="detail-table">
+            <table class="detail-table" id="ai-report-table">
                 <thead>
                     <tr>
                         <th>分析维度</th>
@@ -684,11 +911,318 @@
                 </tbody>
             </table>
             
+            <!-- AI报告总结部分 -->
+            <div class="section-title">三：AI智能分析总结</div>
+            <div class="ai-analysis-container">
+                <div class="ai-analysis-loading">
+                    <div class="loading-text">🤖 AI正在分析您的睡眠数据...</div>
+                    <div class="loading-progress-bar">
+                        <div class="loading-progress" id="loading-progress"></div>
+                    </div>
+                </div>
+                <div class="ai-analysis-content" id="ai-analysis-content">
+                </div>
+                <div class="ai-analysis-error" id="ai-analysis-error">
+                </div>
+                <button class="generate-ai-analysis-btn" id="generate-ai-analysis" onclick="generateAIAnalysis()">
+                    生成AI智能分析总结
+                </button>
+            </div>
+            
             <div class="footer">
-                本报告供诊断参考
+                本报告仅供健康建议参考，具体诊断请咨询专业医生。
             </div>
             <div class="page-number">第4页，共4页</div>
         </div>
     </div>
+
+    <script>
+        // 收集报告数据的函数
+        function collectReportData() {
+            // 收集个人信息
+            const patientInfo = {
+                name: "海大力",
+                gender: "男",
+                age: 33,
+                height: 170.0,
+                weight: 60.0
+            };
+            
+            // 收集自评报告数据
+            const selfReportData = [];
+            const selfReportTable = document.getElementById('self-report-table');
+            if (selfReportTable) {
+                const rows = selfReportTable.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 5) {
+                        selfReportData.push({
+                            dimension: cells[0].textContent.trim(),
+                            item: cells[1].textContent.trim(),
+                            rating: cells[2].textContent.trim(),
+                            level: cells[3].textContent.trim(),
+                            score: cells[4].textContent.trim()
+                        });
+                    }
+                });
+            }
+            
+            // 收集AI评估报告数据
+            const aiReportData = [];
+            const aiReportTable = document.getElementById('ai-report-table');
+            if (aiReportTable) {
+                const rows = aiReportTable.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 5) {
+                        aiReportData.push({
+                            dimension: cells[0].textContent.trim(),
+                            item: cells[1].textContent.trim(),
+                            judgment: cells[2].textContent.trim(),
+                            level: cells[3].textContent.trim(),
+                            score: cells[4].textContent.trim()
+                        });
+                    }
+                });
+            }
+            
+            // 收集评分数据
+            const scoreData = {
+                selfTotal: 61.5,
+                aiTotal: 46
+            };
+            
+            return {
+                patientInfo,
+                selfReportData,
+                aiReportData,
+                scoreData
+            };
+        }
+        
+        // 生成AI分析总结的函数
+        async function generateAIAnalysis() {
+            // 获取所有AI分析按钮和容器
+            const buttons = document.querySelectorAll('.generate-ai-analysis-btn');
+            const loadingIndicators = document.querySelectorAll('.ai-analysis-loading');
+            const contentContainers = document.querySelectorAll('.ai-analysis-content');
+            const errorContainers = document.querySelectorAll('.ai-analysis-error');
+            
+            // 禁用所有按钮并显示加载状态
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.textContent = '生成中...';
+            });
+            
+            loadingIndicators.forEach(indicator => {
+                indicator.style.display = 'block';
+            });
+            
+            contentContainers.forEach(container => {
+                container.style.display = 'none';
+            });
+            
+            errorContainers.forEach(container => {
+                container.style.display = 'none';
+            });
+            
+            // 模拟进度条动画
+            const progressBars = document.querySelectorAll('.loading-progress');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBars.forEach(bar => {
+                    bar.style.width = `${Math.min(progress, 100)}%`;
+                });
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 100);
+            
+            try {
+                // 收集报告数据
+                const reportData = collectReportData();
+                
+                // 构造发送给AI的提示
+                const aiPrompt = `请根据以下睡眠质量评估报告数据，生成一份综合性的AI分析报告：
+                
+个人信息：
+姓名：${reportData.patientInfo.name}
+性别：${reportData.patientInfo.gender}
+年龄：${reportData.patientInfo.age}岁
+身高：${reportData.patientInfo.height}cm
+体重：${reportData.patientInfo.weight}kg
+
+自评报告总分：${reportData.scoreData.selfTotal}
+AI评估报告总分：${reportData.scoreData.aiTotal}
+
+自评报告详情：
+${reportData.selfReportData.map(item => 
+    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
+).join('\n')}
+
+AI评估报告详情：
+${reportData.aiReportData.map(item => 
+    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
+).join('\n')}
+
+请结合以上数据，生成一份综合性分析报告，包含以下内容：
+1. 整体睡眠质量评估
+2. 主要问题识别
+3. 改善建议
+4. 需要关注的风险点
+
+请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
+### 综合睡眠质量分析报告
+
+一、整体睡眠质量评估
+[内容]
+
+二、主要问题识别
+[内容]
+
+三、改善建议
+[内容]
+
+四、需要关注的风险点
+[内容]`;
+                
+                // 调用AI API生成分析报告
+                const aiResponse = await callAIAPI(aiPrompt);
+                displayAIAnalysis(aiResponse);
+            } catch (error) {
+                console.error('AI分析失败:', error);
+                displayAIError('AI分析失败，请稍后重试');
+            } finally {
+                clearInterval(interval);
+                // 恢复按钮状态
+                buttons.forEach(button => {
+                    button.disabled = false;
+                    button.textContent = '生成AI智能分析总结';
+                });
+                
+                loadingIndicators.forEach(indicator => {
+                    indicator.style.display = 'none';
+                });
+            }
+        }
+        
+        // 显示AI分析结果
+        function displayAIAnalysis(content) {
+            const contentContainers = document.querySelectorAll('.ai-analysis-content');
+            contentContainers.forEach(container => {
+                // 将Markdown格式的标题转换为HTML格式
+                let formattedContent = content;
+                formattedContent = formattedContent.replace(/### (.*?)(\n|$)/g, '<h4>$1</h4>');
+                formattedContent = formattedContent.replace(/一、(.*?)(\n|$)/g, '<h5>一、$1</h5>');
+                formattedContent = formattedContent.replace(/二、(.*?)(\n|$)/g, '<h5>二、$1</h5>');
+                formattedContent = formattedContent.replace(/三、(.*?)(\n|$)/g, '<h5>三、$1</h5>');
+                formattedContent = formattedContent.replace(/四、(.*?)(\n|$)/g, '<h5>四、$1</h5>');
+                formattedContent = formattedContent.replace(/\n\n/g, '</p><p>');
+                formattedContent = formattedContent.replace(/\n/g, '<br>');
+                formattedContent = '<p>' + formattedContent + '</p>';
+                
+                container.innerHTML = formattedContent;
+                container.style.display = 'block';
+            });
+        }
+        
+        // 显示错误信息
+        function displayAIError(errorMessage) {
+            const errorContainers = document.querySelectorAll('.ai-analysis-error');
+            errorContainers.forEach(container => {
+                container.textContent = errorMessage;
+                container.style.display = 'block';
+            });
+        }
+        
+        // 调用AI API的函数
+        async function callAIAPI(prompt) {
+            // 检查是否已存在AI聊天组件配置
+            if (typeof window.AI_CHAT_CONFIG === 'undefined') {
+                // 如果没有配置，尝试加载配置
+                try {
+                    await loadAIConfig();
+                } catch (e) {
+                    console.warn('无法加载AI配置，使用默认配置');
+                }
+            }
+            
+            // 获取配置或使用默认值
+            const config = window.AI_CHAT_CONFIG || {
+                functionUrl: '/.netlify/functions/chat',
+                model: 'Qwen/Qwen3-8B'
+            };
+            
+            // 构建消息历史
+            const messages = [
+                {
+                    role: 'system',
+                    content: '你是一个专业的睡眠健康专家，能够根据睡眠评估数据提供专业的分析和建议。'
+                },
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ];
+            
+            // 确保使用正确的URL路径
+            let functionUrl = config.functionUrl;
+            if (functionUrl.startsWith('/.netlify/functions/')) {
+                // 在本地开发环境中，可能需要使用完整的路径
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    functionUrl = `http://localhost:8888${functionUrl}`;
+                }
+            }
+            
+            // 调用Netlify Function
+            const response = await fetch(functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: messages,
+                    model: config.model
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // 解析响应
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                return data.choices[0].message.content;
+            } else if (data.message && data.message.content) {
+                return data.message.content;
+            } else {
+                throw new Error('AI响应格式不正确');
+            }
+        }
+        
+        // 加载AI配置的函数
+        async function loadAIConfig() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = '../ai-chat-config.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 如果页面中没有AI_CHAT_CONFIG，尝试加载
+            if (typeof window.AI_CHAT_CONFIG === 'undefined') {
+                loadAIConfig().catch(e => {
+                    console.warn('AI配置加载失败:', e);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
