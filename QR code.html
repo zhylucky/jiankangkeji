@@ -526,37 +526,22 @@
         
         // 初始化时从本地存储恢复缓存
         function initAppCache() {
+            // 移除本地存储缓存，确保每次都获取最新信息
             try {
-                const cachedData = localStorage.getItem('appDownloadCache');
-                if (cachedData) {
-                    const parsedData = JSON.parse(cachedData);
-                    // 检查缓存是否过期（24小时）
-                    const now = Date.now();
-                    const cacheTime = parsedData.cacheTime || 0;
-                    if (now - cacheTime < 24 * 60 * 60 * 1000) { // 24小时内有效
-                        appCache = parsedData.data || {};
-                        console.log('从本地存储恢复缓存数据');
-                    } else {
-                        console.log('缓存已过期，清除旧缓存');
-                        localStorage.removeItem('appDownloadCache');
-                    }
-                }
+                localStorage.removeItem('appDownloadCache');
             } catch (error) {
-                console.error('恢复缓存数据失败:', error);
-                appCache = {};
+                console.error('清除本地存储缓存失败:', error);
             }
+            appCache = {};
         }
         
         // 保存缓存到本地存储
         function saveAppCache() {
+            // 移除本地存储缓存，确保每次都获取最新信息
             try {
-                const cacheData = {
-                    data: appCache,
-                    cacheTime: Date.now()
-                };
-                localStorage.setItem('appDownloadCache', JSON.stringify(cacheData));
+                localStorage.removeItem('appDownloadCache');
             } catch (error) {
-                console.error('保存缓存数据失败:', error);
+                console.error('清除本地存储缓存失败:', error);
             }
         }
         
@@ -566,10 +551,10 @@
         // 多个备用代理服务器URL（按可靠性排序）
         const proxyServers = [
             'https://api.codetabs.com/v1/proxy?quest=',  // 更稳定的代理
-            'https://corsproxy.io/?',                    // 备用代理1
-            'https://api.allorigins.win/get?url=',       // 备用代理2
-            'https://thingproxy.freeboard.io/fetch/',    // 备用代理3
-            'https://yacdn.org/proxy/'                   // 备用代理4
+            'https://thingproxy.freeboard.io/fetch/',    // 备用代理1
+            'https://yacdn.org/proxy/',                  // 备用代理2
+            'https://corsproxy.io/?',                    // 备用代理3
+            'https://api.allorigins.win/get?url='        // 备用代理4
         ];
         
         // API端点基础URL
@@ -619,136 +604,15 @@
         
         // 预加载常用App信息
         function preloadCommonAppInfo() {
-            // 预加载最常用的App（个人健康pro+）
-            const commonAppId = '502';
-            if (!appCache[commonAppId]) {
-                // 后台预加载，不显示加载状态
-                fetchAppInfoWithCache(commonAppId, false)
-                    .catch(error => console.log('预加载App信息失败:', error));
-            }
+            // 移除预加载功能，确保每次都获取最新信息
+            console.log('预加载功能已移除，确保获取最新App信息');
         }
         
         // 带缓存的App信息获取（不显示UI状态）
         async function fetchAppInfoWithCache(selectedAppId, showStatusUI = true) {
-            // 检查缓存
-            if (appCache[selectedAppId]) {
-                // 检查缓存是否过期（1小时）
-                const cachedItem = appCache[selectedAppId];
-                const now = Date.now();
-                const cacheTime = cachedItem.cacheTime || 0;
-                if (now - cacheTime < 60 * 60 * 1000) { // 1小时内有效
-                    return cachedItem;
-                } else {
-                    // 缓存过期，删除该项
-                    delete appCache[selectedAppId];
-                }
-            }
-            
-            // 显示加载状态（如果需要）
-            if (showStatusUI) {
-                showStatus('正在获取App信息...', 'loading');
-            }
-            
-            // 尝试所有代理服务器
-            let lastError = null;
-            for (let i = 0; i < proxyServers.length; i++) {
-                try {
-                    const proxyRequestURL = proxyServers[i] + encodeURIComponent(baseURL + selectedAppId);
-                    console.log('预加载代理请求URL:', proxyRequestURL);
-                    
-                    // 添加超时控制
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
-                    
-                    const response = await fetch(proxyRequestURL, {
-                        method: 'GET',
-                        signal: controller.signal,
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                        }
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    // 检查响应状态
-                    if (response.status === 403) {
-                        throw new Error('代理服务器拒绝访问 (403 Forbidden)');
-                    }
-                    
-                    if (response.status === 500) {
-                        throw new Error('代理服务器内部错误 (500 Internal Server Error)');
-                    }
-                    
-                    if (response.status === 429) {
-                        throw new Error('请求过于频繁，请稍后再试 (429 Too Many Requests)');
-                    }
-                    
-                    if (!response.ok) {
-                        throw new Error(`代理服务器HTTP错误! 状态码: ${response.status}`);
-                    }
-                    
-                    const proxyData = await response.json();
-                    
-                    // 解析实际的API响应
-                    let apiData;
-                    try {
-                        if (proxyData.contents) {
-                            // allorigins.win 格式
-                            apiData = JSON.parse(proxyData.contents);
-                        } else if (proxyData.content) {
-                            // corsproxy.io 格式
-                            apiData = JSON.parse(proxyData.content);
-                        } else {
-                            // 直接返回的格式
-                            apiData = proxyData;
-                        }
-                    } catch (parseError) {
-                        // 如果解析失败，尝试直接使用返回的数据
-                        apiData = proxyData;
-                    }
-                    
-                    // 检查API响应是否成功
-                    if (apiData.code !== 200) {
-                        throw new Error('API返回错误: ' + (apiData.message || '未知错误'));
-                    }
-                    
-                    // 提取obj对象中的数据
-                    const obj = apiData.obj;
-                    if (!obj) {
-                        throw new Error('API响应中缺少obj对象');
-                    }
-                    
-                    // 提取必要的字段
-                    const name = getAppName(selectedAppId);
-                    const versionName = obj.versionName || '未知版本';
-                    const downloadUrl = obj.downloadUrl || '';
-                    const createDate = obj.createDate || '';
-                    const iconUrl = obj.iconUrl || obj.appIcon || '';
-                    
-                    if (!downloadUrl) {
-                        throw new Error('返回数据中未找到有效的下载链接');
-                    }
-                    
-                    // 缓存数据（带时间戳）
-                    const appInfo = {
-                        id: selectedAppId,
-                        name: name,
-                        version: versionName,
-                        downloadUrl: downloadUrl,
-                        iconUrl: iconUrl,
-                        createDate: createDate,
-                        cacheTime: Date.now() // 添加缓存时间戳
-                    };
-                    
-                    appCache[selectedAppId] = appInfo;
-                    return appInfo;
-                } catch (error) {
-                    console.error(`预加载使用代理服务器 ${proxyServers[i]} 失败:`, error);
-                    lastError = error;
-                }
-            }
-            
-            throw lastError || new Error('所有代理服务器都不可用');
+            // 移除缓存功能，确保每次都获取最新信息
+            console.log('缓存功能已移除，确保获取最新App信息');
+            throw new Error('缓存功能已移除');
         }
         
         // 预加载二维码库
@@ -781,14 +645,16 @@
         // 获取按钮点击事件
         function onFetchBtnClick() {
             const selectedAppId = appSelect ? appSelect.value : '';
-            fetchAppInfo(selectedAppId);
+            // 每次点击获取按钮时都强制刷新，确保获取最新信息
+            fetchAppInfo(selectedAppId, true);
         }
         
         // 下拉菜单变化事件
         function onAppSelectChange() {
             const selectedAppId = this.value;
             if (selectedAppId) {
-                fetchAppInfo(selectedAppId);
+                // 每次选择不同App时都强制刷新，确保获取最新信息
+                fetchAppInfo(selectedAppId, true);
             } else {
                 if (appCard) {
                     appCard.style.display = 'none';
@@ -828,7 +694,7 @@
         }
         
         // 获取App信息 - 使用多个代理服务器重试
-        async function fetchAppInfo(selectedAppId) {
+        async function fetchAppInfo(selectedAppId, forceRefresh = false) {
             if (!selectedAppId) {
                 showStatus('请选择一个App', 'error');
                 return;
@@ -837,13 +703,13 @@
             // 保存当前App ID
             currentAppId = selectedAppId;
             
-            // 检查缓存
-            if (appCache[selectedAppId]) {
-                // 检查缓存是否过期（1小时）
+            // 检查缓存（除非强制刷新）
+            if (!forceRefresh && appCache[selectedAppId]) {
+                // 缩短缓存时间到5分钟，确保信息相对新鲜
                 const cachedItem = appCache[selectedAppId];
                 const now = Date.now();
                 const cacheTime = cachedItem.cacheTime || 0;
-                if (now - cacheTime < 60 * 60 * 1000) { // 1小时内有效
+                if (now - cacheTime < 5 * 60 * 1000) { // 5分钟内有效
                     displayAppInfo(cachedItem);
                     showStatus('使用缓存数据加载成功！', 'success');
                     return;
@@ -876,8 +742,6 @@
                         // 添加缓存时间戳
                         if (appCache[selectedAppId]) {
                             appCache[selectedAppId].cacheTime = Date.now();
-                            // 保存到本地存储
-                            saveAppCache();
                         }
                         return; // 成功获取数据，直接返回
                     }
@@ -927,19 +791,23 @@
                 
                 // 检查响应状态
                 if (response.status === 403) {
-                    throw new Error('代理服务器拒绝访问 (403 Forbidden)');
+                    throw new Error(`代理服务器拒绝访问 (403 Forbidden) - 代理: ${proxyURL}`);
                 }
                 
                 if (response.status === 500) {
-                    throw new Error('代理服务器内部错误 (500 Internal Server Error)');
+                    throw new Error(`代理服务器内部错误 (500 Internal Server Error) - 代理: ${proxyURL}`);
                 }
                 
                 if (response.status === 429) {
-                    throw new Error('请求过于频繁，请稍后再试 (429 Too Many Requests)');
+                    throw new Error(`请求过于频繁 (429 Too Many Requests) - 代理: ${proxyURL}`);
+                }
+                
+                if (response.status === 503) {
+                    throw new Error(`服务暂时不可用 (503 Service Unavailable) - 代理: ${proxyURL}`);
                 }
                 
                 if (!response.ok) {
-                    throw new Error(`代理服务器HTTP错误! 状态码: ${response.status}`);
+                    throw new Error(`代理服务器HTTP错误! 状态码: ${response.status} - 代理: ${proxyURL}`);
                 }
                 
                 const proxyData = await response.json();
