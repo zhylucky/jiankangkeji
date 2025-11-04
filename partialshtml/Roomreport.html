@@ -566,22 +566,22 @@
             <!-- 修改为竖列排版 -->
             <div class="warning-list">
                 <div class="warning-item no-warning">
-                    <span>心电图QRS波群混乱或消失: 无</span>
+                    <span>心电图QRS波群混乱或消失: 有</span>
                 </div>
                 <div class="warning-item no-warning">
-                    <span>室颤/房颤: 无</span>
+                    <span>室颤/房颤: 有</span>
                 </div>
                 <div class="warning-item no-warning">
-                    <span>呼吸暂停持续时间≥40秒，或整晚累计时间≥30分钟: 无</span>
+                    <span>呼吸暂停持续时间≥40秒，或整晚累计时间≥30分钟: 有</span>
                 </div>
                 <div class="warning-item no-warning">
-                    <span>呼吸阻滞持续时间≥30分钟，或整晚累计时间≥90分钟: 无</span>
+                    <span>呼吸阻滞持续时间≥30分钟，或整晚累计时间≥90分钟: 有</span>
                 </div>
                 <div class="warning-item no-warning">
-                    <span>SpO2≤85%: 无</span>
+                    <span>SpO2≤85%: 有</span>
                 </div>
                 <div class="warning-item no-warning">
-                    <span>行走梦游: 无</span>
+                    <span>行走梦游: 有</span>
                 </div>
             </div>
 
@@ -985,11 +985,23 @@
                 aiTotal: 46
             };
             
+            // 收集危险项提示数据
+            const warningData = [];
+            const warningItems = document.querySelectorAll('.warning-item');
+            warningItems.forEach(item => {
+                const text = item.textContent.trim();
+                // 只收集有警告的项（非"无"的项）
+                if (text && !text.includes(': 无')) {
+                    warningData.push(text);
+                }
+            });
+            
             return {
                 patientInfo,
                 selfReportData,
                 aiReportData,
-                scoreData
+                scoreData,
+                warningData
             };
         }
         
@@ -1064,6 +1076,11 @@
 
                 自评报告总分：${reportData.scoreData.selfTotal}
                 AI评估报告总分：${reportData.scoreData.aiTotal}
+                
+                危险项提示：
+                ${reportData.warningData.length > 0 ? 
+                  reportData.warningData.map(item => `- ${item}`).join('\n') : 
+                  '无明显危险项'}
 
                 自评报告详情：
                 ${reportData.selfReportData.map(item => 
@@ -1080,6 +1097,8 @@
                 2. 主要问题识别
                 3. 改善建议
                 4. 需要关注的风险点
+
+                请特别关注危险项提示中的内容，如果存在异常项，请在风险点分析中重点说明。
 
                 请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
                 一、整体睡眠质量评估
