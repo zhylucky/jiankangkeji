@@ -41,7 +41,7 @@ exports.handler = async function(event, context) {
       throw new Error('请求体为空');
     }
 
-    const { messages, model } = JSON.parse(event.body);
+    const { messages, model, max_tokens, temperature, top_p, enable_search, enable_thinking } = JSON.parse(event.body);
     
     // 验证参数
     if (!messages || !Array.isArray(messages)) {
@@ -59,51 +59,75 @@ exports.handler = async function(event, context) {
       model: model || 'Qwen/Qwen3-8B',
       messages: messages,
       stream: false,
-      // 性能优化参数
-      max_tokens: 1500,  // 限制最大token数以提高响应速度
-      temperature: 0.7,  // 适度的创造性
-      top_p: 0.9        // nucleus采样
+      // 性能优化参数（使用前端传递的参数或默认值）
+      max_tokens: max_tokens || 1000,  // 限制最大token数以提高响应速度
+      temperature: temperature || 0.7,  // 适度的创造性
+      top_p: top_p || 0.9        // nucleus采样
     };
     
-    // 明确关闭思考模式（如果API支持）
-    if (model && model.includes('Qwen')) {
-      // 阿里云Qwen模型可能支持的参数
-      requestBody.enable_search = false;  // 禁用搜索
-      requestBody.enable_thinking = false;  // 禁用思考模式
+    // 处理额外参数
+    if (enable_search !== undefined) {
+      requestBody.enable_search = enable_search;
+    }
+    if (enable_thinking !== undefined) {
+      requestBody.enable_thinking = enable_thinking;
     }
     
-    // 使用环境变量中的 API Key
-    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(requestBody),
-      // 设置超时时间
-      timeout: 30000 // 30秒超时
-    });
+    // 增加重试机制
+    const maxRetries = 3;
+    const baseDelay = 1000; // 1秒基础延迟
+    
+    let lastError;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        // 使用环境变量中的 API Key
+        const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(requestBody),
+          // 设置超时时间
+          timeout: 20000 // 20秒超时（减少Netlify Function超时风险）
+        });
 
-    // 获取响应文本用于错误处理
-    const responseText = await response.text();
-    
-    if (!response.ok) {
-      throw new Error(`SiliconFlow API请求失败: ${response.status} ${response.statusText} - ${responseText}`);
-    }
+        // 获取响应文本用于错误处理
+        const responseText = await response.text();
+        
+        if (!response.ok) {
+          throw new Error(`SiliconFlow API请求失败: ${response.status} ${response.statusText} - ${responseText}`);
+        }
 
-    // 解析响应
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      throw new Error(`响应数据解析失败: ${parseError.message} - 原始响应: ${responseText}`);
+        // 解析响应
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          throw new Error(`响应数据解析失败: ${parseError.message} - 原始响应: ${responseText}`);
+        }
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(data)
+        };
+      } catch (error) {
+        lastError = error;
+        console.error(`Attempt ${attempt + 1} failed:`, error);
+        
+        // 如果不是最后一次尝试，等待后重试
+        if (attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt); // 指数退避
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
     }
     
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(data)
-    };
+    // 所有重试都失败了
+    throw lastError;
+    
   } catch (error) {
     console.error('Function执行错误:', error);
     

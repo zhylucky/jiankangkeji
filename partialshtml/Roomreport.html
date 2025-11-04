@@ -632,7 +632,7 @@
         <div class="header small">
                 <div class="logo-container">
                     <img src="../images/dzlogo.png" alt="生命潮" class="logo">
-                    <div class="title">自评报告（附表）</div>
+                    <div class="title">BBS 睡眠质量主客观双百分评价报告一：自评报告</div>
                 </div>
                 <div class="report-info">
                     报告编号: 119953<br>
@@ -756,7 +756,7 @@
         <div class="header small">
                 <div class="logo-container">
                     <img src="../images/dzlogo.png" alt="生命潮" class="logo">
-                    <div class="title">AI 评估报告（附表）</div>
+                    <div class="title">BBS 睡眠质量主客观双百分评价报告二：AI 评估报告</div>
                 </div>
                 <div class="report-info">
                     报告编号: 119953<br>
@@ -892,7 +892,7 @@
         <div class="header small">
                 <div class="logo-container">
                     <img src="../images/dzlogo.png" alt="生命潮" class="logo">
-                    <div class="title">AI 智能分析总结</div>
+                    <div class="title">BBS 睡眠质量主客观双百分评价报告三：AI智能分析总结</div>
                 </div>
                 <div class="report-info">
                     报告编号: 119953<br>
@@ -900,7 +900,7 @@
             </div>
             
             <!-- AI报告总结部分 -->
-            <div class="section-title">AI智能分析总结</div>
+            <div class="section-title">三：AI智能分析总结</div>
             <div class="ai-analysis-container">
                 <div class="ai-analysis-loading">
                     <div class="loading-text">🤖 AI正在分析您的睡眠数据...</div>
@@ -1096,7 +1096,7 @@
                 displayAIAnalysis(aiResponse);
             } catch (error) {
                 console.error('AI分析失败:', error);
-                displayAIError('AI分析失败，请稍后重试');
+                displayAIError(`AI分析失败，请稍后重试 (${error.message})`);
             } finally {
                 clearInterval(interval);
                 // 恢复按钮状态
@@ -1135,7 +1135,18 @@
         function displayAIError(errorMessage) {
             const errorContainers = document.querySelectorAll('.ai-analysis-error');
             errorContainers.forEach(container => {
-                container.textContent = errorMessage;
+                // 根据错误类型提供友好的错误信息
+                let friendlyMessage = errorMessage;
+                
+                if (errorMessage.includes('504') || errorMessage.includes('timeout') || errorMessage.includes('超时')) {
+                    friendlyMessage = 'AI服务响应超时，请稍后重试。系统会自动重试，您也可以手动点击按钮重新生成。';
+                } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('网络')) {
+                    friendlyMessage = '网络连接异常，请检查网络后重试。';
+                } else if (errorMessage.includes('API密钥')) {
+                    friendlyMessage = 'AI服务配置错误，请联系管理员检查API密钥配置。';
+                }
+                
+                container.textContent = friendlyMessage;
                 container.style.display = 'block';
             });
         }
@@ -1179,32 +1190,91 @@
                 }
             }
             
-            // 调用Netlify Function
-            const response = await fetch(functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    messages: messages,
-                    model: config.model
-                })
-            });
+            // 设置超时和重试参数
+            const timeoutMs = 12000; // 12秒超时（减少Netlify Function超时风险）
+            const maxRetries = 3;    // 最多重试3次
+            const baseDelay = 1500;  // 初始延迟1.5秒
             
-            if (!response.ok) {
-                throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}`);
-            }
+            // 实现带重试和超时的请求函数
+            const doRequest = async (attempt) => {
+                // 创建AbortController用于超时控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                }, timeoutMs);
+                
+                try {
+                    // 调用Netlify Function
+                    const response = await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            messages: messages,
+                            model: config.model,
+                            // 添加性能优化参数
+                            max_tokens: 1000,  // 限制最大token数
+                            temperature: 0.7,  // 控制创造性
+                            top_p: 0.9,        // nucleus采样
+                            enable_search: false,  // 禁用搜索
+                            enable_thinking: false // 禁用思考模式
+                        }),
+                        signal: controller.signal,
+                        // 避免缓存
+                        cache: 'no-store'
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text().catch(() => '');
+                        throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 解析响应
+                    if (data.choices && data.choices[0] && data.choices[0].message) {
+                        return data.choices[0].message.content;
+                    } else if (data.message && data.message.content) {
+                        return data.message.content;
+                    } else {
+                        throw new Error('AI响应格式不正确');
+                    }
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    
+                    // 检查是否是超时或网络错误
+                    const isTimeout = error.name === 'AbortError';
+                    const isNetworkError = error.message.includes('Failed to fetch') || 
+                                          error.message.includes('网络') || 
+                                          error.message.includes('504') ||
+                                          error.message.includes('timeout');
+                    
+                    // 如果是超时或网络错误，并且还有重试次数，则进行重试
+                    if ((isTimeout || isNetworkError) && attempt < maxRetries) {
+                        const delay = baseDelay * Math.pow(2, attempt); // 指数退避
+                        console.log(`AI请求失败（${error.message}），${delay}ms后进行第${attempt + 1}次重试...`);
+                        
+                        // 显示重试提示给用户
+                        const errorContainers = document.querySelectorAll('.ai-analysis-error');
+                        errorContainers.forEach(container => {
+                            container.textContent = `AI服务暂时无响应，正在重试中... (${attempt + 1}/${maxRetries})`;
+                            container.style.display = 'block';
+                        });
+                        
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return doRequest(attempt + 1);
+                    }
+                    
+                    // 其他错误或超过重试次数，抛出错误
+                    throw new Error(`AI服务请求失败: ${error.message}`);
+                }
+            };
             
-            const data = await response.json();
-            
-            // 解析响应
-            if (data.choices && data.choices[0] && data.choices[0].message) {
-                return data.choices[0].message.content;
-            } else if (data.message && data.message.content) {
-                return data.message.content;
-            } else {
-                throw new Error('AI响应格式不正确');
-            }
+            // 执行请求
+            return doRequest(0);
         }
         
         // 加载AI配置的函数

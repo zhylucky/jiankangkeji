@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomreport AI分析功能测试</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .test-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #1a6dcc;
+        }
+        button {
+            background: linear-gradient(135deg, #1a6dcc 0%, #0d4d9c 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        .loading {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+        .info {
+            background-color: #fff8e1;
+            color: #ff8f00;
+            border: 1px solid #ffecb3;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f1f8ff;
+            border-radius: 4px;
+        }
+        .stat-value {
+            font-weight: bold;
+            font-size: 18px;
+            color: #1a6dcc;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #1a6dcc, #3b82f6);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <h1>Roomreport AI分析功能测试</h1>
+    
+    <div class="test-container">
+        <h2>单次测试</h2>
+        <button id="testSingle">执行单次AI分析</button>
+        <div id="singleResult" class="result" style="display:none;"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>批量测试</h2>
+        <button id="testBatch5">执行5次连续测试</button>
+        <button id="testBatch10">执行10次连续测试</button>
+        <div id="batchResult" class="result" style="display:none;">
+            <div class="progress-bar">
+                <div class="progress" id="batchProgress"></div>
+            </div>
+            <div id="batchStatus"></div>
+        </div>
+        <div class="stats" id="batchStats" style="display:none;">
+            <div class="stat-item">
+                <div>成功</div>
+                <div class="stat-value" id="successCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div>失败</div>
+                <div class="stat-value" id="failCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div>成功率</div>
+                <div class="stat-value" id="successRate">0%</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>压力测试</h2>
+        <button id="testStress">执行压力测试（20次）</button>
+        <div class="info">
+            <p><strong>注意：</strong>压力测试会连续发送20个AI请求，请谨慎使用，避免对服务造成过大压力。</p>
+        </div>
+        <div id="stressResult" class="result" style="display:none;">
+            <div class="progress-bar">
+                <div class="progress" id="stressProgress"></div>
+            </div>
+            <div id="stressStatus"></div>
+        </div>
+        <div class="stats" id="stressStats" style="display:none;">
+            <div class="stat-item">
+                <div>成功</div>
+                <div class="stat-value" id="stressSuccessCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div>失败</div>
+                <div class="stat-value" id="stressFailCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div>成功率</div>
+                <div class="stat-value" id="stressSuccessRate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟Roomreport中的数据收集函数
+        function collectReportData() {
+            return {
+                patientInfo: {
+                    name: "测试用户",
+                    gender: "男",
+                    age: 35,
+                    height: 175.0,
+                    weight: 70.0
+                },
+                selfReportData: [
+                    { dimension: "睡眠效率", item: "实际睡者时长", rating: "6小时", level: "良", score: "4" },
+                    { dimension: "睡眠质量", item: "醒后疲劳", rating: "轻微疲劳", level: "良", score: "6" },
+                    { dimension: "睡眠干扰", item: "起夜次数", rating: "1次", level: "良", score: "6" }
+                ],
+                aiReportData: [
+                    { dimension: "睡眠风险", item: "心律失常", judgment: "无", level: "优", score: "6" },
+                    { dimension: "睡眠事件", item: "翻身频次", judgment: "正常", level: "良", score: "6" },
+                    { dimension: "睡眠概况", item: "入眠时间", judgment: "15-30分钟", level: "良", score: "4" }
+                ],
+                scoreData: {
+                    selfTotal: 65.5,
+                    aiTotal: 52
+                }
+            };
+        }
+        
+        // 构造AI提示
+        function buildAIPrompt(reportData) {
+            return `请根据以下睡眠质量评估报告数据，生成一份综合性的AI分析报告：
+            
+            个人信息：
+            姓名：${reportData.patientInfo.name}
+            性别：${reportData.patientInfo.gender}
+            年龄：${reportData.patientInfo.age}岁
+            身高：${reportData.patientInfo.height}cm
+            体重：${reportData.patientInfo.weight}kg
+
+            自评报告总分：${reportData.scoreData.selfTotal}
+            AI评估报告总分：${reportData.scoreData.aiTotal}
+
+            自评报告详情：
+            ${reportData.selfReportData.map(item => 
+                `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
+            ).join('\n')}
+
+            AI评估报告详情：
+            ${reportData.aiReportData.map(item => 
+                `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
+            ).join('\n')}
+
+            请结合以上数据，生成一份综合性分析报告，包含以下内容：
+            1. 整体睡眠质量评估
+            2. 主要问题识别
+            3. 改善建议
+            4. 需要关注的风险点
+
+            请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
+            一、整体睡眠质量评估
+            [内容]
+
+            二、主要问题识别
+            [内容]
+
+            三、改善建议
+            [内容]`;
+        }
+        
+        // 调用AI API的函数（模拟Roomreport中的实现）
+        async function callAIAPI(prompt) {
+            // 确保使用正确的URL路径
+            let functionUrl = '/.netlify/functions/chat';
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                functionUrl = `http://localhost:8888${functionUrl}`;
+            }
+            
+            // 设置超时和重试参数
+            const timeoutMs = 12000; // 12秒超时
+            const maxRetries = 3;    // 最多重试3次
+            const baseDelay = 1500;  // 初始延迟1.5秒
+            
+            // 实现带重试和超时的请求函数
+            const doRequest = async (attempt) => {
+                // 创建AbortController用于超时控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                }, timeoutMs);
+                
+                try {
+                    // 调用Netlify Function
+                    const response = await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: '你是一个专业的睡眠健康专家，能够根据睡眠评估数据提供专业的分析和建议。'
+                                },
+                                {
+                                    role: 'user',
+                                    content: prompt
+                                }
+                            ],
+                            model: 'Qwen/Qwen3-8B',
+                            // 添加性能优化参数
+                            max_tokens: 1000,  // 限制最大token数
+                            temperature: 0.7,  // 控制创造性
+                            top_p: 0.9,        // nucleus采样
+                            enable_search: false,  // 禁用搜索
+                            enable_thinking: false // 禁用思考模式
+                        }),
+                        signal: controller.signal,
+                        // 避免缓存
+                        cache: 'no-store'
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text().catch(() => '');
+                        throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 解析响应
+                    if (data.choices && data.choices[0] && data.choices[0].message) {
+                        return data.choices[0].message.content;
+                    } else if (data.message && data.message.content) {
+                        return data.message.content;
+                    } else {
+                        throw new Error('AI响应格式不正确');
+                    }
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    
+                    // 检查是否是超时或网络错误
+                    const isTimeout = error.name === 'AbortError';
+                    const isNetworkError = error.message.includes('Failed to fetch') || 
+                                          error.message.includes('网络') || 
+                                          error.message.includes('504') ||
+                                          error.message.includes('timeout');
+                    
+                    // 如果是超时或网络错误，并且还有重试次数，则进行重试
+                    if ((isTimeout || isNetworkError) && attempt < maxRetries) {
+                        const delay = baseDelay * Math.pow(2, attempt); // 指数退避
+                        console.log(`AI请求失败（${error.message}），${delay}ms后进行第${attempt + 1}次重试...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return doRequest(attempt + 1);
+                    }
+                    
+                    // 其他错误或超过重试次数，抛出错误
+                    throw new Error(`AI服务请求失败: ${error.message}`);
+                }
+            };
+            
+            // 执行请求
+            return doRequest(0);
+        }
+        
+        // 执行单次测试
+        document.getElementById('testSingle').addEventListener('click', async function() {
+            const button = this;
+            const resultDiv = document.getElementById('singleResult');
+            
+            button.disabled = true;
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = '正在执行AI分析...';
+            
+            try {
+                // 收集报告数据
+                const reportData = collectReportData();
+                
+                // 构造发送给AI的提示
+                const aiPrompt = buildAIPrompt(reportData);
+                
+                // 调用AI API生成分析报告
+                const startTime = Date.now();
+                const aiResponse = await callAIAPI(aiPrompt);
+                const endTime = Date.now();
+                
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `AI分析成功！耗时: ${(endTime - startTime) / 1000}秒\n\n${aiResponse}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `AI分析失败: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        });
+        
+        // 执行批量测试
+        async function runBatchTest(count, resultDiv, progressDiv, statusDiv, statsDiv, successCountDiv, failCountDiv, successRateDiv) {
+            const button = document.querySelector(`#testBatch${count}`);
+            
+            button.disabled = true;
+            resultDiv.style.display = 'block';
+            statsDiv.style.display = 'flex';
+            progressDiv.style.width = '0%';
+            statusDiv.textContent = '准备开始测试...';
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            // 收集报告数据
+            const reportData = collectReportData();
+            const aiPrompt = buildAIPrompt(reportData);
+            
+            for (let i = 1; i <= count; i++) {
+                try {
+                    statusDiv.textContent = `正在执行第 ${i} 次测试...`;
+                    progressDiv.style.width = `${(i / count) * 100}%`;
+                    
+                    // 调用AI API生成分析报告
+                    await callAIAPI(aiPrompt);
+                    successCount++;
+                } catch (error) {
+                    failCount++;
+                    console.error(`第 ${i} 次测试失败:`, error.message);
+                }
+                
+                // 更新统计
+                successCountDiv.textContent = successCount;
+                failCountDiv.textContent = failCount;
+                successRateDiv.textContent = `${Math.round((successCount / i) * 100)}%`;
+                
+                // 短暂延迟避免请求过于密集
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+            progressDiv.style.width = '100%';
+            statusDiv.textContent = `批量测试完成 (${count} 次)`;
+            button.disabled = false;
+        }
+        
+        // 绑定批量测试事件
+        document.getElementById('testBatch5').addEventListener('click', function() {
+            runBatchTest(
+                5,
+                document.getElementById('batchResult'),
+                document.getElementById('batchProgress'),
+                document.getElementById('batchStatus'),
+                document.getElementById('batchStats'),
+                document.getElementById('successCount'),
+                document.getElementById('failCount'),
+                document.getElementById('successRate')
+            );
+        });
+        
+        document.getElementById('testBatch10').addEventListener('click', function() {
+            runBatchTest(
+                10,
+                document.getElementById('batchResult'),
+                document.getElementById('batchProgress'),
+                document.getElementById('batchStatus'),
+                document.getElementById('batchStats'),
+                document.getElementById('successCount'),
+                document.getElementById('failCount'),
+                document.getElementById('successRate')
+            );
+        });
+        
+        // 执行压力测试
+        document.getElementById('testStress').addEventListener('click', async function() {
+            const button = this;
+            const resultDiv = document.getElementById('stressResult');
+            const progressDiv = document.getElementById('stressProgress');
+            const statusDiv = document.getElementById('stressStatus');
+            const statsDiv = document.getElementById('stressStats');
+            const successCountDiv = document.getElementById('stressSuccessCount');
+            const failCountDiv = document.getElementById('stressFailCount');
+            const successRateDiv = document.getElementById('stressSuccessRate');
+            
+            button.disabled = true;
+            resultDiv.style.display = 'block';
+            statsDiv.style.display = 'flex';
+            progressDiv.style.width = '0%';
+            statusDiv.textContent = '准备开始压力测试...';
+            
+            let successCount = 0;
+            let failCount = 0;
+            const count = 20;
+            
+            // 收集报告数据
+            const reportData = collectReportData();
+            const aiPrompt = buildAIPrompt(reportData);
+            
+            for (let i = 1; i <= count; i++) {
+                try {
+                    statusDiv.textContent = `正在执行第 ${i} 次压力测试...`;
+                    progressDiv.style.width = `${(i / count) * 100}%`;
+                    
+                    // 调用AI API生成分析报告
+                    await callAIAPI(aiPrompt);
+                    successCount++;
+                } catch (error) {
+                    failCount++;
+                    console.error(`第 ${i} 次压力测试失败:`, error.message);
+                }
+                
+                // 更新统计
+                successCountDiv.textContent = successCount;
+                failCountDiv.textContent = failCount;
+                successRateDiv.textContent = `${Math.round((successCount / i) * 100)}%`;
+                
+                // 短暂延迟避免请求过于密集
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            progressDiv.style.width = '100%';
+            statusDiv.textContent = `压力测试完成 (${count} 次)`;
+            button.disabled = false;
+        });
+    </script>
+</body>
+</html>
