@@ -332,7 +332,14 @@ class AIChatWidget {
         let enhancedSystemPrompt = this.systemPrompt;
         const currentTime = this.getCurrentTime();
         if (searchResults) {
-            enhancedSystemPrompt += `\n\n最新网络信息：\n${searchResults}\n\n请基于上述最新信息和你的知识库综合回答用户问题。\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
+            enhancedSystemPrompt += `
+
+最新网络信息：
+${searchResults}
+
+请基于上述最新信息和你的知识库综合回答用户问题。
+
+重要提醒：${currentTime}，请确保时间信息的准确性。`;
         } else {
             enhancedSystemPrompt += `\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
         }
@@ -347,10 +354,10 @@ class AIChatWidget {
             { role: 'user', content: userMessage }
         ];
 
-        // 超时与重试设置
+        // 超时与重试设置（与Roomreport.html保持一致）
         const timeoutMs = 15000; // 15s 超时
-        const maxRetries = 2;    // 最多重试 2 次
-        const baseDelay = 600;   // 初始退避 600ms
+        const maxRetries = 3;    // 最多重试 3 次（从2次增加到3次）
+        const baseDelay = 1000;   // 初始退避 1000ms
 
         const doRequest = async (attempt) => {
             // 超时控制
@@ -399,7 +406,7 @@ class AIChatWidget {
 
                 const isAbort = err?.name === 'AbortError';
                 const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
-                const isNetwork = /Failed to fetch|NetworkError|网络|fetch/i.test(err?.message || '');
+                const isNetwork = /Failed to fetch|NetworkError|网络|fetch|504/i.test(err?.message || '');
 
                 // 可重试的错误
                 if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
