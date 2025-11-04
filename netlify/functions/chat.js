@@ -60,7 +60,7 @@ exports.handler = async function(event, context) {
       messages: messages,
       stream: false,
       // 性能优化参数
-      max_tokens: 1000,  // 限制最大token数以提高响应速度
+      max_tokens: 1500,  // 限制最大token数以提高响应速度
       temperature: 0.7,  // 适度的创造性
       top_p: 0.9        // nucleus采样
     };
@@ -89,7 +89,7 @@ exports.handler = async function(event, context) {
           },
           body: JSON.stringify(requestBody),
           // 设置超时时间
-          timeout: 20000 // 20秒超时（减少Netlify Function超时风险）
+          timeout: 30000 // 30秒超时
         });
 
         // 获取响应文本用于错误处理
