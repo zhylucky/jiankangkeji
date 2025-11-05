@@ -10,7 +10,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-
+    <!-- 背景装饰元素 -->
+    <div class="background-decoration"></div>
+    
     <!-- 顶部标题栏 -->
     <header class="login-header">
         <div class="header-content">
@@ -30,7 +32,7 @@
 
     <!-- 主要内容区 -->
     <main class="login-main">
-        <div class="login-card">
+        <div class="login-card glass-card">
             <!-- 左侧插画 -->
             <div class="left-panel">
                 <img src="images/login-bg.png" alt="医疗健康插画" class="illustration-img">
@@ -38,20 +40,32 @@
             <!-- 右侧登录表单 -->
             <div class="right-panel">
                 <div class="login-box">
-                    <h2>欢迎登录 健康管理中心</h2>
+                    <h2>登录-健康管理中心</h2>
                     <form id="loginForm">
                         <div class="input-group">
-                            <input type="text" id="username" name="username" placeholder="账号" value="admin" required>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="username" name="username" placeholder="账号" value="admin" required>
+                            </div>
                         </div>
                         <div class="input-group">
-                            <input type="password" id="password" name="password" placeholder="密码" value="123456" required>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password" id="password" name="password" placeholder="密码" value="123456" required>
+                            </div>
                         </div>
                         <div class="form-footer">
+                            <label class="remember-me">
+                                <input type="checkbox" id="remember" name="remember">
+                                <span>记住我</span>
+                            </label>
                             <a href="#">忘记密码?</a>
-                            <a href="#">注册账号</a>
                         </div>
                         <button type="submit" class="login-btn">登 录</button>
                     </form>
+                    <div class="register-link">
+                        <p>还没有账号? <a href="#">立即注册</a></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -65,11 +79,11 @@
     <!-- 右侧悬浮联系方式 (可选) -->
     <div class="contact-buttons">
         <a href="#" class="contact-item phone-contact" data-phone="400-888-999">
-            <img src="images/Phone.png" alt="电话图标" class="contact-icon" >
+            <i class="fas fa-phone"></i>
             <span>电话咨询</span>
         </a>
         <a href="#" class="contact-item qr-contact">
-            <img src="images/WeChat.png" alt="聊天图标" class="contact-icon">
+            <i class="fas fa-comments"></i>
             <span>联系我们</span>
         </a>
     </div>

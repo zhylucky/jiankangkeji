@@ -27,7 +27,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         // 延迟跳转，让用户看到提示
         setTimeout(() => {
             window.location.href = 'health-management.html';
-        }, 500);
+        }, 1500);
 
     } else {
         // 登录失败
@@ -37,6 +37,13 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 
 // 显示小弹窗
 function showToast(message, type) {
+    // 如果已有弹窗，先移除
+    const existingToast = document.querySelector('.toast');
+    const existingMask = document.querySelector('.toast-mask');
+    
+    if (existingToast) existingToast.remove();
+    if (existingMask) existingMask.remove();
+
     // 创建遮罩
     const mask = document.createElement('div');
     mask.className = 'toast-mask';
@@ -76,4 +83,31 @@ function showToast(message, type) {
             mask.remove();
         }, 300); // 等待动画结束
     }, 2000);
+}
+
+// 输入框焦点效果
+document.querySelectorAll('.input-group input').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.parentElement.parentElement.classList.add('focused');
+    });
+    
+    input.addEventListener('blur', function() {
+        this.parentElement.parentElement.classList.remove('focused');
+    });
+});
+
+// 登录按钮点击效果
+const loginBtn = document.querySelector('.login-btn');
+if (loginBtn) {
+    loginBtn.addEventListener('mousedown', function() {
+        this.classList.add('pressed');
+    });
+    
+    loginBtn.addEventListener('mouseup', function() {
+        this.classList.remove('pressed');
+    });
+    
+    loginBtn.addEventListener('mouseleave', function() {
+        this.classList.remove('pressed');
+    });
 }
