@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D粒子系统 - 摄像头手势控制</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            color: white;
+            min-width: 250px;
+        }
+        
+        .ui-group {
+            margin-bottom: 20px;
+        }
+        
+        .ui-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        select, input[type="color"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 14px;
+        }
+        
+        select {
+            cursor: pointer;
+        }
+        
+        select option {
+            background: #333;
+            color: white;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        #fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        #camera-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 100;
+        }
+        
+        #camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #gesture-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="ui-panel">
+        <div class="ui-group">
+            <label for="model-select">选择模型</label>
+            <select id="model-select">
+                <option value="heart">爱心</option>
+                <option value="flower">花朵</option>
+                <option value="star">王星</option>
+                <option value="buddha">佛像</option>
+                <option value="fireworks">烟花</option>
+            </select>
+        </div>
+        <div class="ui-group">
+            <label for="color-picker">粒子颜色</label>
+            <input type="color" id="color-picker" value="#ff6b6b">
+        </div>
+        <div class="ui-group">
+            <button id="start-camera-btn">启动摄像头</button>
+        </div>
+    </div>
+    <button id="fullscreen-btn" title="全屏">⛶</button>
+    <div id="camera-container" style="display: none;">
+        <video id="camera-feed" autoplay playsinline></video>
+    </div>
+    <div id="gesture-info" style="display: none;">手势检测：未检测到</div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.10.0/hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@3.18.0/dist/tf-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@3.18.0/dist/tf-backend-webgl.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.0/dist/hand-pose-detection.min.js"></script>
+    
+    <script>
+        // 3D粒子系统实现
+        class ParticleSystem {
+            constructor() {
+                this.container = document.getElementById('canvas-container');
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                
+                this.particles = null;
+                this.particleCount = 5000;
+                this.currentModel = 'heart';
+                this.currentColor = '#ff6b6b';
+                this.scale = 1;
+                this.handDistance = 0;
+                this.previousHandDistance = 0;
+                
+                this.isCameraActive = false;
+                this.cameraFeed = document.getElementById('camera-feed');
+                this.handsModel = null;
+                this.videoElement = null;
+                
+                this.init();
+                this.createParticles();
+                this.setupEventListeners();
+                this.animate();
+            }
+            
+            init() {
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x000000, 0);
+                this.container.appendChild(this.renderer.domElement);
+                
+                this.camera.position.z = 10;
+                
+                // 添加环境光
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                this.scene.add(ambientLight);
+                
+                // 添加点光源
+                const pointLight = new THREE.PointLight(0xffffff, 1);
+                pointLight.position.set(0, 0, 5);
+                this.scene.add(pointLight);
+            }
+            
+            createParticles() {
+                if (this.particles) {
+                    this.scene.remove(this.particles);
+                }
+                
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(this.particleCount * 3);
+                const colors = new Float32Array(this.particleCount * 3);
+                
+                // 生成粒子位置
+                for (let i = 0; i < this.particleCount; i++) {
+                    const position = this.getModelPosition(i);
+                    positions[i * 3] = position.x;
+                    positions[i * 3 + 1] = position.y;
+                    positions[i * 3 + 2] = position.z;
+                    
+                    // 设置初始颜色
+                    const color = new THREE.Color(this.currentColor);
+                    colors[i * 3] = color.r;
+                    colors[i * 3 + 1] = color.g;
+                    colors[i * 3 + 2] = color.b;
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
+                const material = new THREE.PointsMaterial({
+                    size: 0.05,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending
+                });
+                
+                this.particles = new THREE.Points(geometry, material);
+                this.scene.add(this.particles);
+            }
+            
+            getModelPosition(index) {
+                const angle = (index / this.particleCount) * Math.PI * 2;
+                const radius = Math.random() * 0.5 + 0.5;
+                const height = (Math.random() - 0.5) * 2;
+                
+                let x, y, z;
+                
+                switch (this.currentModel) {
+                    case 'heart':
+                        // 爱心形状
+                        const t = angle * 2;
+                        x = 16 * Math.pow(Math.sin(t), 3) * radius * 0.5;
+                        y = (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * radius * -0.25;
+                        z = (Math.random() - 0.5) * 2 * radius;
+                        break;
+                    
+                    case 'flower':
+                        // 花朵形状
+                        x = Math.cos(angle * 5) * Math.cos(angle) * radius;
+                        y = Math.cos(angle * 5) * Math.sin(angle) * radius;
+                        z = Math.sin(angle * 5) * radius;
+                        break;
+                    
+                    case 'star':
+                        // 王星形状（五角星）
+                        const starAngle = angle * 5;
+                        x = Math.cos(starAngle) * (Math.sin(angle) > 0 ? 1 : 0.5) * radius;
+                        y = Math.sin(starAngle) * (Math.sin(angle) > 0 ? 1 : 0.5) * radius;
+                        z = (Math.random() - 0.5) * 2 * radius;
+                        break;
+                    
+                    case 'buddha':
+                        // 佛像形状（简化）
+                        x = Math.cos(angle) * radius;
+                        y = height * 0.5;
+                        z = Math.sin(angle) * radius;
+                        break;
+                    
+                    case 'fireworks':
+                        // 烟花形状
+                        x = (Math.random() - 0.5) * 3 * radius;
+                        y = (Math.random() - 0.5) * 3 * radius;
+                        z = (Math.random() - 0.5) * 3 * radius;
+                        break;
+                    
+                    default:
+                        x = (Math.random() - 0.5) * 2 * radius;
+                        y = (Math.random() - 0.5) * 2 * radius;
+                        z = (Math.random() - 0.5) * 2 * radius;
+                }
+                
+                return { x, y, z };
+            }
+            
+            updateParticleColors() {
+                const color = new THREE.Color(this.currentColor);
+                const colors = this.particles.geometry.attributes.color.array;
+                
+                for (let i = 0; i < colors.length; i += 3) {
+                    colors[i] = color.r;
+                    colors[i + 1] = color.g;
+                    colors[i + 2] = color.b;
+                }
+                
+                this.particles.geometry.attributes.color.needsUpdate = true;
+            }
+            
+            updateParticlePositions() {
+                const positions = this.particles.geometry.attributes.position.array;
+                
+                for (let i = 0; i < this.particleCount; i++) {
+                    const position = this.getModelPosition(i);
+                    positions[i * 3] = position.x * this.scale;
+                    positions[i * 3 + 1] = position.y * this.scale;
+                    positions[i * 3 + 2] = position.z * this.scale;
+                }
+                
+                this.particles.geometry.attributes.position.needsUpdate = true;
+            }
+            
+            async startCamera() {
+                try {
+                    // 检查浏览器是否支持媒体设备API
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        alert('您的浏览器不支持摄像头访问，请使用现代浏览器');
+                        return;
+                    }
+                    
+                    // 请求摄像头权限，添加更详细的视频约束
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: {
+                            facingMode: 'user', // 使用前置摄像头
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
+                            frameRate: { ideal: 30 }
+                        },
+                        audio: false 
+                    });
+                    
+                    this.cameraFeed.srcObject = stream;
+                    this.videoElement = this.cameraFeed;
+                    
+                    // 显示摄像头容器和手势信息
+                    document.getElementById('camera-container').style.display = 'block';
+                    document.getElementById('gesture-info').style.display = 'block';
+                    
+                    this.isCameraActive = true;
+                    await this.initHandPose();
+                    this.detectHands();
+                } catch (error) {
+                    console.error('启动摄像头失败:', error);
+                    
+                    // 更详细的错误提示
+                    let errorMessage = '无法访问摄像头';
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage = '摄像头权限被拒绝，请在浏览器设置中允许访问摄像头';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage = '未找到摄像头设备';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMessage = '摄像头被其他应用占用';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMessage = '摄像头不支持请求的参数';
+                    }
+                    
+                    alert(`${errorMessage}\n\n详细错误: ${error.message}`);
+                }
+            }
+            
+            async initHandPose() {
+                // 等待tfjs加载完成
+                await tf.setBackend('webgl');
+                await tf.ready();
+                
+                // 加载手部姿势模型
+                const model = handPoseDetection.SupportedModels.MediaPipeHands;
+                const detectorConfig = {
+                    runtime: 'mediapipe',
+                    modelType: 'full',
+                    maxHands: 1,
+                    solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.10.0/'
+                };
+                
+                this.handsModel = await handPoseDetection.createDetector(model, detectorConfig);
+            }
+            
+            async detectHands() {
+                if (!this.isCameraActive || !this.handsModel || !this.videoElement) {
+                    return;
+                }
+                
+                try {
+                    // 确保视频元素已加载完成
+                    if (this.videoElement.readyState < 2) {
+                        requestAnimationFrame(() => this.detectHands());
+                        return;
+                    }
+                    
+                    const predictions = await this.handsModel.estimateHands(this.videoElement, {
+                        flipHorizontal: true
+                    });
+                    
+                    if (predictions.length > 0) {
+                        const hand = predictions[0];
+                        const landmarks = hand.landmarks;
+                        
+                        // 确保所有关键点都被检测到
+                        if (landmarks.length >= 21) {
+                            // 计算拇指尖(4)和食指尖(8)之间的距离
+                            const thumb = landmarks[4];
+                            const index = landmarks[8];
+                            
+                            // 只使用2D距离，提高稳定性
+                            const distance = Math.sqrt(
+                                Math.pow(thumb.x - index.x, 2) +
+                                Math.pow(thumb.y - index.y, 2)
+                            );
+                            
+                            this.handDistance = distance;
+                            
+                            // 更新手势信息
+                            document.getElementById('gesture-info').textContent = `手势检测：距离 ${(distance * 100).toFixed(1)}`;
+                            
+                            // 根据手势距离调整粒子缩放，使用平滑过渡
+                            if (this.previousHandDistance > 0) {
+                                const delta = (this.handDistance - this.previousHandDistance) * 3;
+                                this.scale += delta;
+                                this.scale = Math.max(0.1, Math.min(3, this.scale));
+                                this.updateParticlePositions();
+                            }
+                            
+                            this.previousHandDistance = this.handDistance;
+                        }
+                    } else {
+                        document.getElementById('gesture-info').textContent = '手势检测：未检测到手部';
+                        this.previousHandDistance = 0;
+                    }
+                } catch (error) {
+                    console.error('手势检测错误:', error);
+                    // 不中断检测流程
+                }
+                
+                // 继续检测，使用setTimeout控制帧率，减少性能消耗
+                setTimeout(() => this.detectHands(), 50);
+            }
+            
+            setupEventListeners() {
+                // 窗口大小调整
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+                
+                // 模型选择
+                const modelSelect = document.getElementById('model-select');
+                modelSelect.addEventListener('change', (e) => {
+                    this.currentModel = e.target.value;
+                    this.updateParticlePositions();
+                });
+                
+                // 颜色选择
+                const colorPicker = document.getElementById('color-picker');
+                colorPicker.addEventListener('input', (e) => {
+                    this.currentColor = e.target.value;
+                    this.updateParticleColors();
+                });
+                
+                // 全屏按钮
+                const fullscreenBtn = document.getElementById('fullscreen-btn');
+                fullscreenBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    } else {
+                        document.exitFullscreen();
+                    }
+                });
+                
+                // 启动摄像头按钮
+                const startCameraBtn = document.getElementById('start-camera-btn');
+                startCameraBtn.addEventListener('click', () => {
+                    if (!this.isCameraActive) {
+                        this.startCamera();
+                        startCameraBtn.textContent = '关闭摄像头';
+                    } else {
+                        this.stopCamera();
+                        startCameraBtn.textContent = '启动摄像头';
+                    }
+                });
+                
+                // 鼠标移动（旋转）
+                this.renderer.domElement.addEventListener('mousemove', (e) => {
+                    if (e.buttons === 1) { // 左键拖动
+                        const deltaX = e.movementX * 0.01;
+                        const deltaY = e.movementY * 0.01;
+                        this.particles.rotation.y += deltaX;
+                        this.particles.rotation.x += deltaY;
+                    }
+                });
+                
+                // 鼠标滚轮（缩放）
+                this.renderer.domElement.addEventListener('wheel', (e) => {
+                    this.scale += e.deltaY * -0.001;
+                    this.scale = Math.max(0.1, Math.min(3, this.scale));
+                    this.updateParticlePositions();
+                });
+            }
+            
+            stopCamera() {
+                this.isCameraActive = false;
+                
+                if (this.cameraFeed.srcObject) {
+                    const tracks = this.cameraFeed.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.cameraFeed.srcObject = null;
+                }
+                
+                // 隐藏摄像头容器和手势信息
+                document.getElementById('camera-container').style.display = 'none';
+                document.getElementById('gesture-info').style.display = 'none';
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // 粒子旋转动画
+                if (this.particles) {
+                    this.particles.rotation.y += 0.005;
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        
+        // 检查是否在安全上下文(HTTPS)中
+        function checkSecureContext() {
+            if (window.isSecureContext === false) {
+                const warning = document.createElement('div');
+                warning.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    background: #ff6b6b;
+                    color: white;
+                    padding: 15px;
+                    text-align: center;
+                    z-index: 1000;
+                    font-family: Arial, sans-serif;
+                    font-size: 14px;
+                `;
+                warning.textContent = '警告：当前处于非安全环境(HTTP)，摄像头访问可能受限。建议使用HTTPS协议访问。';
+                document.body.appendChild(warning);
+            }
+        }
+        
+        // 初始化粒子系统
+        window.addEventListener('DOMContentLoaded', () => {
+            checkSecureContext();
+            new ParticleSystem();
+        });
+    </script>
+</body>
+</html>
