@@ -1,12 +1,16 @@
 // Supabase配置
 const supabaseUrl = 'https://gxohpxiekmpsmkzkcxfc.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4b2hweGlla21wc21remtjeGZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MTg0NDQsImV4cCI6MjA2NTI5NDQ0NH0.sUleRxPQsEMxNqGPWUfZBDbjvDR5huZ7hGQkrHoahqk';
-let supabase;
+
+// 确保supabase变量只声明一次
+if (typeof window.supabaseInstance === 'undefined') {
+    window.supabaseInstance = null;
+}
 
 // Supabase按需加载器
 async function loadSupabase() {
-    if (supabase) {
-        return supabase; // 已经初始化
+    if (window.supabaseInstance) {
+        return window.supabaseInstance; // 已经初始化
     }
     
     // 添加请求超时配置
@@ -91,9 +95,9 @@ async function loadSupabase() {
     };
     
     try {
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey, supabaseOptions);
+        window.supabaseInstance = window.supabase.createClient(supabaseUrl, supabaseKey, supabaseOptions);
         debugLog('Supabase客户端初始化成功');
-        return supabase;
+        return window.supabaseInstance;
     } catch (error) {
         debugError('Supabase初始化失败:', error);
         showToast('数据库连接初始化失败，请检查网络连接');
@@ -106,6 +110,66 @@ const IS_PRODUCTION = window.location.hostname !== 'localhost' && window.locatio
 const debugLog = IS_PRODUCTION ? () => {} : console.log;
 const debugError = IS_PRODUCTION ? () => {} : console.error;
 const debugWarn = IS_PRODUCTION ? () => {} : console.warn;
+
+// Supabase连接保持活跃机制
+const KEEP_ALIVE_INTERVAL = 15 * 60 * 1000; // 15分钟
+
+// 定期ping Supabase服务以保持活跃
+function setupKeepAlive() {
+    if (IS_PRODUCTION) { // 只在生产环境中启用
+        // 立即执行一次，然后定期执行
+        keepAlivePing();
+        
+        setInterval(async () => {
+            keepAlivePing();
+        }, KEEP_ALIVE_INTERVAL);
+        
+        debugLog('Supabase keep-alive mechanism initialized');
+    }
+}
+
+// 执行keep-alive ping
+async function keepAlivePing() {
+    try {
+        const supabaseClient = await loadSupabase();
+        if (supabaseClient) {
+            // 执行一个简单的查询来保持连接活跃
+            const { error } = await supabaseClient.from('New_user').select('id').limit(1);
+            if (error) {
+                debugWarn('Keep-alive ping failed:', error.message);
+                
+                // 如果连接失败，尝试重新初始化
+                window.supabaseInstance = null;
+                
+                // 等待一段时间后再次尝试
+                setTimeout(async () => {
+                    try {
+                        const reinitializedClient = await loadSupabase();
+                        if (reinitializedClient) {
+                            const { error: reError } = await reinitializedClient.from('New_user').select('id').limit(1);
+                            if (!reError) {
+                                debugLog('Supabase reconnection successful');
+                            }
+                        }
+                    } catch (reError) {
+                        debugError('Supabase reconnection failed:', reError);
+                    }
+                }, 5000);
+            } else {
+                debugLog('Supabase keep-alive ping successful');
+            }
+        }
+    } catch (error) {
+        debugError('Keep-alive ping error:', error);
+    }
+}
+
+// 页面加载完成后启动keep-alive机制
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupKeepAlive);
+} else {
+    setupKeepAlive();
+}
 
 // 请求缓存机制
 const requestCache = new Map();
@@ -587,7 +651,8 @@ async function filterData() {
         
         window.filterDataInProgress = true;
         
-        if (!supabase) throw new Error('Supabase客户端未初始化');
+        const supabaseClient = await loadSupabase();
+        if (!supabaseClient) throw new Error('Supabase客户端未初始化');
 
         const nameFilter = document.querySelector('.search-inputs input[placeholder="姓名"]')?.value?.trim();
         const phoneFilter = document.querySelector('.search-inputs input[placeholder="手机号"]')?.value?.trim();
@@ -615,7 +680,7 @@ async function filterData() {
         const { currentPage, pageSize } = state.pagination;
 
         // 优化查询：只选择必要字段，使用索引友好的查询
-        let query = supabase
+        let query = supabaseClient
             .from('New_user')
             .select('id, name, gender, age, phone, direction, created_at', { count: 'exact' });
 
@@ -980,7 +1045,7 @@ async function openProfileModal(userId) {
             profile = cachedProfile;
         } else {
             // 性能优化：只选择需要的字段
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('user_profiles')
                 .select(`
                     user_id, created_at, date_of_birth, address, diseases,
@@ -1105,7 +1170,8 @@ async function saveProfile(event) {
 
     showToast('正在保存档案...');
     try {
-        const { data, error } = await supabase
+        const supabaseClient = await loadSupabase();
+        const { data, error } = await supabaseClient
             .from('user_profiles')
             .upsert(profileData, { onConflict: 'user_id' })
             .select();
