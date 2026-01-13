@@ -1045,6 +1045,7 @@ async function openProfileModal(userId) {
             profile = cachedProfile;
         } else {
             // 性能优化：只选择需要的字段
+            const supabaseClient = await loadSupabase();
             const { data, error } = await supabaseClient
                 .from('user_profiles')
                 .select(`
