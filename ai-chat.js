@@ -355,7 +355,7 @@ ${searchResults}
         ];
 
         // 超时与重试设置（与Roomreport.html保持一致）
-        const timeoutMs = 15000; // 15s 超时
+        const timeoutMs = 30000; // 30s 超时
         const maxRetries = 3;    // 最多重试 3 次（从2次增加到3次）
         const baseDelay = 1000;   // 初始退避 1000ms
 
