@@ -1,26 +1,30 @@
 <!-- 统计数据卡片容器 -->
 <div class="dashboard-stats-container"></div>
 
+<!-- 背景装饰 -->
+<div class="page-background"></div>
+
 <!-- 搜索和筛选区 -->
 <div class="search-section">
     <div class="search-group">
         <div class="search-inputs">
             <div class="input-group">
                 <i class="fas fa-user"></i>
-                <input type="text" placeholder="姓名">
+                <input type="text" placeholder="请输入姓名">
             </div>
             <div class="input-group">
                 <i class="fas fa-phone"></i>
-                <input type="text" placeholder="手机号">
+                <input type="text" placeholder="请输入手机号">
             </div>
-        </div>
-        <div class="search-actions">
-            <select class="filter-select">
-                <option value="">全部方向</option>
-                <option value="糖代谢">糖代谢</option>
-                <option value="亚健康">亚健康</option>
-                <option value="其他">其他</option>
-            </select>
+            <div class="select-wrapper">
+                <i class="fas fa-filter"></i>
+                <select class="filter-select">
+                    <option value="">全部方向</option>
+                    <option value="糖代谢">糖代谢</option>
+                    <option value="亚健康">亚健康</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
             <button class="btn-search">
                 <i class="fas fa-search"></i> 搜索
             </button>
@@ -34,21 +38,24 @@
 <!-- 工具栏 -->
 <div class="toolbar">
     <div class="left-tools">
-        <button class="btn-add">
+        <button class="btn-primary btn-add">
             <i class="fas fa-plus"></i> 新增用户
         </button>
-        <button class="btn-export">
+        <button class="btn-secondary btn-export">
             <i class="fas fa-file-export"></i> 导出数据
         </button>
-        <button class="btn-batch">
+        <button class="btn-secondary btn-batch">
             <i class="fas fa-tags"></i> 批量标签
         </button>
-        <button class="btn-refresh">
-            <i class="fas fa-sync-alt"></i> 刷新列表
+        <button class="btn-icon btn-refresh" title="刷新列表">
+            <i class="fas fa-sync-alt"></i>
         </button>
     </div>
     <div class="right-tools">
-        <span class="selected-count">已选择 0 项</span>
+        <span class="selected-count">
+            <i class="fas fa-check-circle"></i>
+            已选择 <strong>0</strong> 项
+        </span>
     </div>
 </div>
 
@@ -57,43 +64,970 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th><input type="checkbox" class="select-all"></th>
-                <th>姓名</th>
-                <th>性别</th>
-                <th>年龄</th>
-                <th>手机号</th>
-                <th>调理方向</th>
-                <th>主要操作</th>
-                <th>操作</th>
+                <th class="col-checkbox">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" class="select-all">
+                        <span class="checkmark"></span>
+                    </label>
+                </th>
+                <th class="col-name">姓名</th>
+                <th class="col-gender">性别</th>
+                <th class="col-age">年龄</th>
+                <th class="col-phone">手机号</th>
+                <th class="col-direction">调理方向</th>
+                <th class="col-action-main">主要操作</th>
+                <th class="col-operate">操作</th>
             </tr>
         </thead>
-        <tbody>                       
+        <tbody>                        
             <!-- 其他数据行 -->
         </tbody>
     </table>
+    <div class="table-empty" style="display: none;">
+        <i class="fas fa-inbox"></i>
+        <p>暂无数据</p>
+    </div>
 </div>
 
 <!-- 分页控件 -->
 <div class="pagination">
-    <div class="pagination-container">
-        <span>共 24 条</span>
-        <select class="page-size">
-            <option value="10">10条/页</option>
-            <option value="20">20条/页</option>
-            <option value="50">50条/页</option>
-        </select>
-        <div class="page-buttons">
-            <!-- 页码按钮将通过 JavaScript 动态生成 -->
+    <div class="pagination-info">
+        <span class="total-count">共 <strong>24</strong> 条记录</span>
+        <div class="select-wrapper page-size-wrapper">
+            <select class="page-size">
+                <option value="10">10条/页</option>
+                <option value="20">20条/页</option>
+                <option value="50">50条/页</option>
+            </select>
         </div>
-        <div class="page-jump">
-            前往 <input type="number" min="1" max="3" value="1"> 页
-        </div>
+    </div>
+    <div class="page-buttons" style="display: flex; align-items: center; gap: 8px;">
+        <button class="page-btn page-btn-first" disabled title="首页">
+            <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button class="page-btn page-btn-prev" disabled title="上一页">
+            <i class="fas fa-angle-left"></i>
+        </button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn page-btn-next" title="下一页">
+            <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="page-btn page-btn-last" title="末页">
+            <i class="fas fa-angle-double-right"></i>
+        </button>
+    </div>
+    <div class="page-jump">
+        前往 <input type="number" min="1" max="3" value="1"> 页
     </div>
 </div>
 
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
+<style>
+/* 全局滚动条自定义 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, #f0f2f7 0%, #e8eaf0 100%);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+}
+
+/* 背景装饰 */
+.page-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+}
+
+.page-background::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: -10%;
+    width: 50%;
+    height: 50%;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.15) 0%, transparent 70%);
+    filter: blur(60px);
+    animation: float 20s ease-in-out infinite;
+}
+
+.page-background::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    right: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(118, 75, 162, 0.12) 0%, transparent 70%);
+    filter: blur(80px);
+    animation: float 25s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -30px) scale(1.1); }
+}
+
+/* 搜索区域样式 - 玻璃拟态 */
+.search-section {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 24px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-section:hover {
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.search-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+}
+
+.search-inputs {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.input-group {
+    position: relative;
+    flex: 1;
+    max-width: 200px;
+}
+
+.input-group i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8c8c9a;
+    font-size: 14px;
+    z-index: 1;
+    transition: color 0.3s ease;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 2px solid rgba(232, 232, 237, 0.8);
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1a1a2e;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(250, 250, 252, 0.8);
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15),
+                0 4px 16px rgba(102, 126, 234, 0.1);
+    background: white;
+    transform: translateY(-2px);
+}
+
+.input-group input:focus + i {
+    color: #667eea;
+}
+
+.input-group input::placeholder {
+    color: #b8b8c6;
+}
+
+.search-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.select-wrapper i {
+    position: absolute;
+    left: 12px;
+    color: #8c8c9a;
+    font-size: 12px;
+    z-index: 1;
+}
+
+.filter-select, .page-size {
+    padding: 10px 32px 10px 30px;
+    border: 2px solid rgba(232, 232, 237, 0.8);
+    border-radius: 10px;
+    background: rgba(250, 250, 252, 0.8);
+    color: #1a1a2e;
+    font-size: 14px;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238c8c9a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.filter-select:focus, .page-size:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+    background: white;
+    transform: translateY(-2px);
+}
+
+/* 按钮样式 - 渐变背景 + 发光阴影 */
+.btn-search, .btn-reset {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.btn-search {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4),
+                0 0 40px rgba(102, 126, 234, 0.1);
+}
+
+.btn-search::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-search:hover::before {
+    left: 100%;
+}
+
+.btn-search:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5),
+                0 0 60px rgba(102, 126, 234, 0.2);
+}
+
+.btn-search:active {
+    transform: translateY(-1px);
+}
+
+.btn-reset {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(232, 232, 237, 0.8);
+    color: #666;
+    backdrop-filter: blur(10px);
+}
+
+.btn-reset:hover {
+    border-color: #667eea;
+    color: #667eea;
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+}
+
+/* 工具栏样式 - 玻璃拟态 */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toolbar:hover {
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.left-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 主按钮 - 渐变 + 发光 */
+.btn-primary {
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4),
+                0 0 40px rgba(102, 126, 234, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5),
+                0 0 60px rgba(102, 126, 234, 0.2);
+}
+
+/* 次按钮 */
+.btn-secondary {
+    padding: 14px 24px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(232, 232, 237, 0.8);
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+    border-color: #667eea;
+    color: #667eea;
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(102, 126, 234, 0.15);
+}
+
+/* 图标按钮 */
+.btn-icon {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(232, 232, 237, 0.8);
+    border-radius: 14px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-icon:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(102, 126, 234, 0.35);
+}
+
+.right-tools .selected-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #8c8c9a;
+    font-size: 15px;
+    padding: 8px 16px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 20px;
+}
+
+.right-tools .selected-count strong {
+    color: #667eea;
+    font-weight: 700;
+}
+
+.right-tools .selected-count i {
+    color: #667eea;
+}
+
+/* 表格容器 - 玻璃拟态 */
+.table-container {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.table-container:hover {
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table thead {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+}
+
+.data-table th {
+    padding: 18px 20px;
+    text-align: left;
+    font-weight: 700;
+    color: #1a1a2e;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.15);
+    white-space: nowrap;
+    position: relative;
+}
+
+.data-table th::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.data-table th:hover::after {
+    transform: scaleX(1);
+}
+
+.data-table th.col-checkbox {
+    width: 50px;
+}
+
+.data-table td {
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(232, 232, 237, 0.5);
+    color: #333;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    background: transparent;
+}
+
+/* 斑马纹 */
+.data-table tbody tr:nth-child(even) {
+    background: rgba(248, 249, 252, 0.5);
+}
+
+.data-table tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* 悬浮高亮 */
+.data-table tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.data-table tbody tr:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.05) 100%) !important;
+    transform: scale(1.01);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+}
+
+.data-table tbody tr:hover td {
+    background: transparent;
+}
+
+.data-table tbody tr td:first-child {
+    border-radius: 0;
+}
+
+.data-table tbody tr td:last-child {
+    border-radius: 0;
+}
+
+/* 复选框样式 */
+.checkbox-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-wrapper input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkbox-wrapper .checkmark {
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkbox-wrapper:hover .checkmark {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.checkbox-wrapper input:checked ~ .checkmark {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.checkbox-wrapper .checkmark::after {
+    content: '';
+    display: none;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.checkbox-wrapper input:checked ~ .checkmark::after {
+    display: block;
+    animation: checkAnim 0.2s ease;
+}
+
+@keyframes checkAnim {
+    0% { transform: rotate(45deg) translate(-5px, -5px); opacity: 0; }
+    100% { transform: rotate(45deg) translate(-1px, -1px); opacity: 1; }
+}
+
+/* 调理方向标签 - 精美徽章 */
+.direction-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+}
+
+.direction-tag::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.direction-tag.sugar {
+    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(245, 87, 108, 0.35);
+}
+
+.direction-tag.sub-health {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.35);
+}
+
+.direction-tag.other {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(67, 233, 123, 0.35);
+}
+
+.direction-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 操作按钮 */
+.action-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-btn {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.action-btn:hover::before {
+    opacity: 1;
+}
+
+.action-btn.view {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.35);
+}
+
+.action-btn.view:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+}
+
+.action-btn.edit {
+    background: linear-gradient(135deg, #ffc048 0%, #ff9f43 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 192, 72, 0.35);
+}
+
+.action-btn.edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 192, 72, 0.45);
+}
+
+.action-btn.delete {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.35);
+}
+
+.action-btn.delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.45);
+}
+
+/* 空状态 */
+.table-empty {
+    padding: 80px 20px;
+    text-align: center;
+    color: #8c8c9a;
+}
+
+.table-empty i {
+    font-size: 72px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+}
+
+.table-empty p {
+    font-size: 16px;
+    margin: 0;
+    color: #8c8c9a;
+}
+
+/* 分页控件 - 玻璃拟态 */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    flex-wrap: wrap;
+    gap: 16px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pagination:hover {
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.pagination-info .total-count {
+    color: #666;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.pagination-info .total-count strong {
+    color: #667eea;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-size-wrapper .page-size {
+    padding: 10px 36px 10px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-btn {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 14px;
+    border: 2px solid rgba(232, 232, 237, 0.8);
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.page-btn:hover:not(.active):not(:disabled) {
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.page-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 6px;
+}
+
+.page-jump {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #666;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.page-jump input {
+    width: 56px;
+    padding: 10px 12px;
+    border: 2px solid rgba(232, 232, 237, 0.8);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.page-jump input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .search-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .toolbar {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .left-tools {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+    
+    .right-tools {
+        justify-content: flex-start;
+    }
+    
+    .data-table {
+        display: table !important;
+    }
+    
+    .management-table {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-section {
+        padding: 16px;
+        border-radius: 16px;
+    }
+    
+    .search-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-actions .select-wrapper,
+    .search-actions .btn-search,
+    .search-actions .btn-reset {
+        width: 100%;
+    }
+    
+    .toolbar {
+        padding: 16px;
+        border-radius: 16px;
+    }
+    
+    .left-tools .btn-primary,
+    .left-tools .btn-secondary {
+        flex: 1;
+        justify-content: center;
+        padding: 12px 16px;
+    }
+    
+    .pagination {
+        flex-direction: column;
+        padding: 16px;
+        border-radius: 16px;
+    }
+    
+    .pagination-info,
+    .pagination-controls {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .page-jump {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .data-table {
+        display: block !important;
+        overflow-x: auto;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 14px 16px;
+        white-space: nowrap;
+    }
+}
+</style>

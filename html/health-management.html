@@ -2,18 +2,18 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="../../images/dzlogo.png">
+    <link rel="icon" href="../images/dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>健康管理中心</title>
-    <link rel="stylesheet" href="../../css/JKstyle.css">
-    <link rel="stylesheet" href="../../css/ai-chat.css">
+    <link rel="stylesheet" href="../css/JKstyle.css">
+    <link rel="stylesheet" href="../css/ai-chat.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- 顶部导航 -->
 <nav class="top-nav">
     <div class="nav-left">
-        <img src="../../images/dzlogo.png" alt="Logo" class="logo">
+        <img src="../images/dzlogo.png" alt="Logo" class="logo"> 
         <h1>健康管理中心</h1>
     </div>
     <div class="nav-right">
@@ -34,14 +34,14 @@
             <div class="menu-group">
                 <div class="menu-title">用户管理</div>
                 <ul>
-                    <li class="active" onclick="loadContent('partialshtml/user_list.html', this)"><i class="fas fa-users"></i> 用户列表</li>
+                    <li class="active" onclick="loadContent('../partialshtml/user_list.html', this)"><i class="fas fa-users"></i> 用户列表</li>
                 </ul>
             </div>
             <div class="menu-group">
                 <div class="menu-title">数据统计</div>
                 <ul>
-                    <li onclick="loadContent('partialshtml/health_trends.html', this)"><i class="fas fa-chart-line"></i> 健康趋势</li>
-                    <li onclick="loadContent('partialshtml/data_analysis.html', this)"><i class="fas fa-chart-pie"></i> 数据分析</li>
+                    <li onclick="loadContent('../partialshtml/health_trends.html', this)"><i class="fas fa-chart-line"></i> 健康趋势</li>
+                    <li onclick="loadContent('../partialshtml/data_analysis.html', this)"><i class="fas fa-chart-pie"></i> 数据分析</li>
                 </ul>
             </div>
         </aside>
@@ -221,7 +221,7 @@
     </div>
     
     <!-- ECharts统一加载器 -->
-    <script src="../../js/echarts-loader.js"></script>
+    <script src="../js/echarts-loader.js"></script>
     <!-- 预加载ECharts库，提升图表页面打开速度 -->
     <script>
         // 页面加载完成后立即预加载ECharts
@@ -239,7 +239,7 @@
         });
     </script>
     <!-- 性能优化配置 -->
-    <script src="../../config/performance-config.js"></script>
+    <script src="../config/performance-config.js"></script>
     <script>
         // 预连接到Supabase服务器和CDN，减少连接时间
         const preconnectUrls = [
@@ -273,7 +273,7 @@
         // 预加载主脚本
         const linkPreload = document.createElement('link');
         linkPreload.rel = 'preload';
-        linkPreload.href = '../../js/JKscript.js';
+        linkPreload.href = '../js/JKscript.js';
         linkPreload.as = 'script';
         document.head.appendChild(linkPreload);
 
@@ -317,7 +317,7 @@
             // 根据选择的报告类型打开相应的页面
             if (reportType === 'sleep') {
                 // 睡眠报告 - 在新标签页中打开本地报告
-                window.open('partialshtml/Roomreport.html', '_blank');
+                window.open('../partialshtml/Roomreport.html', '_blank');
             } else if (reportType === 'navigation') {
                 // 导航报告 - 在新标签页中打开PDF文件
                 window.open('https://lifetide.oss-cn-beijing.aliyuncs.com/upload/room/data/2025/2/12/601-2405294827-20250212141706891-2104240009.pdf', '_blank');
@@ -338,9 +338,9 @@
         }
     </script>
     
-    <script src="../../js/JKscript.js"></script>
+    <script src="../js/JKscript.js"></script>
     <!-- AI聊天组件 -->
-    <script src="../../config/ai-chat-config.js"></script>
-    <script src="../../js/ai-chat.js" defer></script>
+    <script src="../config/ai-chat-config.js"></script>
+    <script src="../js/ai-chat.js" defer></script>
 </body>
 </html>

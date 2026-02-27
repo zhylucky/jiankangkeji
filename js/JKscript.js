@@ -242,7 +242,11 @@ async function loadUsers() {
         if (cachedData) {
             debugLog('使用缓存数据');
             state.users = cachedData.data || [];
-            state.pagination.totalUsers = cachedData.count || 0;
+            // 如果缓存中没有计数，使用已保存的总数，避免分页按钮消失
+            const cachedCount = cachedData.count;
+            state.pagination.totalUsers = (cachedCount !== undefined && cachedCount !== null && cachedCount > 0) 
+                ? cachedCount 
+                : state.pagination.totalUsers;
             // 只在第一页时更新仪表盘统计信息，避免重复计算
             if (currentPage === 1) {
                 updateDashboardStats(cachedData.count, cachedData.data);
@@ -1396,7 +1400,7 @@ function viewSleepReport(date) {
     // 关闭睡眠报告列表模态框
     closeSleepReportModal();
     // 在新标签页中打开睡眠报告
-    window.open('partialshtml/Roomreport.html', '_blank');
+    window.open('../partialshtml/Roomreport.html', '_blank');
 }
 
 // 新增：关闭睡眠报告模态框
@@ -1814,7 +1818,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         const initialElement = document.querySelector('.sidebar li.active');
         if (initialElement) {
-            loadContent('partialshtml/user_list.html', initialElement);
+            loadContent('../partialshtml/user_list.html', initialElement);
         }
     }, 100);
 
