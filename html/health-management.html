@@ -2,18 +2,18 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="images/dzlogo.png">
+    <link rel="icon" href="../../images/dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>健康管理中心</title>
-    <link rel="stylesheet" href="JKstyle.css">
-    <link rel="stylesheet" href="ai-chat.css">
+    <link rel="stylesheet" href="../../css/JKstyle.css">
+    <link rel="stylesheet" href="../../css/ai-chat.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- 顶部导航 -->
 <nav class="top-nav">
     <div class="nav-left">
-        <img src="images/dzlogo.png" alt="Logo" class="logo">
+        <img src="../../images/dzlogo.png" alt="Logo" class="logo">
         <h1>健康管理中心</h1>
     </div>
     <div class="nav-right">
@@ -221,7 +221,7 @@
     </div>
     
     <!-- ECharts统一加载器 -->
-    <script src="echarts-loader.js"></script>
+    <script src="../../js/echarts-loader.js"></script>
     <!-- 预加载ECharts库，提升图表页面打开速度 -->
     <script>
         // 页面加载完成后立即预加载ECharts
@@ -239,7 +239,7 @@
         });
     </script>
     <!-- 性能优化配置 -->
-    <script src="performance-config.js"></script>
+    <script src="../../config/performance-config.js"></script>
     <script>
         // 预连接到Supabase服务器和CDN，减少连接时间
         const preconnectUrls = [
@@ -273,7 +273,7 @@
         // 预加载主脚本
         const linkPreload = document.createElement('link');
         linkPreload.rel = 'preload';
-        linkPreload.href = 'JKscript.js';
+        linkPreload.href = '../../js/JKscript.js';
         linkPreload.as = 'script';
         document.head.appendChild(linkPreload);
 
@@ -338,9 +338,9 @@
         }
     </script>
     
-    <script src="JKscript.js"></script>
+    <script src="../../js/JKscript.js"></script>
     <!-- AI聊天组件 -->
-    <script src="ai-chat-config.js"></script>
-    <script src="ai-chat.js" defer></script>
+    <script src="../../config/ai-chat-config.js"></script>
+    <script src="../../js/ai-chat.js" defer></script>
 </body>
 </html>

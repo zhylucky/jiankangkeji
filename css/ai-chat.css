@@ -23,7 +23,7 @@
     justify-content: center;
     color: white;
     font-size: 24px;
-    background-image: url('images/./douyan.png');
+    background-image: url('../images/douyan.png');
     background-size: 100%;
     background-position: center;
     background-repeat: no-repeat;
@@ -215,7 +215,7 @@
 
 .chat-avatar.ai {
     background: #764ba2;
-    background-image: url('images/./douyan.png');
+    background-image: url('../images/douyan.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

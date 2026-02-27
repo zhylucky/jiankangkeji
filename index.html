@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="images/dzlogo.png">
+    <link rel="icon" href="./images/dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO 基础信息 -->
@@ -93,8 +93,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
     <!-- 样式表 -->
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="ai-chat.css">
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="./css/ai-chat.css">
     <!-- Font Awesome 图标库 -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
@@ -104,7 +104,7 @@
     <!-- 导航栏 -->
     <nav role="navigation" aria-label="主导航">
         <div class="logo">
-            <img src="images/dzlogo.png" alt="健康科技标志">
+            <img src="./images/dzlogo.png" alt="健康科技标志">
             <div class="logo-text">
                 <div class="logo-text-cn">健康科技</div>
                 <div class="logo-text-en">Health Technology</div>
@@ -112,7 +112,7 @@
         </div>
         <ul role="menubar">
             <li role="none"><a href="#home" class="nav-active" role="menuitem" aria-current="page">首页</a></li>        
-            <li role="none"><a href="login.html" class="nav-button" role="menuitem">新版健康管理中心</a></li>
+            <li role="none"><a href="html/login.html" class="nav-button" role="menuitem">新版健康管理中心</a></li>
             <!-- <li role="none"><a href="http://management.lifetide.cn/login" class="nav-button" role="menuitem">后台管理系统</a></li> -->
             <li role="none"><a href="http://anxiety.lifetide.cn/login/" class="nav-button legacy" role="menuitem">老版健康管理中心</a></li>
         </ul>
@@ -154,7 +154,7 @@
                 </div>
                 <div class="hero-visual" role="img" aria-label="产品展示和功能演示">
                     <div class="hero-image">
-                        <img src="images/pro.png" alt="个人健康精英Pro+手机应用界面展示" class="phone-mockup">
+                        <img src="./images/pro.png" alt="个人健康精英Pro+手机应用界面展示" class="phone-mockup">
                         <div class="floating-card card-1" role="note" aria-label="心率监测数据">
                             <i class="fas fa-heart" aria-hidden="true"></i>
                             <div class="card-content">
@@ -196,7 +196,7 @@
                 <div class="featured-media">
                     <div class="video-card video-card--cctv">
                         <div class="video-card__logo">
-                            <img src="images/logo.png" alt="发现者栏目Logo">
+                            <img src="./images/logo.png" alt="发现者栏目Logo">
                         </div>
                         <div class="video-card__info">
                             <h3 class="video-card__title">央视《发现者》栏目:生命潮®《数字健康之路》</h3>
@@ -282,7 +282,7 @@
                     <!-- 产品视频卡片 -->
                     <div class="video-card video-card--pro">
                         <div class="video-card__logo">
-                            <img src="images//pro.png" alt="个人健康管家Pro+ Logo">
+                            <img src="./images/pro.png" alt="个人健康管家Pro+ Logo">
                         </div>
                         <div class="video-card__info">
                             <h3 class="video-card__title">个人健康精英Pro+</h3>
@@ -307,7 +307,7 @@
                 <div class="download-container">
                     <div class="app-info-card">
                         <div class="app-icon">
-                            <img src="images/pro.png" alt="健康管家Pro+ App图标">
+                            <img src="./images/pro.png" alt="健康管家Pro+ App图标">
                         </div>
                         <div class="app-details">
                             <h3 class="app-name">个人健康精英Pro+</h3>
@@ -331,7 +331,7 @@
                         </div>
                     </div>
                     <div class="qr-code-section">
-                        <img src="images/health-pro-qr.png" alt="下载个人健康精英Pro" class="qr-code-img">
+                        <img src="./images/health-pro-qr.png" alt="下载个人健康精英Pro" class="qr-code-img">
                         <div class="qr-code-info">
                             <h4>扫描二维码下载</h4>
                             <p>使用手机扫描二维码打开H5官网下载</p>
@@ -354,7 +354,7 @@
             <div class="footer-section">
                 <h4>产品链接</h4>
                 <ul role="list">
-                    <li><a href="QRcode.html" aria-label="下载更多应用">APP全家桶下载</a></li>
+                    <li><a href="html/QRcode.html" aria-label="下载更多应用">APP全家桶下载</a></li>
                     <li><a href="https://incomparable-axolotl.netlify.app/" aria-label="查看成功案例">糖尿病管理平台</a></li>
                     <li><a href="https://glistening-bxy.netlify.app/" aria-label="bxy彩蛋😍😶🐷">彩蛋🎄</a></li>
                 </ul>
@@ -392,11 +392,11 @@
         </div>
     </footer>
     <!-- 性能优化脚本 -->
-    <script src="performance-optimizer.js" defer></script>
-    <script src="mobile-nav.js" defer></script>
-    <script src="index.js" defer></script>
+    <script src="js/performance-optimizer.js" defer></script>
+    <script src="js/mobile-nav.js" defer></script>
+    <script src="js/index.js" defer></script>
     <!-- AI聊天组件 -->
-    <script src="ai-chat-config.js"></script>
-    <script src="ai-chat.js" defer></script>
+    <script src="config/ai-chat-config.js"></script>
+    <script src="js/ai-chat.js" defer></script>
 </body>
 </html>
