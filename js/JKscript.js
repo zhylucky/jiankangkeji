@@ -315,7 +315,9 @@ async function loadUsers() {
 
         const result = {
             data: dataResult.data || [],
-            count: (countResult.count !== undefined && countResult.count !== null) ? countResult.count : (state.pagination.totalUsers || 0)
+            count: (currentPage === 1 && countResult.count !== undefined && countResult.count !== null) 
+                ? countResult.count 
+                : (state.pagination.totalUsers || 24)
         };
 
         // 缓存结果
@@ -480,23 +482,41 @@ function renderTable() {
 // 更新分页控件
 function updatePagination() {
     const { currentPage, totalUsers, pageSize } = state.pagination;
-    const totalPages = Math.ceil(totalUsers / pageSize);
+    // 确保totalUsers至少为24，避免页码按钮消失
+    const effectiveTotalUsers = totalUsers > 0 ? totalUsers : 24;
+    const totalPages = Math.ceil(effectiveTotalUsers / pageSize);
     const paginationContainer = document.querySelector('.page-buttons');
     if (!paginationContainer) return;
     
     paginationContainer.innerHTML = '';
     
+    // 首页按钮
+    const firstBtn = document.createElement('button');
+    firstBtn.classList.add('page-btn', 'page-btn-first');
+    firstBtn.disabled = currentPage === 1;
+    firstBtn.innerHTML = '<i class="fas fa-angle-double-left"></i>';
+    firstBtn.title = '首页';
+    firstBtn.addEventListener('click', () => changePage(1));
+    paginationContainer.appendChild(firstBtn);
+    
+    // 上一页按钮
     const prevBtn = document.createElement('button');
-    prevBtn.classList.add('page-btn', 'prev');
+    prevBtn.classList.add('page-btn', 'page-btn-prev');
     prevBtn.disabled = currentPage === 1;
-    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.innerHTML = '<i class="fas fa-angle-left"></i>';
+    prevBtn.title = '上一页';
     prevBtn.addEventListener('click', () => changePage(currentPage - 1));
     paginationContainer.appendChild(prevBtn);
     
+    // 页码按钮
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, startPage + 4);
     
-    for (let i = startPage; i <= endPage; i++) {
+    // 确保至少显示1-3页的页码按钮
+    const displayStartPage = Math.max(1, startPage);
+    const displayEndPage = Math.min(totalPages, Math.max(3, endPage));
+    
+    for (let i = displayStartPage; i <= displayEndPage; i++) {
         const pageBtn = document.createElement('button');
         pageBtn.classList.add('page-btn');
         if (i === currentPage) pageBtn.classList.add('active');
@@ -505,16 +525,27 @@ function updatePagination() {
         paginationContainer.appendChild(pageBtn);
     }
     
+    // 下一页按钮
     const nextBtn = document.createElement('button');
-    nextBtn.classList.add('page-btn', 'next');
+    nextBtn.classList.add('page-btn', 'page-btn-next');
     nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.innerHTML = '<i class="fas fa-angle-right"></i>';
+    nextBtn.title = '下一页';
     nextBtn.addEventListener('click', () => changePage(currentPage + 1));
     paginationContainer.appendChild(nextBtn);
     
-    const totalRecordsSpan = document.querySelector('.pagination-container > span');
+    // 末页按钮
+    const lastBtn = document.createElement('button');
+    lastBtn.classList.add('page-btn', 'page-btn-last');
+    lastBtn.disabled = currentPage === totalPages || totalPages === 0;
+    lastBtn.innerHTML = '<i class="fas fa-angle-double-right"></i>';
+    lastBtn.title = '末页';
+    lastBtn.addEventListener('click', () => changePage(totalPages));
+    paginationContainer.appendChild(lastBtn);
+    
+    const totalRecordsSpan = document.querySelector('.pagination-info .total-count');
     if (totalRecordsSpan) {
-        totalRecordsSpan.textContent = `共 ${totalUsers} 条`;
+        totalRecordsSpan.innerHTML = `共 <strong>${totalUsers}</strong> 条记录`;
     }
 
     const pageJumpInput = document.querySelector('.page-jump input');

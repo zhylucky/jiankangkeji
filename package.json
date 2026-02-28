@@ -14,7 +14,7 @@
     "website",
     "static"
   ],
-  "author": "道贞健康科技",
+  "author": "健康科技",
   "license": "MIT",
   "devDependencies": {
     "live-server": "^1.2.2"
