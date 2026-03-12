@@ -6,11 +6,6 @@
   to = "/.netlify/functions/chat"
   status = 200
 
-[[redirects]]
-  from = "/.netlify/functions/ftp-upload"
-  to = "/.netlify/functions/ftp-upload"
-  status = 200
-
 [functions]
   directory = "netlify/functions"
 

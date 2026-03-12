@@ -88,6 +88,151 @@
             transition: all 0.3s ease;
             background: white;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: 40px;
+        }
+
+        .select-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+        }
+
+        .select-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-select-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .custom-select-trigger:hover {
+            border-color: #667eea;
+        }
+
+        .custom-select.open .custom-select-trigger {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .select-icon-img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            border-radius: 6px;
+            background: #f5f5f5;
+        }
+
+        .select-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .custom-select-arrow {
+            color: #999;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .custom-select.open .custom-select-arrow {
+            transform: rotate(180deg);
+        }
+
+        .custom-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 1000;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .custom-select.open .custom-select-options {
+            display: block;
+        }
+
+        .custom-select-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .custom-select-option:first-child {
+            border-radius: 10px 10px 0 0;
+        }
+
+        .custom-select-option:last-child {
+            border-radius: 0 0 10px 10px;
+        }
+
+        .custom-select-option:hover {
+            background: #f5f5f5;
+        }
+
+        .custom-select-option.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .option-icon {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .option-text {
+            font-size: 15px;
+        }
+
+        .custom-select-option.selected .option-text {
+            color: white;
         }
 
         #appSelect:focus {
@@ -432,25 +577,67 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-download"></i> APP下载中心</h1>
-            <p class="subtitle">选择您需要的应用，获取下载链接和二维码</p>
+            <p class="subtitle">下拉选择需要的应用，获取下载链接和二维码</p>
         </header>
         
         <div class="input-section">
             <h2 class="section-title"><i class="fas fa-search"></i> 选择应用</h2>
             <div class="input-group">
-                <select id="appSelect">
-                    <option value="">请选择要下载的App</option>
-                    <option value="502">个人健康pro+</option>
-                    <option value="1">睡眠呼吸监测仪</option>
-                    <option value="602">健康测评</option>
-                    <option value="4">心身健康测评系统</option>
-                    <option value="3">促醒监护</option>
-                    <option value="500">个人健康精英版</option>
-                    <option value="504">场效应反馈</option>                  
-                    <option value="508">个人健康精英鸿蒙版</option>
-                    <option value="701">多参数监护仪app</option>
-                    <option value="15">脑电app</option>
-                </select>
+                <div class="custom-select-wrapper" style="flex: 1; position: relative;">
+                    <div class="custom-select" id="customSelect">
+                        <div class="custom-select-trigger" id="selectTrigger">
+                            <span class="select-icon-img" id="currentIcon"></span>
+                            <span class="select-text" id="currentText">请选择要下载的App</span>
+                            <span class="custom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="custom-select-options" id="selectOptions">
+                            <div class="custom-select-option" data-value="" data-icon="">
+                                <span class="option-text">请选择要下载的App</span>
+                            </div>
+                            <div class="custom-select-option" data-value="502" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png" class="option-icon">
+                                <span class="option-text">个人健康pro+</span>
+                            </div>
+                            <div class="custom-select-option" data-value="1" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png" class="option-icon">
+                                <span class="option-text">睡眠呼吸监测仪</span>
+                            </div>
+                            <div class="custom-select-option" data-value="602" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/45ababd37b13ec581dc113bf838d583.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/45ababd37b13ec581dc113bf838d583.png" class="option-icon">
+                                <span class="option-text">健康测评</span>
+                            </div>
+                            <div class="custom-select-option" data-value="4" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/e46524ac20eb6dc50d1bfb706ea53ed9.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/e46524ac20eb6dc50d1bfb706ea53ed9.png" class="option-icon">
+                                <span class="option-text">心身健康测评系统</span>
+                            </div>
+                            <div class="custom-select-option" data-value="3" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/cuxing.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/cuxing.png" class="option-icon">
+                                <span class="option-text">促醒监护</span>
+                            </div>
+                            <div class="custom-select-option" data-value="500" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240820145829.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240820145829.png" class="option-icon">
+                                <span class="option-text">个人健康精英版</span>
+                            </div>
+                            <div class="custom-select-option" data-value="504" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/c57ddcc3dc637b4987247b9b1bcb3a9f.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/c57ddcc3dc637b4987247b9b1bcb3a9f.png" class="option-icon">
+                                <span class="option-text">场效应反馈</span>
+                            </div>
+                            <div class="custom-select-option" data-value="508" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png" class="option-icon">
+                                <span class="option-text">个人健康精英鸿蒙版</span>
+                            </div>
+                            <div class="custom-select-option" data-value="701" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png" class="option-icon">
+                                <span class="option-text">多参数监护仪app</span>
+                            </div>
+                            <div class="custom-select-option" data-value="15" data-icon="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png">
+                                <img src="https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png" class="option-icon">
+                                <span class="option-text">脑电app</span>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="appSelect" value="">
+                </div>
                 <button id="fetchBtn"><i class="fas fa-sync-alt"></i> 获取信息</button>
             </div>
             <p>选择App后，系统将获取下载信息并生成二维码</p>
@@ -484,69 +671,6 @@
             </div>
             
             <div id="statusMessage" class="status" style="display: none;"></div>
-        </div>
-        
-        
-        
-        <!-- FTP上传区域 -->
-        <div class="input-section" style="margin-top: 30px;">
-            <h2 class="section-title"><i class="fas fa-server"></i> 上传APK文件</h2>
-            
-            <div id="dropZone" class="drop-zone" style="border: 3px dashed #667eea; border-radius: 15px; padding: 40px; text-align: center; background: #f8f9fa; transition: all 0.3s ease; cursor: pointer;">
-                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #667eea; margin-bottom: 15px;"></i>
-                <p style="color: #333; font-size: 18px; margin-bottom: 10px;">拖拽APK文件到此处上传</p>
-                <p style="color: #999; font-size: 14px;">或</p>
-                <input type="file" id="fileInput" accept=".apk" style="display: none;">
-                <button id="selectFileBtn" style="margin-top: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px;">
-                    <i class="fas fa-folder-open"></i> 选择APK文件
-                </button>
-            </div>
-            
-            <div id="fileInfo" style="display: none; margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 10px; border-left: 4px solid #4CAF50;">
-                <p style="color: #2E7D32; font-weight: 600;"><i class="fas fa-file-android"></i> 已选择文件: <span id="selectedFileName"></span></p>
-                <p style="color: #666; font-size: 14px;">大小: <span id="selectedFileSize"></span></p>
-            </div>
-            
-            <div id="uploadProgress" style="display: none; margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #333; font-weight: 600;">上传进度</span>
-                    <span id="progressPercent" style="color: #667eea; font-weight: 600;">0%</span>
-                </div>
-                <div style="width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; overflow: hidden;">
-                    <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.3s ease;"></div>
-                </div>
-                <p id="uploadStatus" style="margin-top: 10px; color: #666; font-size: 14px;">准备上传...</p>
-            </div>
-            
-            <button id="uploadBtn" style="display: none; margin-top: 20px; width: 100%; background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 600;">
-                <i class="fas fa-upload"></i> 开始上传到FTP服务器
-            </button>
-        </div>
-        
-        <!-- FTP上传结果二维码区域 -->
-        <div id="ftpResultCard" class="app-card" style="display: none; margin-top: 20px;">
-            <div class="app-header">
-                <div class="app-icon" style="background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 36px;"></i>
-                </div>
-                <div class="app-info">
-                    <div class="app-title" id="ftpFileName">上传成功</div>
-                    <div class="app-id" id="ftpFileSize">文件已上传到服务器</div>
-                    <div class="app-version" id="ftpUploadTime">上传时间: </div>
-                </div>
-            </div>
-            
-            <div class="qr-container">
-                <h3 class="qr-title"><i class="fas fa-qrcode"></i> 扫描二维码下载APK</h3>
-                <div class="qr-code" id="ftpQrCode" style="background: white;"></div>
-            </div>
-            
-            <div class="download-section">
-                <h3 class="download-title"><i class="fas fa-link"></i> 下载链接</h3>
-                <div class="download-link" id="ftpDownloadLink">下载链接将在此处显示</div>
-                <a href="#" class="download-btn" id="ftpDownloadBtn" target="_blank"><i class="fas fa-download"></i> 直接下载APK</a>
-                <button class="copy-btn" id="ftpCopyBtn"><i class="fas fa-copy"></i> 复制链接</button>
-            </div>
         </div>
 
         <!-- APK二维码结果显示区域 -->
@@ -752,296 +876,18 @@
             copyToClipboard(downloadUrl, '链接复制成功');
         }
 
-        // FTP上传功能
-        let selectedFile = null;
-        let ftpQrCode = null;
-        
-        // FTP服务器配置
-        const FTP_CONFIG = {
-            host: 'ftpupload.net',
-            port: 21,
-            username: 'if0_41370346',
-            password: 'XnxfScGXQlWGOP'
-        };
-        
-        function initFtpUpload() {
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('fileInput');
-            const selectFileBtn = document.getElementById('selectFileBtn');
-            const uploadBtn = document.getElementById('uploadBtn');
-            
-            if (!dropZone || !fileInput || !selectFileBtn) return;
-            
-            // 点击选择文件按钮
-            selectFileBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                fileInput.click();
-            });
-            
-            // 点击整个拖拽区域也可以选择文件
-            dropZone.addEventListener('click', function(e) {
-                if (e.target !== selectFileBtn && !selectFileBtn.contains(e.target)) {
-                    fileInput.click();
-                }
-            });
-            
-            // 文件选择事件
-            fileInput.addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    handleFileSelect(this.files[0]);
-                }
-            });
-            
-            // 拖拽事件
-            dropZone.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.style.background = '#e3f2fd';
-                dropZone.style.borderColor = '#2196F3';
-            });
-            
-            dropZone.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.style.background = '#f8f9fa';
-                dropZone.style.borderColor = '#667eea';
-            });
-            
-            dropZone.addEventListener('drop', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.style.background = '#f8f9fa';
-                dropZone.style.borderColor = '#667eea';
-                
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    handleFileSelect(e.dataTransfer.files[0]);
-                }
-            });
-            
-            // 上传按钮事件
-            if (uploadBtn) {
-                uploadBtn.addEventListener('click', uploadFileToFtp);
-            }
-            
-            // FTP复制按钮
-            const ftpCopyBtn = document.getElementById('ftpCopyBtn');
-            if (ftpCopyBtn) {
-                ftpCopyBtn.addEventListener('click', function() {
-                    const downloadLink = document.getElementById('ftpDownloadLink');
-                    if (downloadLink && downloadLink.textContent) {
-                        copyToClipboard(downloadLink.textContent, 'FTP链接复制成功');
-                    }
-                });
-            }
-        }
-        
-        function handleFileSelect(file) {
-            // 验证文件类型
-            if (!file.name.toLowerCase().endsWith('.apk')) {
-                showFtpStatus('请选择APK文件', 'error');
-                return;
-            }
-            
-            selectedFile = file;
-            
-            // 显示文件信息
-            const fileInfo = document.getElementById('fileInfo');
-            const fileNameEl = document.getElementById('selectedFileName');
-            const fileSizeEl = document.getElementById('selectedFileSize');
-            const uploadBtn = document.getElementById('uploadBtn');
-            
-            if (fileInfo) fileInfo.style.display = 'block';
-            if (fileNameEl) fileNameEl.textContent = file.name;
-            if (fileSizeEl) fileSizeEl.textContent = formatFileSize(file.size);
-            if (uploadBtn) uploadBtn.style.display = 'block';
-            
-            // 重置进度
-            const progress = document.getElementById('uploadProgress');
-            const progressBar = document.getElementById('progressBar');
-            const progressPercent = document.getElementById('progressPercent');
-            const uploadStatus = document.getElementById('uploadStatus');
-            
-            if (progress) progress.style.display = 'none';
-            if (progressBar) progressBar.style.width = '0%';
-            if (progressPercent) progressPercent.textContent = '0%';
-            if (uploadStatus) uploadStatus.textContent = '准备上传...';
-            
-            // 隐藏之前的结果
-            const ftpResultCard = document.getElementById('ftpResultCard');
-            if (ftpResultCard) ftpResultCard.style.display = 'none';
-        }
-        
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-        
-        function uploadFileToFtp() {
-            if (!selectedFile) {
-                showFtpStatus('请先选择文件', 'error');
-                return;
-            }
-            
-            // 显示进度条
-            const progress = document.getElementById('uploadProgress');
-            const progressBar = document.getElementById('progressBar');
-            const progressPercent = document.getElementById('progressPercent');
-            const uploadStatus = document.getElementById('uploadStatus');
-            const uploadBtn = document.getElementById('uploadBtn');
-            
-            if (progress) progress.style.display = 'block';
-            if (uploadBtn) uploadBtn.disabled = true;
-            if (uploadStatus) uploadStatus.textContent = '正在读取文件...';
-            
-            // 将文件转换为Base64
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const base64Data = e.target.result.split(',')[1]; // 去除data:application/octet-stream;base64,前缀
-                
-                if (uploadStatus) uploadStatus.textContent = '正在上传到服务器...';
-                
-                // 发送到Netlify Function
-                try {
-                    const response = await fetch('/.netlify/functions/ftp-upload', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            filename: selectedFile.name,
-                            fileData: base64Data
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        if (uploadStatus) uploadStatus.textContent = '上传成功!';
-                        showFtpStatus('文件上传成功!', 'success');
-                        generateFtpQrCode(result.downloadUrl);
-                    } else {
-                        throw new Error(result.error || '上传失败');
-                    }
-                } catch (error) {
-                    showFtpStatus('上传失败: ' + error.message, 'error');
-                    if (uploadStatus) uploadStatus.textContent = '上传失败';
-                }
-                
-                if (uploadBtn) uploadBtn.disabled = false;
-            };
-            
-            reader.onerror = function() {
-                showFtpStatus('文件读取失败', 'error');
-                if (uploadBtn) uploadBtn.disabled = false;
-            };
-            
-            // 更新进度（模拟）
-            if (progressBar) progressBar.style.width = '30%';
-            if (progressPercent) progressPercent.textContent = '30%';
-            
-            reader.readAsDataURL(selectedFile);
-        }
-        
-        function generateFtpQrCode(downloadUrl) {
-            const ftpResultCard = document.getElementById('ftpResultCard');
-            const ftpQrContainer = document.getElementById('ftpQrCode');
-            const ftpFileNameEl = document.getElementById('ftpFileName');
-            const ftpFileSizeEl = document.getElementById('ftpFileSize');
-            const ftpUploadTimeEl = document.getElementById('ftpUploadTime');
-            const ftpDownloadLinkEl = document.getElementById('ftpDownloadLink');
-            const ftpDownloadBtnEl = document.getElementById('ftpDownloadBtn');
-            
-            if (!ftpResultCard || !ftpQrContainer) return;
-            
-            // 显示结果卡片
-            ftpResultCard.style.display = 'block';
-            
-            // 清空之前的二维码
-            ftpQrContainer.innerHTML = '';
-            
-            // 更新文件信息
-            if (ftpFileNameEl) ftpFileNameEl.textContent = selectedFile.name;
-            if (ftpFileSizeEl) ftpFileSizeEl.textContent = '大小: ' + formatFileSize(selectedFile.size);
-            if (ftpUploadTimeEl) {
-                ftpUploadTimeEl.textContent = '上传时间: ' + new Date().toLocaleString('zh-CN');
-            }
-            
-            // 更新下载链接
-            if (ftpDownloadLinkEl) ftpDownloadLinkEl.textContent = downloadUrl;
-            if (ftpDownloadBtnEl) {
-                ftpDownloadBtnEl.href = downloadUrl;
-                ftpDownloadBtnEl.download = selectedFile.name;
-            }
-            
-            // 生成二维码
-            setTimeout(() => {
-                if (typeof QRCode !== 'undefined') {
-                    try {
-                        // 对URL进行编码处理，处理中文等问题
-                        let qrUrl = downloadUrl;
-                        try {
-                            const urlObj = new URL(downloadUrl);
-                            qrUrl = urlObj.toString();
-                        } catch (e) {
-                            console.warn('URL格式可能有误:', e);
-                        }
-                        
-                        ftpQrContainer.innerHTML = '';
-                        ftpQrCode = new QRCode(ftpQrContainer, {
-                            text: qrUrl,
-                            width: 230,
-                            height: 230,
-                            colorDark: '#000000',
-                            colorLight: '#ffffff',
-                            correctLevel: QRCode.CorrectLevel.M
-                        });
-                    } catch (e) {
-                        console.error('FTP二维码生成失败:', e);
-                    }
-                }
-            }, 100);
-            
-            // 滚动到结果区域
-            ftpResultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        
-        function showFtpStatus(message, type) {
-            const ftpResultCard = document.getElementById('ftpResultCard');
-            if (!ftpResultCard) return;
-            
-            let statusEl = document.getElementById('ftpStatusMessage');
-            if (!statusEl) {
-                statusEl = document.createElement('div');
-                statusEl.id = 'ftpStatusMessage';
-                statusEl.className = 'status';
-                ftpResultCard.appendChild(statusEl);
-            }
-            
-            statusEl.textContent = message;
-            statusEl.className = 'status ' + type;
-            statusEl.style.display = 'block';
-            
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 5000);
-        }
-        
-        // 保留原有的APK URL二维码生成功能（兼容旧功能）
+        // APK URL二维码生成功能
         let apkQrCode = null;
         
         function initApkQrCode() {
-            // 初始化FTP上传功能
-            initFtpUpload();
+            // 初始化自定义下拉框
+            initCustomSelect();
             
-            // 保留原有的URL输入二维码生成功能
+            // URL输入框和生成按钮事件绑定
             const generateBtn = document.getElementById('generateQrBtn');
             const apkUrlInput = document.getElementById('apkUrl');
             
-            // 如果存在旧的URL输入框和生成按钮，仍然绑定事件
+            // 如果存在URL输入框和生成按钮，绑定事件
             if (generateBtn && apkUrlInput) {
                 generateBtn.addEventListener('click', generateApkQrCode);
                 apkUrlInput.addEventListener('keypress', function(e) {
@@ -1051,7 +897,7 @@
                 });
             }
             
-            // 保留原有的复制APK链接按钮功能
+            // 复制链接按钮功能
             const apkCopyBtn = document.getElementById('apkCopyBtn');
             if (apkCopyBtn) {
                 apkCopyBtn.addEventListener('click', function() {
@@ -1560,8 +1406,6 @@
         
         // 获取应用图标URL
         function getAppIconUrl(appId) {
-            // 这里是示例图标URL，你需要替换为实际的图标地址
-            // 示例格式：'https://your-domain.com/icons/app-{appId}.png'
             const iconUrls = {
                 '602': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/45ababd37b13ec581dc113bf838d583.png',
                 '508': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png',
@@ -1574,9 +1418,91 @@
                 '701': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
                 '15': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
             };
-            
-            // 返回特定App的图标URL或默认图标
             return iconUrls[appId] || 'https://management.lifetide.cn/title.ico';
+        }
+        
+        // 获取下拉框图标URL
+        function getSelectIconUrl(appId) {
+            const iconUrls = {
+                '502': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png',
+                '1': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
+                '602': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/45ababd37b13ec581dc113bf838d583.png',
+                '4': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/e46524ac20eb6dc50d1bfb706ea53ed9.png',
+                '3': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/cuxing.png',
+                '500': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240820145829.png',
+                '504': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/c57ddcc3dc637b4987247b9b1bcb3a9f.png',
+                '508': 'https://lifetide.oss-cn-beijing.aliyuncs.com/upload/logo/pro.png',
+                '701': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
+                '15': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
+            };
+            return iconUrls[appId] || '';
+        }
+        
+        // 初始化自定义下拉框
+        function initCustomSelect() {
+            const customSelect = document.getElementById('customSelect');
+            const selectTrigger = document.getElementById('selectTrigger');
+            const selectOptions = document.getElementById('selectOptions');
+            const appSelect = document.getElementById('appSelect');
+            
+            if (!customSelect || !selectTrigger || !selectOptions || !appSelect) {
+                return;
+            }
+            
+            // 点击触发器打开/关闭下拉框
+            selectTrigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                customSelect.classList.toggle('open');
+            });
+            
+            // 点击选项选中
+            const options = selectOptions.querySelectorAll('.custom-select-option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const icon = this.getAttribute('data-icon');
+                    const text = this.querySelector('.option-text').textContent;
+                    
+                    // 更新隐藏的input值
+                    appSelect.value = value;
+                    
+                    // 更新显示
+                    const currentIcon = document.getElementById('currentIcon');
+                    const currentText = document.getElementById('currentText');
+                    
+                    if (currentIcon) {
+                        if (icon) {
+                            currentIcon.innerHTML = `<img src="${icon}" class="select-icon-img" style="width: 32px; height: 32px; object-fit: contain; border-radius: 6px;">`;
+                        } else {
+                            currentIcon.innerHTML = '';
+                        }
+                    }
+                    if (currentText) {
+                        currentText.textContent = text;
+                    }
+                    
+                    // 更新选中状态
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    // 关闭下拉框
+                    customSelect.classList.remove('open');
+                    
+                    // 触发change事件
+                    const event = new Event('change', { bubbles: true });
+                    appSelect.dispatchEvent(event);
+                });
+            });
+            
+            // 点击其他地方关闭下拉框
+            document.addEventListener('click', function() {
+                customSelect.classList.remove('open');
+            });
+            
+            // 阻止下拉框内部点击事件冒泡
+            selectOptions.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
         }
         
         // 获取应用名称
