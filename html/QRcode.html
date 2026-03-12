@@ -448,6 +448,8 @@
                     <option value="500">个人健康精英版</option>
                     <option value="504">场效应反馈</option>                  
                     <option value="508">个人健康精英鸿蒙版</option>
+                    <option value="701">多参数监护仪app</option>
+                    <option value="15">脑电app</option>
                 </select>
                 <button id="fetchBtn"><i class="fas fa-sync-alt"></i> 获取信息</button>
             </div>
@@ -485,6 +487,93 @@
         </div>
         
         
+        
+        <!-- FTP上传区域 -->
+        <div class="input-section" style="margin-top: 30px;">
+            <h2 class="section-title"><i class="fas fa-server"></i> 上传APK文件</h2>
+            
+            <div id="dropZone" class="drop-zone" style="border: 3px dashed #667eea; border-radius: 15px; padding: 40px; text-align: center; background: #f8f9fa; transition: all 0.3s ease; cursor: pointer;">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #667eea; margin-bottom: 15px;"></i>
+                <p style="color: #333; font-size: 18px; margin-bottom: 10px;">拖拽APK文件到此处上传</p>
+                <p style="color: #999; font-size: 14px;">或</p>
+                <input type="file" id="fileInput" accept=".apk" style="display: none;">
+                <button id="selectFileBtn" style="margin-top: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+                    <i class="fas fa-folder-open"></i> 选择APK文件
+                </button>
+            </div>
+            
+            <div id="fileInfo" style="display: none; margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 10px; border-left: 4px solid #4CAF50;">
+                <p style="color: #2E7D32; font-weight: 600;"><i class="fas fa-file-android"></i> 已选择文件: <span id="selectedFileName"></span></p>
+                <p style="color: #666; font-size: 14px;">大小: <span id="selectedFileSize"></span></p>
+            </div>
+            
+            <div id="uploadProgress" style="display: none; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #333; font-weight: 600;">上传进度</span>
+                    <span id="progressPercent" style="color: #667eea; font-weight: 600;">0%</span>
+                </div>
+                <div style="width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; overflow: hidden;">
+                    <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.3s ease;"></div>
+                </div>
+                <p id="uploadStatus" style="margin-top: 10px; color: #666; font-size: 14px;">准备上传...</p>
+            </div>
+            
+            <button id="uploadBtn" style="display: none; margin-top: 20px; width: 100%; background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                <i class="fas fa-upload"></i> 开始上传到FTP服务器
+            </button>
+        </div>
+        
+        <!-- FTP上传结果二维码区域 -->
+        <div id="ftpResultCard" class="app-card" style="display: none; margin-top: 20px;">
+            <div class="app-header">
+                <div class="app-icon" style="background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%);">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 36px;"></i>
+                </div>
+                <div class="app-info">
+                    <div class="app-title" id="ftpFileName">上传成功</div>
+                    <div class="app-id" id="ftpFileSize">文件已上传到服务器</div>
+                    <div class="app-version" id="ftpUploadTime">上传时间: </div>
+                </div>
+            </div>
+            
+            <div class="qr-container">
+                <h3 class="qr-title"><i class="fas fa-qrcode"></i> 扫描二维码下载APK</h3>
+                <div class="qr-code" id="ftpQrCode" style="background: white;"></div>
+            </div>
+            
+            <div class="download-section">
+                <h3 class="download-title"><i class="fas fa-link"></i> 下载链接</h3>
+                <div class="download-link" id="ftpDownloadLink">下载链接将在此处显示</div>
+                <a href="#" class="download-btn" id="ftpDownloadBtn" target="_blank"><i class="fas fa-download"></i> 直接下载APK</a>
+                <button class="copy-btn" id="ftpCopyBtn"><i class="fas fa-copy"></i> 复制链接</button>
+            </div>
+        </div>
+
+        <!-- APK二维码结果显示区域 -->
+        <div id="apkResultCard" class="app-card" style="display: none;">
+            <div class="app-header">
+                <div class="app-icon" style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);">
+                    <i class="fas fa-android" style="font-size: 36px;"></i>
+                </div>
+                <div class="app-info">
+                    <div class="app-title" id="apkFileName">自定义APK</div>
+                    <div class="app-id" id="apkFileSize">大小: </div>
+                    <div class="app-version" id="apkUploadTime">上传时间: </div>
+                </div>
+            </div>
+            
+            <div class="qr-container">
+                <h3 class="qr-title"><i class="fas fa-qrcode"></i> 扫描二维码下载APK</h3>
+                <div class="qr-code" id="apkQrCode" style="background: white;"></div>
+            </div>
+            
+            <div class="download-section">
+                <h3 class="download-title"><i class="fas fa-link"></i> 下载链接</h3>
+                <div class="download-link" id="apkDownloadLink">下载链接将在此处显示</div>
+                <a href="#" class="download-btn" id="apkDownloadBtn" target="_blank"><i class="fas fa-download"></i> 直接下载APK</a>
+                <button class="copy-btn" id="apkCopyBtn"><i class="fas fa-copy"></i> 复制链接</button>
+            </div>
+        </div>
         
         <footer>
             <p>© APP全家桶下载中心</p>
@@ -560,6 +649,9 @@
             
             // 预加载常用App信息以提高首次加载速度
             preloadCommonAppInfo();
+            
+            // 初始化APK二维码生成功能
+            initApkQrCode();
             
             // 绑定事件
             if (fetchBtn) {
@@ -655,20 +747,472 @@
                 showStatus('无下载链接可复制', 'error');
                 return;
             }
+
+            // 复制链接到剪贴板
+            copyToClipboard(downloadUrl, '链接复制成功');
+        }
+
+        // FTP上传功能
+        let selectedFile = null;
+        let ftpQrCode = null;
+        
+        // FTP服务器配置
+        const FTP_CONFIG = {
+            host: 'ftpupload.net',
+            port: 21,
+            username: 'if0_41370346',
+            password: 'XnxfScGXQlWGOP'
+        };
+        
+        function initFtpUpload() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const selectFileBtn = document.getElementById('selectFileBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
             
-            // 尝试使用现代浏览器API复制
-            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-                navigator.clipboard.writeText(downloadUrl).then(() => {
-                    showStatus('链接已复制到剪贴板', 'success');
-                }).catch(err => {
-                    console.error('Clipboard API 复制失败:', err);
-                    fallbackCopyTextToClipboard(downloadUrl);
+            if (!dropZone || !fileInput || !selectFileBtn) return;
+            
+            // 点击选择文件按钮
+            selectFileBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInput.click();
+            });
+            
+            // 点击整个拖拽区域也可以选择文件
+            dropZone.addEventListener('click', function(e) {
+                if (e.target !== selectFileBtn && !selectFileBtn.contains(e.target)) {
+                    fileInput.click();
+                }
+            });
+            
+            // 文件选择事件
+            fileInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    handleFileSelect(this.files[0]);
+                }
+            });
+            
+            // 拖拽事件
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.style.background = '#e3f2fd';
+                dropZone.style.borderColor = '#2196F3';
+            });
+            
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.style.background = '#f8f9fa';
+                dropZone.style.borderColor = '#667eea';
+            });
+            
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.style.background = '#f8f9fa';
+                dropZone.style.borderColor = '#667eea';
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleFileSelect(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // 上传按钮事件
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', uploadFileToFtp);
+            }
+            
+            // FTP复制按钮
+            const ftpCopyBtn = document.getElementById('ftpCopyBtn');
+            if (ftpCopyBtn) {
+                ftpCopyBtn.addEventListener('click', function() {
+                    const downloadLink = document.getElementById('ftpDownloadLink');
+                    if (downloadLink && downloadLink.textContent) {
+                        copyToClipboard(downloadLink.textContent, 'FTP链接复制成功');
+                    }
                 });
-            } else {
-                fallbackCopyTextToClipboard(downloadUrl);
             }
         }
         
+        function handleFileSelect(file) {
+            // 验证文件类型
+            if (!file.name.toLowerCase().endsWith('.apk')) {
+                showFtpStatus('请选择APK文件', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // 显示文件信息
+            const fileInfo = document.getElementById('fileInfo');
+            const fileNameEl = document.getElementById('selectedFileName');
+            const fileSizeEl = document.getElementById('selectedFileSize');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (fileInfo) fileInfo.style.display = 'block';
+            if (fileNameEl) fileNameEl.textContent = file.name;
+            if (fileSizeEl) fileSizeEl.textContent = formatFileSize(file.size);
+            if (uploadBtn) uploadBtn.style.display = 'block';
+            
+            // 重置进度
+            const progress = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const uploadStatus = document.getElementById('uploadStatus');
+            
+            if (progress) progress.style.display = 'none';
+            if (progressBar) progressBar.style.width = '0%';
+            if (progressPercent) progressPercent.textContent = '0%';
+            if (uploadStatus) uploadStatus.textContent = '准备上传...';
+            
+            // 隐藏之前的结果
+            const ftpResultCard = document.getElementById('ftpResultCard');
+            if (ftpResultCard) ftpResultCard.style.display = 'none';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function uploadFileToFtp() {
+            if (!selectedFile) {
+                showFtpStatus('请先选择文件', 'error');
+                return;
+            }
+            
+            // 显示进度条
+            const progress = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (progress) progress.style.display = 'block';
+            if (uploadBtn) uploadBtn.disabled = true;
+            if (uploadStatus) uploadStatus.textContent = '正在读取文件...';
+            
+            // 将文件转换为Base64
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result.split(',')[1]; // 去除data:application/octet-stream;base64,前缀
+                
+                if (uploadStatus) uploadStatus.textContent = '正在上传到服务器...';
+                
+                // 发送到Netlify Function
+                try {
+                    const response = await fetch('/.netlify/functions/ftp-upload', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            filename: selectedFile.name,
+                            fileData: base64Data
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        if (uploadStatus) uploadStatus.textContent = '上传成功!';
+                        showFtpStatus('文件上传成功!', 'success');
+                        generateFtpQrCode(result.downloadUrl);
+                    } else {
+                        throw new Error(result.error || '上传失败');
+                    }
+                } catch (error) {
+                    showFtpStatus('上传失败: ' + error.message, 'error');
+                    if (uploadStatus) uploadStatus.textContent = '上传失败';
+                }
+                
+                if (uploadBtn) uploadBtn.disabled = false;
+            };
+            
+            reader.onerror = function() {
+                showFtpStatus('文件读取失败', 'error');
+                if (uploadBtn) uploadBtn.disabled = false;
+            };
+            
+            // 更新进度（模拟）
+            if (progressBar) progressBar.style.width = '30%';
+            if (progressPercent) progressPercent.textContent = '30%';
+            
+            reader.readAsDataURL(selectedFile);
+        }
+        
+        function generateFtpQrCode(downloadUrl) {
+            const ftpResultCard = document.getElementById('ftpResultCard');
+            const ftpQrContainer = document.getElementById('ftpQrCode');
+            const ftpFileNameEl = document.getElementById('ftpFileName');
+            const ftpFileSizeEl = document.getElementById('ftpFileSize');
+            const ftpUploadTimeEl = document.getElementById('ftpUploadTime');
+            const ftpDownloadLinkEl = document.getElementById('ftpDownloadLink');
+            const ftpDownloadBtnEl = document.getElementById('ftpDownloadBtn');
+            
+            if (!ftpResultCard || !ftpQrContainer) return;
+            
+            // 显示结果卡片
+            ftpResultCard.style.display = 'block';
+            
+            // 清空之前的二维码
+            ftpQrContainer.innerHTML = '';
+            
+            // 更新文件信息
+            if (ftpFileNameEl) ftpFileNameEl.textContent = selectedFile.name;
+            if (ftpFileSizeEl) ftpFileSizeEl.textContent = '大小: ' + formatFileSize(selectedFile.size);
+            if (ftpUploadTimeEl) {
+                ftpUploadTimeEl.textContent = '上传时间: ' + new Date().toLocaleString('zh-CN');
+            }
+            
+            // 更新下载链接
+            if (ftpDownloadLinkEl) ftpDownloadLinkEl.textContent = downloadUrl;
+            if (ftpDownloadBtnEl) {
+                ftpDownloadBtnEl.href = downloadUrl;
+                ftpDownloadBtnEl.download = selectedFile.name;
+            }
+            
+            // 生成二维码
+            setTimeout(() => {
+                if (typeof QRCode !== 'undefined') {
+                    try {
+                        // 对URL进行编码处理，处理中文等问题
+                        let qrUrl = downloadUrl;
+                        try {
+                            const urlObj = new URL(downloadUrl);
+                            qrUrl = urlObj.toString();
+                        } catch (e) {
+                            console.warn('URL格式可能有误:', e);
+                        }
+                        
+                        ftpQrContainer.innerHTML = '';
+                        ftpQrCode = new QRCode(ftpQrContainer, {
+                            text: qrUrl,
+                            width: 230,
+                            height: 230,
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    } catch (e) {
+                        console.error('FTP二维码生成失败:', e);
+                    }
+                }
+            }, 100);
+            
+            // 滚动到结果区域
+            ftpResultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function showFtpStatus(message, type) {
+            const ftpResultCard = document.getElementById('ftpResultCard');
+            if (!ftpResultCard) return;
+            
+            let statusEl = document.getElementById('ftpStatusMessage');
+            if (!statusEl) {
+                statusEl = document.createElement('div');
+                statusEl.id = 'ftpStatusMessage';
+                statusEl.className = 'status';
+                ftpResultCard.appendChild(statusEl);
+            }
+            
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+            statusEl.style.display = 'block';
+            
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // 保留原有的APK URL二维码生成功能（兼容旧功能）
+        let apkQrCode = null;
+        
+        function initApkQrCode() {
+            // 初始化FTP上传功能
+            initFtpUpload();
+            
+            // 保留原有的URL输入二维码生成功能
+            const generateBtn = document.getElementById('generateQrBtn');
+            const apkUrlInput = document.getElementById('apkUrl');
+            
+            // 如果存在旧的URL输入框和生成按钮，仍然绑定事件
+            if (generateBtn && apkUrlInput) {
+                generateBtn.addEventListener('click', generateApkQrCode);
+                apkUrlInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        generateApkQrCode();
+                    }
+                });
+            }
+            
+            // 保留原有的复制APK链接按钮功能
+            const apkCopyBtn = document.getElementById('apkCopyBtn');
+            if (apkCopyBtn) {
+                apkCopyBtn.addEventListener('click', function() {
+                    const apkUrl = document.getElementById('apkUrl').value.trim();
+                    if (apkUrl) {
+                        copyToClipboard(apkUrl, 'APK链接复制成功');
+                    }
+                });
+            }
+        }
+        
+        function generateApkQrCode() {
+            const apkUrlInput = document.getElementById('apkUrl');
+            if (!apkUrlInput) return;
+            
+            const apkUrl = apkUrlInput.value.trim();
+            const resultCard = document.getElementById('apkResultCard');
+            const qrContainer = document.getElementById('apkQrCode');
+            
+            if (!apkUrl) {
+                showApkStatus('请输入APK下载链接', 'error');
+                return;
+            }
+            
+            if (!isValidUrl(apkUrl)) {
+                showApkStatus('请输入有效的URL链接', 'error');
+                return;
+            }
+            
+            if (!apkUrl.toLowerCase().endsWith('.apk') && !apkUrl.includes('apk')) {
+                showApkStatus('警告：链接可能不是APK文件', 'error');
+            }
+            
+            if (resultCard) resultCard.style.display = 'block';
+            if (qrContainer) qrContainer.innerHTML = '';
+            
+            let fileName = '自定义APK';
+            try {
+                const urlParts = apkUrl.split('/');
+                const lastPart = urlParts[urlParts.length - 1];
+                if (lastPart && lastPart.length > 0) {
+                    fileName = decodeURIComponent(lastPart.replace('.apk', '').replace(/[?#].*/, '')) + '.apk';
+                }
+            } catch (e) {
+                console.error('解析文件名失败:', e);
+            }
+            
+            const fileNameEl = document.getElementById('apkFileName');
+            const fileSizeEl = document.getElementById('apkFileSize');
+            const uploadTimeEl = document.getElementById('apkUploadTime');
+            
+            if (fileNameEl) fileNameEl.textContent = fileName;
+            if (fileSizeEl) fileSizeEl.textContent = '大小: 未知（请查看实际文件）';
+            if (uploadTimeEl) {
+                uploadTimeEl.textContent = '生成时间: ' + new Date().toLocaleString('zh-CN');
+            }
+            
+            const downloadLinkEl = document.getElementById('apkDownloadLink');
+            const downloadBtnEl = document.getElementById('apkDownloadBtn');
+            
+            if (downloadLinkEl) downloadLinkEl.textContent = apkUrl;
+            if (downloadBtnEl) {
+                downloadBtnEl.href = apkUrl;
+                downloadBtnEl.download = fileName;
+            }
+            
+            setTimeout(() => {
+                if (typeof QRCode !== 'undefined' && qrContainer) {
+                    try {
+                        // 对URL进行编码处理，处理中文等问题
+                        let qrUrl = apkUrl;
+                        try {
+                            const urlObj = new URL(apkUrl);
+                            qrUrl = urlObj.toString();
+                        } catch (e) {
+                            console.warn('URL格式可能有误:', e);
+                        }
+                        
+                        apkQrCode = new QRCode(qrContainer, {
+                            text: qrUrl,
+                            width: 230,
+                            height: 230,
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                        showApkStatus('二维码生成成功', 'success');
+                    } catch (e) {
+                        console.error('二维码生成失败:', e);
+                        showApkStatus('二维码生成失败: ' + e.message, 'error');
+                    }
+                } else {
+                    showApkStatus('二维码库加载中，请稍后重试', 'error');
+                }
+            }, 100);
+        }
+        
+        function showApkStatus(message, type) {
+            const resultCard = document.getElementById('apkResultCard');
+            if (!resultCard) return;
+            
+            let statusEl = document.getElementById('apkStatusMessage');
+            if (!statusEl) {
+                statusEl = document.createElement('div');
+                statusEl.id = 'apkStatusMessage';
+                statusEl.className = 'status';
+                resultCard.appendChild(statusEl);
+            }
+            
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+            statusEl.style.display = 'block';
+            
+            // 5秒后隐藏
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+        
+        // 复制到剪贴板函数
+        function copyToClipboard(text, successMessage) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showStatus(successMessage, 'success');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    fallbackCopyText(text, successMessage);
+                });
+            } else {
+                fallbackCopyText(text, successMessage);
+            }
+        }
+        
+        function fallbackCopyText(text, successMessage) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showStatus(successMessage, 'success');
+            } catch (err) {
+                console.error('复制失败:', err);
+                showStatus('复制失败，请手动复制', 'error');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+            
         // 获取App信息 - 使用多个代理服务器重试
         async function fetchAppInfo(selectedAppId, forceRefresh = false) {
             if (!selectedAppId) {
@@ -824,7 +1368,7 @@
                 // 提取必要的字段
                 const name = getAppName(selectedAppId); // 获取应用名称
                 const versionName = obj.versionName || '未知版本';
-                const downloadUrl = obj.downloadUrl || '';
+                const downloadUrl = (obj.downloadUrl || '').trim();
                 const createDate = obj.createDate || ''; // 获取创建/更新日期
                 // 尝试从API响应中获取图标URL，如果没有则使用默认的
                 const iconUrl = obj.iconUrl || obj.appIcon || ''; // 根据实际API字段名调整
@@ -980,21 +1524,34 @@
                     throw new Error('二维码生成库未准备好');
                 }
                 
+                // 对URL进行编码处理，处理中文等问题
+                let qrUrl = url;
+                try {
+                    // 尝试解析URL，确保格式正确
+                    const urlObj = new URL(url);
+                    // 重新构建URL，确保编码正确
+                    qrUrl = urlObj.toString();
+                } catch (urlError) {
+                    console.warn('URL格式可能有误，尝试直接编码:', urlError);
+                }
+                
                 if (qrCodeContainer) {
+                    qrCodeContainer.innerHTML = '';
                     new QRCode(qrCodeContainer, {
-                        text: url,
+                        text: qrUrl,
                         width: 200,
                         height: 200,
                         colorDark: '#000000',
                         colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.H
+                        correctLevel: QRCode.CorrectLevel.M
                     });
                 }
                 
                 showStatus('二维码生成成功！', 'success');
             } catch (error) {
+                console.error('二维码生成详细错误:', error);
                 if (qrCodeContainer) {
-                    qrCodeContainer.innerHTML = '二维码生成失败';
+                    qrCodeContainer.innerHTML = '二维码生成失败: ' + error.message;
                     qrCodeContainer.className = 'qr-code error';
                 }
                 showStatus('二维码生成失败: ' + error.message, 'error');
@@ -1013,7 +1570,9 @@
                 '3': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/cuxing.png',
                 '500': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20240820145829.png',
                 '504': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/c57ddcc3dc637b4987247b9b1bcb3a9f.png',
-                '4': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/e46524ac20eb6dc50d1bfb706ea53ed9.png'
+                '4': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/e46524ac20eb6dc50d1bfb706ea53ed9.png',
+                '701': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
+                '15': 'https://lifetide.oss-cn-beijing.aliyuncs.com/logo/sleep.png',
             };
             
             // 返回特定App的图标URL或默认图标
@@ -1030,7 +1589,9 @@
                 '3': '促醒监护',
                 '500': '个人健康精英版',
                 '504': '场效应反馈',
-                '4': '心身健康测评系统'
+                '4': '心身健康测评系统',
+                '701': '多参数监护仪app',
+                '15': '脑电app',
             };
             return appNames[appId] || '未知应用';
         }
