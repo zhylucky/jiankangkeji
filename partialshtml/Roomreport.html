@@ -1073,51 +1073,41 @@
                 // 收集报告数据
                 const reportData = collectReportData();
                 
-                // 构造发送给AI的提示
-                const aiPrompt = `请根据以下睡眠质量评估报告数据，生成一份综合性的AI分析报告：
-                
-                个人信息：
-                姓名：${reportData.patientInfo.name}
-                性别：${reportData.patientInfo.gender}
-                年龄：${reportData.patientInfo.age}岁
-                身高：${reportData.patientInfo.height}cm
-                体重：${reportData.patientInfo.weight}kg
+                // 构造发送给 AI 的提示 - 针对健康建议场景优化
+                const aiPrompt = `【角色】你是专业睡眠健康专家，为医生和患者提供简洁专业的报告解读。
 
-                自评报告总分：${reportData.scoreData.selfTotal}
-                AI评估报告总分：${reportData.scoreData.aiTotal}
-                
-                危险项提示：
-                ${reportData.warningData.length > 0 ? 
-                  reportData.warningData.map(item => `- ${item}`).join('\n') : 
-                  '无明显危险项'}
+【任务】基于以下睡眠评估数据，生成**简明扼要**的综合分析报告（总字数控制在 500 字以内）：
 
-                自评报告详情：
-                ${reportData.selfReportData.map(item => 
-                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，评价${item.rating}`
-                ).join('\n')}
+【患者信息】
+姓名：${reportData.patientInfo.name} | 性别：${reportData.patientInfo.gender} | 年龄：${reportData.patientInfo.age}岁
+BMI: ${(reportData.patientInfo.weight / ((reportData.patientInfo.height/100) ** 2)).toFixed(1)}
 
-                AI评估报告详情：
-                ${reportData.aiReportData.map(item => 
-                    `- ${item.dimension} - ${item.item}：评分${item.score}，等级${item.level}，判断${item.judgment}`
-                ).join('\n')}
+【核心评分】
+自评量表：${reportData.scoreData.selfTotal}分 | AI 评估：${reportData.scoreData.aiTotal}分
 
-                请结合以上数据，生成一份综合性分析报告，包含以下内容：
-                1. 整体睡眠质量评估
-                2. 主要问题识别
-                3. 改善建议
-                4. 需要关注的风险点
+【危险项警示】${reportData.warningData.length > 0 ? '\n' + reportData.warningData.map(item => `⚠️ ${item}`).join('\n') : '✅ 无明显危险项'}
 
-                请特别关注危险项提示中的内容，如果存在异常项，请在风险点分析中重点说明。
+【数据详情】
+自评关键项：${reportData.selfReportData.filter(item => parseFloat(item.score) < 5).slice(0, 5).map(item => `${item.item}(${item.score}分)`).join('、') || '无明显低分项'}
+AI 关键项：${reportData.aiReportData.filter(item => parseFloat(item.score) < 5).slice(0, 5).map(item => `${item.item}(${item.score}分)`).join('、') || '无明显低分项'}
 
-                请用中文回复，语言简洁明了，便于医生和患者理解。按照以下格式输出：
-                一、整体睡眠质量评估
-                [内容]
+【输出要求】
+1. 重点突出危险项和低分项目
+2. 建议具体可执行，避免空话
+3. 语言通俗，患者能理解
+4. 严格按以下格式，每部分 100-150 字：
 
-                二、主要问题识别
-                [内容]
+一、整体睡眠质量评估
+[综合评分解读，一句话总结质量等级]
 
-                三、改善建议
-                [内容]`;
+二、主要问题识别  
+[列出 2-3 个最突出的问题，按严重程度排序]
+
+三、改善建议
+[给出 2-3 条最优先的可执行建议]
+
+四、风险警示
+[如有危险项则重点说明，无则写"暂无特殊风险"]`;
                 
                 // 调用AI API生成分析报告
                 const aiResponse = await callAIAPI(aiPrompt);
