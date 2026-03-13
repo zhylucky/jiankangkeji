@@ -54,17 +54,17 @@ exports.handler = async function(event, context) {
       throw new Error('API密钥未配置，请在Netlify环境变量中设置SILICONFLOW_API_KEY或AI_API_KEY');
     }
     
-    // 构建请求参数 - 优化响应速度
+    // 构建请求参数 - 平衡详细性和响应速度
     const requestBody = {
       model: model || 'Qwen/Qwen3-8B',
       messages: messages,
       stream: false,
-      // 性能优化参数 - 更严格的限制以提高响应速度
-      max_tokens: 1200,  // 进一步降低最大 token 数
-      temperature: 0.5,  // 降低随机性，提高响应速度
-      top_p: 0.8,        // 更集中的采样
-      presence_penalty: 0.1,  // 降低重复
-      frequency_penalty: 0.3  // 减少冗余内容
+      // 性能优化参数
+      max_tokens: 2000,  // 支持生成更详细的健康报告（800-1000 字中文约需 1500-2000 tokens）
+      temperature: 0.6,  // 适度的创造性，保证专业性的同时有一定灵活性
+      top_p: 0.85,       // 平衡集中性和多样性
+      presence_penalty: 0.1,  // 轻微降低重复
+      frequency_penalty: 0.2  // 适度减少冗余
     };
         
     // 明确关闭思考模式和其他耗时功能

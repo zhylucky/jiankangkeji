@@ -1073,41 +1073,119 @@
                 // 收集报告数据
                 const reportData = collectReportData();
                 
-                // 构造发送给 AI 的提示 - 针对健康建议场景优化
-                const aiPrompt = `【角色】你是专业睡眠健康专家，为医生和患者提供简洁专业的报告解读。
+                // 构造发送给 AI 的提示 - 详细专业版健康分析报告
+                const aiPrompt = `【角色定位】
+你是由"健康科技"团队打造的专业睡眠健康专家，拥有临床医学和健康管理双重背景。你的任务是为医生提供专业参考，为患者提供易懂的健康指导。
 
-【任务】基于以下睡眠评估数据，生成**简明扼要**的综合分析报告（总字数控制在 500 字以内）：
+【分析任务】
+基于以下睡眠监测数据，生成一份**专业、全面、可执行**的健康分析报告。请结合医学知识和健康管理经验，进行深度解读。
 
-【患者信息】
-姓名：${reportData.patientInfo.name} | 性别：${reportData.patientInfo.gender} | 年龄：${reportData.patientInfo.age}岁
-BMI: ${(reportData.patientInfo.weight / ((reportData.patientInfo.height/100) ** 2)).toFixed(1)}
+【患者基本信息】
+• 姓名：${reportData.patientInfo.name}
+• 性别：${reportData.patientInfo.gender}  
+• 年龄：${reportData.patientInfo.age}岁
+• 身高：${reportData.patientInfo.height}cm
+• 体重：${reportData.patientInfo.weight}kg
+• BMI: ${(reportData.patientInfo.weight / ((reportData.patientInfo.height/100) ** 2)).toFixed(1)} ${(() => {
+const bmi = (reportData.patientInfo.weight / ((reportData.patientInfo.height/100) ** 2)).toFixed(1);
+if(bmi < 18.5) return '(偏瘦)';
+if(bmi < 24) return '(正常)';
+if(bmi < 28) return '(超重)';
+return '(肥胖)';
+})()}
 
-【核心评分】
-自评量表：${reportData.scoreData.selfTotal}分 | AI 评估：${reportData.scoreData.aiTotal}分
+【核心评分总览】
+• BBS 自评量表总分：${reportData.scoreData.selfTotal}分（满分 100）
+  - 睡眠效率：${reportData.selfReportData.find(item => item.item.includes('实际睡者时长'))?.score || 'N/A'}分
+  - 睡眠质量：${reportData.selfReportData.filter(item => item.dimension === '睡眠质量').reduce((sum, item) => sum + parseFloat(item.score)||0, 0)}分（满分 46）
+  - 睡眠干扰：${reportData.selfReportData.filter(item => item.dimension === '睡眠干扰').reduce((sum, item) => sum + parseFloat(item.score)||0, 0)}分（满分 48）
 
-【危险项警示】${reportData.warningData.length > 0 ? '\n' + reportData.warningData.map(item => `⚠️ ${item}`).join('\n') : '✅ 无明显危险项'}
+• BBS-AI 评估量表总分：${reportData.scoreData.aiTotal}分（满分 100）
+  - 睡眠风险：${reportData.aiReportData.filter(item => item.dimension === '睡眠风险').reduce((sum, item) => sum + parseFloat(item.score)||0, 0)}分（满分 34）
+  - 睡眠事件：${reportData.aiReportData.filter(item => item.dimension === '睡眠事件').reduce((sum, item) => sum + parseFloat(item.score)||0, 0)}分（满分 32）
+  - 睡眠概况：${reportData.aiReportData.filter(item => item.dimension === '睡眠概况').reduce((sum, item) => sum + parseFloat(item.score)||0, 0)}分（满分 34）
 
-【数据详情】
-自评关键项：${reportData.selfReportData.filter(item => parseFloat(item.score) < 5).slice(0, 5).map(item => `${item.item}(${item.score}分)`).join('、') || '无明显低分项'}
-AI 关键项：${reportData.aiReportData.filter(item => parseFloat(item.score) < 5).slice(0, 5).map(item => `${item.item}(${item.score}分)`).join('、') || '无明显低分项'}
+【危险项警示】${reportData.warningData.length > 0 ? 
+'\n⚠️ 发现以下高风险项（需立即关注）：' + reportData.warningData.map(item => `\n   • ${item}`).join('') : 
+'\n✅ 未检测到明显危险项'}
 
-【输出要求】
-1. 重点突出危险项和低分项目
-2. 建议具体可执行，避免空话
-3. 语言通俗，患者能理解
-4. 严格按以下格式，每部分 100-150 字：
+【关键异常数据】
+自评低分项（≤3 分）：
+${reportData.selfReportData.filter(item => parseFloat(item.score) <= 3).length > 0 ? 
+  reportData.selfReportData.filter(item => parseFloat(item.score) <= 3).map(item => 
+    `   • ${item.item}：${item.score}分（${item.rating}）`
+  ).join('\n') : '   无明显低分项'}
+
+AI 评估低分项（≤3 分）：
+${reportData.aiReportData.filter(item => parseFloat(item.score) <= 3).length > 0 ? 
+  reportData.aiReportData.filter(item => parseFloat(item.score) <= 3).map(item => 
+    `   • ${item.item}：${item.score}分（${item.level}）`
+  ).join('\n') : '   无明显低分项'}
+
+【综合分析维度】
+请从以下六个维度进行系统性分析：
+1. 睡眠连续性：入睡时间、夜间觉醒、早醒情况
+2. 睡眠结构：深度睡眠占比、睡眠效率
+3. 生理指标：血氧、心率变异性、呼吸状况
+4. 行为模式：翻身频次、睡姿、躯体活动
+5. 主观感受：疲劳度、睡眠质量自评
+6. 潜在风险：危险项、慢性缺氧、心血管负担
+
+【输出格式与内容要求】
+请严格按照以下四部分结构输出，**每部分 200-300 字**，总字数 800-1000 字：
 
 一、整体睡眠质量评估
-[综合评分解读，一句话总结质量等级]
+【写作要点】
+• 综合解读自评和 AI 评估总分，说明属于哪个等级（优/良/中/差/非常差）
+• 概括性描述睡眠的整体状况（如"睡眠片段化严重"、"深度睡眠不足"等）
+• 指出最核心的 1-2 个问题（如入睡困难、维持困难、早醒等）
+• 评估对日间功能的可能影响（疲劳、注意力不集中等）
+【示例开头】"根据综合评估，您的睡眠质量属于'中等偏下'水平。自评得分 61.5 分，AI 评估仅 46 分，两者差异提示您可能存在主观感受与客观数据不一致的情况..."
 
-二、主要问题识别  
-[列出 2-3 个最突出的问题，按严重程度排序]
+二、主要问题识别
+【写作要点】
+• 按严重程度列出 3-4 个核心问题，每个问题包含：
+  - 问题名称（如"入睡潜伏期延长"）
+  - 具体数据支持（如"入睡时间>30 分钟"）
+  - 可能的原因分析（如"睡前使用电子设备、焦虑等"）
+  - 对健康的影响（如"导致睡眠效率下降、日间疲劳"）
+• 优先排序：危险项 > 低分项 > 一般异常
+【示例格式】"1. 深度睡眠严重不足（仅占 5%）：正常成年人深度睡眠应占 15-25%，您的深度睡眠时长显著偏低。这可能与年龄增长、睡眠环境不佳、睡前过度兴奋等因素有关。长期深度睡眠不足会影响身体修复、免疫力下降和记忆巩固..."
 
 三、改善建议
-[给出 2-3 条最优先的可执行建议]
+【写作要点】
+• 给出 4-5 条具体、可执行的建议，按优先级排序
+• 每条建议包含：具体措施 + 执行方法 + 预期效果
+• 区分短期应急措施和长期调理方案
+• 建议要可量化、可追踪（如"固定 23:00 上床"而非"早睡"）
+【分类建议】
+• 睡眠卫生：环境优化、作息规律、饮食调整
+• 放松技巧：呼吸训练、冥想、渐进式肌肉放松
+• 认知调整：减少对失眠的焦虑、建立正确睡眠认知
+• 医疗干预：何时需要就医、可能需要做的检查
+【示例格式】"1. 建立固定的睡眠时间表：建议您每天 22:30 开始准备睡觉（洗漱、调暗灯光），23:00 准时上床，早上 6:30 起床。周末也尽量保持同一时间，前后误差不超过 30 分钟。坚持 2-4 周后，您的生物钟会逐渐适应这个节奏..."
 
-四、风险警示
-[如有危险项则重点说明，无则写"暂无特殊风险"]`;
+四、风险警示与随访建议
+【写作要点】
+• 如有危险项（⚠️标记），必须重点强调其严重性和紧迫性
+• 说明可能导致的健康后果（如心血管疾病、代谢紊乱等）
+• 给出明确的就医指征（什么情况下必须看医生）
+• 建议复查时间和监测指标
+• 如无危险项，也要提醒需要持续关注的预警信号
+【示例格式】"⚠️ 高度风险提示：您存在'呼吸暂停持续时间≥40 秒'的情况，这可能是阻塞性睡眠呼吸暂停（OSA）的表现。OSA 会增加高血压、冠心病、脑卒中的风险。建议您尽快到睡眠专科就诊，进行多导睡眠监测（PSG），必要时进行呼吸机治疗..."
+
+【语言风格要求】
+1. 专业性：使用规范的医学术语，但要解释清楚
+2. 同理心：语气温暖、鼓励，避免制造焦虑
+3. 可读性：句子简短，逻辑清晰，重点加粗
+4. 实用性：建议要落地，让患者知道具体怎么做
+5. 科学性：基于数据说话，不夸大不恐吓
+
+【注意事项】
+• 避免使用绝对化表述（如"一定"、"肯定"），改用"可能"、"建议"
+• 对于超出健康管理范围的问题，明确建议就医
+• 不要替代医生诊断，而是提供健康指导和决策支持
+• 如果数据之间存在矛盾（如自评和 AI 评估差异大），要指出并分析原因`;
                 
                 // 调用AI API生成分析报告
                 const aiResponse = await callAIAPI(aiPrompt);
