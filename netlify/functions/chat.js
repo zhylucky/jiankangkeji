@@ -60,7 +60,7 @@ exports.handler = async function(event, context) {
       messages: messages,
       stream: false,
       // 性能优化参数
-      max_tokens: 2000,  // 支持生成更详细的健康报告（800-1000 字中文约需 1500-2000 tokens）
+      max_tokens: 1500,  // 支持生成更详细的健康报告（800-1000 字中文约需 1500-2000 tokens）
       temperature: 0.6,  // 适度的创造性，保证专业性的同时有一定灵活性
       top_p: 0.85,       // 平衡集中性和多样性
       presence_penalty: 0.1,  // 轻微降低重复
