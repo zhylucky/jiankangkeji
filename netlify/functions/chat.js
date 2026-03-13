@@ -54,59 +54,70 @@ exports.handler = async function(event, context) {
       throw new Error('API密钥未配置，请在Netlify环境变量中设置SILICONFLOW_API_KEY或AI_API_KEY');
     }
     
-    // 构建请求参数
+    // 构建请求参数 - 优化响应速度
     const requestBody = {
       model: model || 'Qwen/Qwen3-8B',
       messages: messages,
       stream: false,
-      // 性能优化参数
-      max_tokens: 1500,  // 限制最大token数以提高响应速度
-      temperature: 0.7,  // 适度的创造性
-      top_p: 0.9        // nucleus采样
+      // 性能优化参数 - 更严格的限制以提高响应速度
+      max_tokens: 1200,  // 进一步降低最大 token 数
+      temperature: 0.5,  // 降低随机性，提高响应速度
+      top_p: 0.8,        // 更集中的采样
+      presence_penalty: 0.1,  // 降低重复
+      frequency_penalty: 0.3  // 减少冗余内容
     };
-    
-    // 明确关闭思考模式（如果API支持）
+        
+    // 明确关闭思考模式和其他耗时功能
     if (model && model.includes('Qwen')) {
-      // 阿里云Qwen模型可能支持的参数
       requestBody.enable_search = false;  // 禁用搜索
       requestBody.enable_thinking = false;  // 禁用思考模式
+      requestBody.stream = false;  // 确保非流式
     }
     
-    // 增加重试机制
-    const maxRetries = 3;
-    const baseDelay = 1000; // 1秒基础延迟
-    
+    // 增加重试机制 - 优化超时和重试策略
+    const maxRetries = 2;  // 减少重试次数，避免长时间等待
+    const baseDelay = 500; // 降低基础延迟
+        
     let lastError;
-    
+        
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        console.log(`[Attempt ${attempt + 1}/${maxRetries + 1}] Calling SiliconFlow API...`);
+            
         // 使用环境变量中的 API Key
         const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${apiKey}`,
+            'User-Agent': 'Netlify-Function-Client'
           },
           body: JSON.stringify(requestBody),
-          // 设置超时时间
-          timeout: 30000 // 30秒超时
+          // Netlify Functions 最大超时是 60 秒，设置为 55 秒留有余量
+          timeout: 55000
         });
 
         // 获取响应文本用于错误处理
         const responseText = await response.text();
         
         if (!response.ok) {
-          throw new Error(`SiliconFlow API请求失败: ${response.status} ${response.statusText} - ${responseText}`);
+          // 504 超时错误，快速重试
+          if (response.status === 504 || response.status === 503) {
+            console.warn(`[Attempt ${attempt + 1}] Server timeout (${response.status}), will retry...`);
+            throw new Error(`SiliconFlow API 暂时不可用：${response.status}`);
+          }
+          throw new Error(`SiliconFlow API请求失败：${response.status} ${response.statusText} - ${responseText}`);
         }
-
+    
         // 解析响应
         let data;
         try {
           data = JSON.parse(responseText);
+          console.log(`[Success] API response received in ${Date.now()}ms`);
         } catch (parseError) {
-          throw new Error(`响应数据解析失败: ${parseError.message} - 原始响应: ${responseText}`);
+          throw new Error(`响应数据解析失败：${parseError.message} - 原始响应：${responseText}`);
         }
-        
+            
         return {
           statusCode: 200,
           headers,
@@ -114,18 +125,28 @@ exports.handler = async function(event, context) {
         };
       } catch (error) {
         lastError = error;
-        console.error(`Attempt ${attempt + 1} failed:`, error);
-        
+        console.error(`[Attempt ${attempt + 1}] Failed:`, error.message);
+            
         // 如果不是最后一次尝试，等待后重试
         if (attempt < maxRetries) {
-          const delay = baseDelay * Math.pow(2, attempt); // 指数退避
+          // 使用固定延迟而不是指数退避，加快重试速度
+          const delay = baseDelay * (attempt + 1);
+          console.log(`[Retry] Waiting ${delay}ms before next attempt...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     }
-    
-    // 所有重试都失败了
-    throw lastError;
+        
+    // 所有重试都失败了，返回友好错误信息
+    console.error('[Final] All attempts failed:', lastError.message);
+    return {
+      statusCode: 504,  // 使用 504 网关超时代码，让前端知道是超时问题
+      headers,
+      body: JSON.stringify({ 
+        error: 'AI 服务响应超时，请稍后重试',
+        details: lastError.message
+      })
+    };
     
   } catch (error) {
     console.error('Function执行错误:', error);
