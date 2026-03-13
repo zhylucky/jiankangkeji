@@ -1162,28 +1162,19 @@
         // 显示错误信息
         function displayAIError(errorMessage) {
             const errorContainers = document.querySelectorAll('.ai-analysis-error');
-            
             errorContainers.forEach(container => {
+                // 根据错误类型提供友好的错误信息
                 let friendlyMessage = errorMessage;
-                let showRetry = false;
                 
                 if (errorMessage.includes('504') || errorMessage.includes('timeout') || errorMessage.includes('超时')) {
-                    friendlyMessage = 'AI服务响应较慢，请稍后重试。';
-                    showRetry = true;
-                } else if (errorMessage.includes('502') || errorMessage.includes('Bad Gateway')) {
-                    friendlyMessage = 'AI服务暂时不可用，请稍后重试。';
-                    showRetry = true;
+                    friendlyMessage = 'AI服务响应超时，请稍后重试。系统会自动重试，您也可以手动点击按钮重新生成。';
                 } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('网络')) {
                     friendlyMessage = '网络连接异常，请检查网络后重试。';
                 } else if (errorMessage.includes('API密钥')) {
                     friendlyMessage = 'AI服务配置错误，请联系管理员检查API密钥配置。';
                 }
                 
-                if (showRetry) {
-                    container.innerHTML = `<p>${friendlyMessage}</p><p style="margin-top:10px;font-size:13px;color:#666;">您可以点击上方按钮重新生成</p>`;
-                } else {
-                    container.textContent = friendlyMessage;
-                }
+                container.textContent = friendlyMessage;
                 container.style.display = 'block';
             });
         }
@@ -1228,9 +1219,9 @@
             }
             
             // 超时与重试设置（参考ai-chat.js中的稳定实现）
-            const timeoutMs = 60000; // 60s 超时，增加超时时间
-            const maxRetries = 2;    // 最多重试 2 次
-            const baseDelay = 2000;   // 初始退避 2000ms
+            const timeoutMs = 30000; // 15s 超时（与ai-chat.js保持一致）
+            const maxRetries = 3;    // 最多重试 3 次
+            const baseDelay = 1000;   // 初始退避 1000ms（与ai-chat.js保持一致）
 
             const doRequest = async (attempt) => {
                 // 超时控制
