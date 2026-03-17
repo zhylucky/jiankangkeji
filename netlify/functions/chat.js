@@ -65,9 +65,9 @@ exports.handler = async function(event, context) {
         messages: messages,
         stream: false,
         // GLM 推荐参数 - 优化响应速度
-        max_tokens: 4192,   // 降低到 8K，足够生成 1500 字报告
-        temperature: 0.6,   // GLM 推荐值
-        top_p: 0.7,
+        max_tokens: 8192,   // 降低到 8K，足够生成 1500 字报告
+        temperature: 0.7,   // GLM 推荐值
+        top_p: 0.9,
         thinking: {
           type: 'disabled'  // 暂时关闭思考模式以加快响应
         }

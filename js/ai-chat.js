@@ -32,10 +32,10 @@ class AIChatWidget {
             this.searchConfig = this.config.searchSettings || {};
             this.searchEnabled = this.searchConfig.enabled || false;
         } else {
-            // 使用默认配置（仅 GLM）
+            // 使用默认配置
             this.functionUrl = '/.netlify/functions/chat';
-            this.model = 'glm-4.7-flash';
-            this.systemPrompt = '你是一个专业的健康管理 AI 助手。';
+            this.model = 'Qwen/Qwen3-8B';
+            this.systemPrompt = '你是一个专业的健康管理AI助手。';
             this.maxMessages = 10;
             this.searchEnabled = false;
         }
@@ -410,31 +410,13 @@ ${searchResults}
 
                 // 可重试的错误
                 if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
-                    // 检测 429 速率限制错误
-                    const isRateLimit = err?.message?.includes('429') || err?.message?.includes('速率限制');
-                    
-                    if (isRateLimit) {
-                        // 429 错误需要更长的等待时间（至少 60 秒）
-                        const rateLimitDelay = 60000; // 60 秒
-                        console.warn(`⚠️ 触发 API 速率限制，等待 ${rateLimitDelay/1000} 秒后重试...`);
-                        await new Promise(r => setTimeout(r, rateLimitDelay));
-                        return doRequest(attempt + 1);
-                    } else {
-                        // 其他错误使用指数退避
-                        const delay = baseDelay * Math.pow(2, attempt);
-                        console.log(`重试 [${attempt + 1}/${maxRetries}]: 等待 ${delay}ms`);
-                        await new Promise(r => setTimeout(r, delay));
-                        return doRequest(attempt + 1);
-                    }
+                    const delay = baseDelay * Math.pow(2, attempt); // 指数退避
+                    await new Promise(r => setTimeout(r, delay));
+                    return doRequest(attempt + 1);
                 }
 
                 // 其他错误或超过重试次数
-                const isRateLimit = err?.message?.includes('429') || err?.message?.includes('速率限制');
-                if (isRateLimit) {
-                    throw new Error('AI 服务繁忙（429），请稍后 1-2 分钟再试。系统会自动重试...');
-                } else {
-                    throw new Error(`调用 AI 失败：${err.message}`);
-                }
+                throw new Error(`调用AI失败: ${err.message}`);
             }
         };
 
