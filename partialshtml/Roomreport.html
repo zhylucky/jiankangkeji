@@ -1328,10 +1328,10 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                         
             console.log('AI API 调用 URL:', functionUrl);
                         
-            // 极限优化 - 适配 Netlify 免费版 10 秒超时
-            const timeoutMs = 8000;  // 8 秒超时（给 Netlify 留 2 秒缓冲）
-            const maxRetries = 5;    // 5 次快速重试
-            const baseDelay = 500;   // 0.5 秒超快重试
+            // 优化超时配置 - Netlify Functions 支持最长 60 秒
+            const timeoutMs = 55000;  // 55 秒超时（给 Netlify 60 秒限制留 5 秒余量）
+            const maxRetries = 2;     // 2 次重试（总等待时间约 3 分钟）
+            const baseDelay = 1000;   // 1 秒延迟重试
 
             const doRequest = async (attempt) => {
                 console.log(`AI API请求 (尝试 ${attempt + 1}/${maxRetries + 1})`);
@@ -1368,11 +1368,11 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                     if (!response.ok) {
                         const errorText = await response.text().catch(() => '');
                         
-                        // 特殊处理 504 超时错误 - Netlify 免费版限制
+                        // 特殊处理 504 超时错误
                         if (response.status === 504 || response.status === 503) {
-                            const errorMsg = `Netlify Functions 免费版限制 10 秒超时。建议：升级 Netlify Pro($19/月，60 秒超时)`;
+                            const errorMsg = `AI 服务响应超时，可能是 GLM API 繁忙或网络延迟。将在 ${baseDelay/1000} 秒后重试...`;
                             console.error(`AI 服务网关超时 [${response.status}]: ${errorMsg}`);
-                            throw new Error('AI 服务响应超时（Netlify 免费版限制），正在快速重试...');
+                            throw new Error('AI 服务响应超时，正在重试...');
                         }
                         
                         throw new Error(`AI 服务请求失败 (${response.status}): ${errorText || response.statusText}`);
