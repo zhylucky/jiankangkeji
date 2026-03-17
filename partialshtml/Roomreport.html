@@ -531,6 +531,46 @@
         .ai-analysis-content li {
             margin-bottom: 8px;
         }
+        
+        /* AI 分析报告排版优化 */
+        .ai-analysis-content {
+            line-height: 1.8;
+            color: #2c3e50;
+        }
+        
+        .report-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a6dcc;
+            margin: 24px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e6f0ff;
+        }
+        
+        .report-paragraph {
+            margin: 12px 0;
+            text-align: justify;
+            line-height: 1.8;
+            color: #34495e;
+        }
+        
+        .report-paragraph:first-child {
+            margin-top: 0;
+        }
+        
+        /* 打印样式优化 */
+        @media print {
+            .report-section-title {
+                font-size: 16px;
+                page-break-after: avoid;
+            }
+            
+            .report-paragraph {
+                font-size: 13px;
+                line-height: 1.6;
+                margin: 8px 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1153,22 +1193,73 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
             }
         }
         
-        // 显示AI分析结果
+        // 显示 AI 分析结果 - 优化排版，清理 Markdown 符号
         function displayAIAnalysis(content) {
             const contentContainers = document.querySelectorAll('.ai-analysis-content');
             contentContainers.forEach(container => {
-                // 将Markdown格式的标题转换为HTML格式
                 let formattedContent = content;
-                formattedContent = formattedContent.replace(/### (.*?)(\n|$)/g, '<h4>$1</h4>');
-                formattedContent = formattedContent.replace(/一、(.*?)(\n|$)/g, '<h5>一、$1</h5>');
-                formattedContent = formattedContent.replace(/二、(.*?)(\n|$)/g, '<h5>二、$1</h5>');
-                formattedContent = formattedContent.replace(/三、(.*?)(\n|$)/g, '<h5>三、$1</h5>');
-                formattedContent = formattedContent.replace(/四、(.*?)(\n|$)/g, '<h5>四、$1</h5>');
-                formattedContent = formattedContent.replace(/\n\n/g, '</p><p>');
-                formattedContent = formattedContent.replace(/\n/g, '<br>');
-                formattedContent = '<p>' + formattedContent + '</p>';
-                
-                container.innerHTML = formattedContent;
+                        
+                // 第 1 步：清理所有 Markdown 符号
+                formattedContent = formattedContent.replace(/^#{1,6}\s+/gm, '');  // 移除 # 标题
+                formattedContent = formattedContent.replace(/^\*\s+/gm, '');      // 移除 * 列表
+                formattedContent = formattedContent.replace(/^-\s+/gm, '');       // 移除 - 列表
+                formattedContent = formattedContent.replace(/^\d+\.\s+/gm, '');   // 移除数字列表
+                formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '$1');  // 移除 **加粗**
+                formattedContent = formattedContent.replace(/\*(.*?)\*/g, '$1');      // 移除 *斜体*
+                formattedContent = formattedContent.replace(/`([^`]+)`/g, '$1');      // 移除 `代码`
+                        
+                // 第 2 步：智能分段和格式化
+                const paragraphs = [];
+                const lines = formattedContent.split('\n');
+                let currentParagraph = [];
+                        
+                for (let line of lines) {
+                    const trimmedLine = line.trim();
+                            
+                    // 空行表示段落结束
+                    if (trimmedLine === '') {
+                        if (currentParagraph.length > 0) {
+                            paragraphs.push(currentParagraph.join(' '));
+                            currentParagraph = [];
+                        }
+                    } else {
+                        // 识别标题行（一、二、三、四 或 整体、问题、建议、风险）
+                        if (/^[一二三四][、.]/.test(trimmedLine) || 
+                            /^(整体|主要|改善|风险|评估|问题|建议|警示)/.test(trimmedLine)) {
+                            // 保存当前段落
+                            if (currentParagraph.length > 0) {
+                                paragraphs.push(currentParagraph.join(' '));
+                                currentParagraph = [];
+                            }
+                            // 作为标题单独处理
+                            paragraphs.push(`<h4 class="report-section-title">${trimmedLine}</h4>`);
+                        } else {
+                            // 普通内容行
+                            currentParagraph.push(trimmedLine);
+                        }
+                    }
+                }
+                        
+                // 添加最后一个段落
+                if (currentParagraph.length > 0) {
+                    paragraphs.push(currentParagraph.join(' '));
+                }
+                        
+                // 第 3 步：构建 HTML
+                let html = '';
+                for (let para of paragraphs) {
+                    if (para.startsWith('<h4')) {
+                        html += para;
+                    } else {
+                        // 清理多余空格，保留标点符号
+                        para = para.replace(/\s+/g, ' ').trim();
+                        if (para.length > 0) {
+                            html += `<p class="report-paragraph">${para}</p>`;
+                        }
+                    }
+                }
+                        
+                container.innerHTML = html;
                 container.style.display = 'block';
             });
         }
