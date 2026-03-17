@@ -48,55 +48,30 @@ exports.handler = async function(event, context) {
       throw new Error('messages 参数无效或缺失');
     }
 
-    // 根据模型选择 API Key 和配置
-    let apiKey, baseUrl, requestBody;
+    // 检查环境变量（优先使用SILICONFLOW_API_KEY，兼容AI_API_KEY）
+    const apiKey = process.env.SILICONFLOW_API_KEY || process.env.AI_API_KEY;
+    if (!apiKey) {
+      throw new Error('API密钥未配置，请在Netlify环境变量中设置SILICONFLOW_API_KEY或AI_API_KEY');
+    }
+    
+    // 构建请求参数 - 精简版（控制成本）
+    const requestBody = {
+      model: model || 'Qwen/Qwen3-8B',
+      messages: messages,
+      stream: false,
+      // 性能优化参数 - 平衡质量和成本
+      max_tokens: 1200,  // 支持 600-700 字中文报告（约 900-1400 tokens）
+      temperature: 0.5,  // 降低随机性，提高响应速度和稳定性
+      top_p: 0.8,        // 更集中的采样
+      presence_penalty: 0.1,  // 轻微降低重复
+      frequency_penalty: 0.3  // 适度减少冗余，控制字数
+    };
         
-    if (model && model.includes('glm')) {
-      // ===== GLM-4.7-Flash 配置 =====
-      apiKey = process.env.ZHIPU_API_KEY;
-      if (!apiKey) {
-        throw new Error('GLM API 密钥未配置，请设置 ZHIPU_API_KEY');
-      }
-          
-      baseUrl = 'https://open.bigmodel.cn/api/paas/v4';
-          
-      requestBody = {
-        model: 'glm-4.7-flash',
-        messages: messages,
-        stream: false,
-        // GLM 推荐参数 - 优化响应速度
-        max_tokens: 8192,   // 降低到 8K，足够生成 1500 字报告
-        temperature: 0.7,   // GLM 推荐值
-        top_p: 0.9,
-        thinking: {
-          type: 'disabled'  // 暂时关闭思考模式以加快响应
-        }
-      };
-          
-      console.log('[GLM] Using GLM-4.7-Flash model');
-          
-    } else {
-      // ===== SiliconFlow (Qwen) 配置 - 保持兼容 =====
-      apiKey = process.env.SILICONFLOW_API_KEY || process.env.AI_API_KEY;
-      if (!apiKey) {
-        throw new Error('API 密钥未配置，请设置 SILICONFLOW_API_KEY 或 AI_API_KEY');
-      }
-          
-      baseUrl = 'https://api.siliconflow.cn/v1';
-          
-      requestBody = {
-        model: model || 'Qwen/Qwen3-8B',
-        messages: messages,
-        stream: false,
-        // 性能优化参数 - 平衡质量和成本
-        max_tokens: 1200,  // 支持 600-700 字中文报告（约 900-1400 tokens）
-        temperature: 0.5,  // 降低随机性，提高响应速度和稳定性
-        top_p: 0.8,        // 更集中的采样
-        presence_penalty: 0.1,  // 轻微降低重复
-        frequency_penalty: 0.3  // 适度减少冗余，控制字数
-      };
-          
-      console.log('[SiliconFlow] Using Qwen model:', model || 'Qwen/Qwen3-8B');
+    // 明确关闭思考模式和其他耗时功能
+    if (model && model.includes('Qwen')) {
+      requestBody.enable_search = false;  // 禁用搜索
+      requestBody.enable_thinking = false;  // 禁用思考模式
+      requestBody.stream = false;  // 确保非流式
     }
     
     // 增加重试机制 - 优化超时和重试策略
@@ -107,10 +82,10 @@ exports.handler = async function(event, context) {
         
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const apiName = model && model.includes('glm') ? 'GLM' : 'SiliconFlow';
-        console.log(`[Attempt ${attempt + 1}/${maxRetries + 1}] Calling ${apiName} API...`);
+        console.log(`[Attempt ${attempt + 1}/${maxRetries + 1}] Calling SiliconFlow API...`);
             
-        const response = await fetch(`${baseUrl}/chat/completions`, {
+        // 使用环境变量中的 API Key
+        const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -3,46 +3,24 @@
  * 在这里配置您的API密钥和其他设置
  */
 
-// AI 服务配置 - 双模型并行版本
+// AI服务配置 - 安全版本
 const AI_CHAT_CONFIG = {
-    // 不再需要 apiKey，通过 Netlify Function 代理调用
+    // 不再需要 apiKey，通过Netlify Function代理调用
     functionUrl: '/.netlify/functions/chat', // Netlify Function 地址
-    model: 'glm-4.7-flash', // 默认使用 GLM-4.7-Flash（零成本）
-    
-    // 支持双模型切换
-    supportedModels: {
-        glm: 'glm-4.7-flash',      // 智谱AI GLM-4.7-Flash（推荐，免费）
-        qwen: 'Qwen/Qwen3-8B'      // SiliconFlow Qwen3-8B（备用）
-    },
+    model: 'Qwen/Qwen3-8B', 
     
     // 聊天配置
     maxMessages: 9, // 减少上下文消息数量以提高响应速度
     
-    // API 性能优化参数
+    // API性能优化参数
     performanceSettings: {
-        maxTokens: 2500, // 限制最大 token 数以提高响应速度
+        maxTokens: 2500, // 限制最大token数以提高响应速度
         temperature: 0.7, // 适度的创造性
-        topP: 0.9, // nucleus 采样
+        topP: 0.9, // nucleus采样
         enableThinking: true, // 明确关闭思考模式
         // 仅本地演示使用：不调用后端，模拟流式输出与按钮状态
         demoMode: false,
         enableSSEDemo: false
-    },
-    
-    // GLM 特定配置
-    glmSettings: {
-        apiProvider: 'zhipu',  // 'siliconflow' | 'zhipu'
-        apiKeyEnv: 'ZHIPU_API_KEY',  // Netlify 环境变量名
-        baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
-        
-        // GLM 特有参数
-        enableThinking: true,  // 启用深度思考模式
-        thinkingType: 'enabled',  // 'enabled' | 'disabled'
-        
-        // 性能优化
-        maxTokens: 65536,  // GLM 支持更大输出
-        temperature: 0.7,  // GLM 推荐值
-        topP: 0.9
     },
 
     // 联网搜索配置（默认禁用以提升响应速度）
