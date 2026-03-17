@@ -1296,10 +1296,10 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                 }
             }
             
-            // 获取配置或使用默认值
+            // 获取配置或使用默认值（仅 GLM）
             const config = window.AI_CHAT_CONFIG || {
                 functionUrl: '/.netlify/functions/chat',
-                model: 'Qwen/Qwen3-8B'
+                model: 'glm-4.7-flash'
             };
             
             // 构建消息历史 - 简化系统提示以减少 token 消耗
@@ -1370,7 +1370,7 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                         
                         // 特殊处理 504 超时错误 - Netlify 免费版限制
                         if (response.status === 504 || response.status === 503) {
-                            const errorMsg = `Netlify Functions 免费版限制 10 秒超时，GLM 响应时间过长。建议：1.升级 Netlify Pro($19/月，60 秒超时) 2.切换到 Qwen/Qwen3-8B（更快但付费）`;
+                            const errorMsg = `Netlify Functions 免费版限制 10 秒超时。建议：升级 Netlify Pro($19/月，60 秒超时)`;
                             console.error(`AI 服务网关超时 [${response.status}]: ${errorMsg}`);
                             throw new Error('AI 服务响应超时（Netlify 免费版限制），正在快速重试...');
                         }
@@ -1416,11 +1416,22 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
 
                     // 可重试的错误
                     if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
-                        // 使用超快指数退避（0.5s, 1s, 2s, 4s, 8s）
-                        const delay = baseDelay * Math.pow(2, attempt);
-                        console.log(`超快重试 [${attempt + 1}/${maxRetries}]: 等待 ${delay}ms 后重试...`);
-                        await new Promise(r => setTimeout(r, delay));
-                        return doRequest(attempt + 1);
+                        // 检测 429 速率限制错误
+                        const isRateLimit = errorText?.includes('429') || errorText?.includes('速率限制');
+                        
+                        if (isRateLimit) {
+                            // 429 错误需要更长的等待时间（至少 60 秒）
+                            const rateLimitDelay = 60000; // 60 秒
+                            console.warn(`⚠️ 触发 API 速率限制，等待 ${rateLimitDelay/1000} 秒后重试...`);
+                            await new Promise(r => setTimeout(r, rateLimitDelay));
+                            return doRequest(attempt + 1);
+                        } else {
+                            // 其他错误使用快速重试
+                            const delay = baseDelay * Math.pow(2, attempt);
+                            console.log(`快速重试 [${attempt + 1}/${maxRetries}]: 等待 ${delay}ms 后重试...`);
+                            await new Promise(r => setTimeout(r, delay));
+                            return doRequest(attempt + 1);
+                        }
                     }
 
                     // 其他错误或超过重试次数
