@@ -56,7 +56,7 @@ exports.handler = async function(event, context) {
     
     // 构建请求参数 - 精简版（控制成本）
     const requestBody = {
-      model: model || 'Qwen/Qwen3-8B',
+      model: model || 'Qwen/Qwen2.5-8B-Instruct',
       messages: messages,
       stream: false,
       // 性能优化参数 - 平衡质量和成本
