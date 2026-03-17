@@ -64,13 +64,12 @@ exports.handler = async function(event, context) {
         model: 'glm-4.7-flash',
         messages: messages,
         stream: false,
-        // GLM 推荐参数 - 优化响应速度
-        max_tokens: 8192,   // 降低到 8K，足够生成 1500 字报告
-        temperature: 0.7,   // GLM 推荐值
-        top_p: 0.9,
-        thinking: {
-          type: 'disabled'  // 暂时关闭思考模式以加快响应
-        }
+        // GLM 推荐参数 - 极限优化响应速度（适配 Netlify 免费版 10 秒限制）
+        max_tokens: 4096,   // 进一步降低到 4K，生成 800-1000 字足够
+        temperature: 0.5,   // 降低随机性，提高速度和稳定性
+        top_p: 0.7,         // 更集中的采样，加快响应
+        presence_penalty: 0.0,  // 不惩罚存在性
+        frequency_penalty: 0.5  // 增加重复惩罚，减少冗余内容
       };
           
       console.log('[GLM] Using GLM-4.7-Flash model');

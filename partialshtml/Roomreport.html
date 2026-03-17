@@ -1113,10 +1113,10 @@
                 // 收集报告数据
                 const reportData = collectReportData();
                 
-                // 构造发送给 AI 的提示 - GLM-4.7-Flash 快速响应版
-                const aiPrompt = `【角色】专业睡眠健康专家，为医生和患者提供精准的健康指导。
+                // 构造发送给 AI 的提示 - GLM-4.7-Flash 极速响应版（适配 Netlify 10 秒限制）
+                const aiPrompt = `【角色】专业睡眠健康专家。请用**最简洁的语言**生成健康分析报告。
 
-【任务】基于以下数据生成一份**专业健康分析报告**，建议 1000-1200 字，简洁明了。
+【任务】基于以下数据生成一份**精简版报告**，严格控制在 800 字以内。
 
 【基础信息】
 ${reportData.patientInfo.name} | ${reportData.patientInfo.gender} | ${reportData.patientInfo.age}岁
@@ -1135,7 +1135,7 @@ return b<18.5?'(偏瘦)':b<24?'(正常)':b<28?'(超重)':'(肥胖)';
 自评：${reportData.selfReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).map(i => `${i.item}(${i.score}分)`).join('; ') || '无'}
 AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).map(i => `${i.item}(${i.score}分)`).join('; ') || '无'}
 
-【输出要求】严格按以下四部分，**每部分 200-300 字**，总字数 1000-1200 字：
+【输出要求】严格按以下四部分，**每部分 150-200 字**，总字数 800-1000 字：
 
 一、整体睡眠质量评估
 • 综合解读自评和 AI 评估总分，判定等级（优/良/中/差/非常差）
@@ -1328,10 +1328,10 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                         
             console.log('AI API 调用 URL:', functionUrl);
                         
-            // 优化后的超时与重试设置 - 适配 Netlify 免费计划
-            const timeoutMs = 50000; // 50 秒（Netlify 免费版最大 10 秒，但我们可以多试几次）
-            const maxRetries = 4;    // 增加到 4 次重试
-            const baseDelay = 1000;  // 降低基础延迟到 1 秒
+            // 极限优化 - 适配 Netlify 免费版 10 秒超时
+            const timeoutMs = 8000;  // 8 秒超时（给 Netlify 留 2 秒缓冲）
+            const maxRetries = 5;    // 5 次快速重试
+            const baseDelay = 500;   // 0.5 秒超快重试
 
             const doRequest = async (attempt) => {
                 console.log(`AI API请求 (尝试 ${attempt + 1}/${maxRetries + 1})`);
@@ -1368,10 +1368,11 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                     if (!response.ok) {
                         const errorText = await response.text().catch(() => '');
                         
-                        // 特殊处理 504 超时错误
+                        // 特殊处理 504 超时错误 - Netlify 免费版限制
                         if (response.status === 504 || response.status === 503) {
-                            console.error('AI 服务网关超时，可能是 Netlify Function 或上游 API 问题');
-                            throw new Error('AI 服务响应超时，请稍后重试');
+                            const errorMsg = `Netlify Functions 免费版限制 10 秒超时，GLM 响应时间过长。建议：1.升级 Netlify Pro($19/月，60 秒超时) 2.切换到 Qwen/Qwen3-8B（更快但付费）`;
+                            console.error(`AI 服务网关超时 [${response.status}]: ${errorMsg}`);
+                            throw new Error('AI 服务响应超时（Netlify 免费版限制），正在快速重试...');
                         }
                         
                         throw new Error(`AI 服务请求失败 (${response.status}): ${errorText || response.statusText}`);
@@ -1415,9 +1416,9 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
 
                     // 可重试的错误
                     if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
-                        // 使用快速重试策略（1s, 2s, 3s）
-                        const delay = baseDelay * (attempt + 1);
-                        console.log(`快速重试：将在 ${delay}ms 后重试（第${attempt + 2}次尝试）...`);
+                        // 使用超快指数退避（0.5s, 1s, 2s, 4s, 8s）
+                        const delay = baseDelay * Math.pow(2, attempt);
+                        console.log(`超快重试 [${attempt + 1}/${maxRetries}]: 等待 ${delay}ms 后重试...`);
                         await new Promise(r => setTimeout(r, delay));
                         return doRequest(attempt + 1);
                     }
