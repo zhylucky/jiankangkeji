@@ -3,15 +3,16 @@
  * 在这里配置您的API密钥和其他设置
  */
 
-// AI 服务配置 - 仅使用 GLM-4.7-Flash（零成本，无速率限制）
+// AI 服务配置 - 双模型并行版本
 const AI_CHAT_CONFIG = {
     // 不再需要 apiKey，通过 Netlify Function 代理调用
     functionUrl: '/.netlify/functions/chat', // Netlify Function 地址
     model: 'glm-4.7-flash', // 默认使用 GLM-4.7-Flash（零成本）
     
-    // 支持的模型（仅 GLM）
+    // 支持双模型切换
     supportedModels: {
-        glm: 'glm-4.7-flash'      // 智谱 AI GLM-4.7-Flash（唯一推荐，免费无限制）
+        glm: 'glm-4.7-flash',      // 智谱AI GLM-4.7-Flash（推荐，免费）
+        qwen: 'Qwen/Qwen3-8B'      // SiliconFlow Qwen3-8B（备用）
     },
     
     // 聊天配置
@@ -30,7 +31,7 @@ const AI_CHAT_CONFIG = {
     
     // GLM 特定配置
     glmSettings: {
-        apiProvider: 'zhipu',  // 智谱 AI
+        apiProvider: 'zhipu',  // 'siliconflow' | 'zhipu'
         apiKeyEnv: 'ZHIPU_API_KEY',  // Netlify 环境变量名
         baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
         
@@ -43,11 +44,6 @@ const AI_CHAT_CONFIG = {
         temperature: 0.7,  // GLM 推荐值
         topP: 0.9
     },
-    
-    // 已弃用的模型（保留作为历史记录）
-    // deprecatedModels: {
-    //     qwen: 'Qwen/Qwen3-8B'  // SiliconFlow Qwen3-8B（已弃用，因速率限制问题）
-    // }
 
     // 联网搜索配置（默认禁用以提升响应速度）
     searchSettings: {
