@@ -58,14 +58,14 @@ exports.handler = async function(event, context) {
         throw new Error('GLM API 密钥未配置，请设置 ZHIPU_API_KEY');
       }
           
-      baseUrl = 'https://open.bigmodel.cn/api/paas/v4';
+      baseUrl = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
           
       requestBody = {
         model: 'glm-4.7-flash',
         messages: messages,
         stream: false,
         // GLM 推荐参数 - 优化响应速度
-        max_tokens: 8192,   // 降低到 8K，足够生成 1500 字报告
+        max_tokens: 4192,   // 降低到 8K，足够生成 1500 字报告
         temperature: 0.7,   // GLM 推荐值
         top_p: 0.9,
         thinking: {

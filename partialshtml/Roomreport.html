@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
         <link rel="icon" href="../images/dzlogo.png">
 <head>
@@ -1314,24 +1314,15 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                 }
             ];
                         
-            // 确保使用正确的 URL 路径
-            let functionUrl = config.functionUrl;
-            if (functionUrl.startsWith('/.netlify/functions/')) {
-                // 在本地开发环境中，可能需要使用完整的路径
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    functionUrl = `http://localhost:8888${functionUrl}`;
-                } else {
-                    // 生产环境使用完整域名
-                    functionUrl = `https://jkkeji.netlify.app${functionUrl}`;
-                }
-            }
+            // 使用相对路径，让浏览器自动处理域名（与 AI 智能助手保持一致）
+            const functionUrl = config.functionUrl || '/.netlify/functions/chat';
                         
             console.log('AI API 调用 URL:', functionUrl);
                         
-            // 优化后的超时与重试设置 - 适配 Netlify 免费计划
-            const timeoutMs = 50000; // 50 秒（Netlify 免费版最大 10 秒，但我们可以多试几次）
-            const maxRetries = 4;    // 增加到 4 次重试
-            const baseDelay = 1000;  // 降低基础延迟到 1 秒
+            // 超时与重试设置（与 ai-chat.js 保持一致）
+            const timeoutMs = 30000; // 30 秒超时
+            const maxRetries = 3;    // 最多重试 3 次
+            const baseDelay = 1000;   // 初始退避 1000ms
 
             const doRequest = async (attempt) => {
                 console.log(`AI API请求 (尝试 ${attempt + 1}/${maxRetries + 1})`);
@@ -1410,20 +1401,36 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                     console.error(`AI 请求错误 (尝试 ${attempt + 1}, 耗时：${duration}ms):`, err.message);
 
                     const isAbort = err?.name === 'AbortError';
-                    const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
-                    const isNetwork = /Failed to fetch|NetworkError|网络|fetch|504|503/i.test(err?.message || '');
-
+                    const isTimeout = /超时 |timeout|AbortError/i.test(err?.message || '');
+                    const isNetwork = /Failed to fetch|NetworkError|网络 |fetch|504|503/i.test(err?.message || '');
+                    
                     // 可重试的错误
                     if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
-                        // 使用快速重试策略（1s, 2s, 3s）
-                        const delay = baseDelay * (attempt + 1);
-                        console.log(`快速重试：将在 ${delay}ms 后重试（第${attempt + 2}次尝试）...`);
-                        await new Promise(r => setTimeout(r, delay));
-                        return doRequest(attempt + 1);
+                        // 检测 429 速率限制错误
+                        const isRateLimit = err?.message?.includes('429') || err?.message?.includes('速率限制');
+                                            
+                        if (isRateLimit) {
+                            // 429 错误需要更长的等待时间（至少 60 秒）
+                            const rateLimitDelay = 60000; // 60 秒
+                            console.warn(`⚠️ 触发 API 速率限制，等待 ${rateLimitDelay/1000} 秒后重试...`);
+                            await new Promise(r => setTimeout(r, rateLimitDelay));
+                            return doRequest(attempt + 1);
+                        } else {
+                            // 其他错误使用指数退避
+                            const delay = baseDelay * Math.pow(2, attempt);
+                            console.log(`重试 [${attempt + 1}/${maxRetries}]: 等待 ${delay}ms`);
+                            await new Promise(r => setTimeout(r, delay));
+                            return doRequest(attempt + 1);
+                        }
                     }
-
+                    
                     // 其他错误或超过重试次数
-                    throw new Error(`AI 服务调用失败：${err.message}`);
+                    const isRateLimit = err?.message?.includes('429') || err?.message?.includes('速率限制');
+                    if (isRateLimit) {
+                        throw new Error('AI 服务繁忙（429），请稍后 1-2 分钟再试。系统会自动重试...');
+                    } else {
+                        throw new Error(`AI 服务调用失败：${err.message}`);
+                    }
                 }
             };
 
