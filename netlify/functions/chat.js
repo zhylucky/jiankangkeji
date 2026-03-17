@@ -48,29 +48,31 @@ exports.handler = async function(event, context) {
       throw new Error('messages 参数无效或缺失');
     }
 
-    // ===== GLM-4.7-Flash 配置（唯一支持的模型）=====
-    let apiKey, baseUrl, requestBody;
-        
-    apiKey = process.env.ZHIPU_API_KEY;
+    // 检查环境变量（优先使用SILICONFLOW_API_KEY，兼容AI_API_KEY）
+    const apiKey = process.env.SILICONFLOW_API_KEY || process.env.AI_API_KEY;
     if (!apiKey) {
-      throw new Error('GLM API 密钥未配置，请设置 ZHIPU_API_KEY');
+      throw new Error('API密钥未配置，请在Netlify环境变量中设置SILICONFLOW_API_KEY或AI_API_KEY');
     }
-            
-    baseUrl = 'https://open.bigmodel.cn/api/paas/v4';
-            
-    requestBody = {
-      model: 'glm-4.7-flash',
+    
+    // 构建请求参数 - 精简版（控制成本）
+    const requestBody = {
+      model: model || 'Qwen/Qwen3-8B',
       messages: messages,
       stream: false,
-      // GLM 推荐参数 - 极速优化响应速度（适配 Netlify 免费版 10 秒限制）
-      max_tokens: 4096,   // 进一步降低到 4K，生成 800-1000 字足够
-      temperature: 0.5,   // 降低随机性，提高速度和稳定性
-      top_p: 0.7,         // 更集中的采样，加快响应
-      presence_penalty: 0.0,  // 不惩罚存在性
-      frequency_penalty: 0.5  // 增加重复惩罚，减少冗余内容
+      // 性能优化参数 - 平衡质量和成本
+      max_tokens: 1200,  // 支持 600-700 字中文报告（约 900-1400 tokens）
+      temperature: 0.5,  // 降低随机性，提高响应速度和稳定性
+      top_p: 0.8,        // 更集中的采样
+      presence_penalty: 0.1,  // 轻微降低重复
+      frequency_penalty: 0.3  // 适度减少冗余，控制字数
     };
-            
-    console.log('[GLM] Using GLM-4.7-Flash model');
+        
+    // 明确关闭思考模式和其他耗时功能
+    if (model && model.includes('Qwen')) {
+      requestBody.enable_search = false;  // 禁用搜索
+      requestBody.enable_thinking = false;  // 禁用思考模式
+      requestBody.stream = false;  // 确保非流式
+    }
     
     // 增加重试机制 - 优化超时和重试策略
     const maxRetries = 2;  // 减少重试次数，避免长时间等待
@@ -80,9 +82,10 @@ exports.handler = async function(event, context) {
         
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[Attempt ${attempt + 1}/${maxRetries + 1}] Calling GLM API...`);
+        console.log(`[Attempt ${attempt + 1}/${maxRetries + 1}] Calling SiliconFlow API...`);
             
-        const response = await fetch(`${baseUrl}/chat/completions`, {
+        // 使用环境变量中的 API Key
+        const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -101,9 +104,9 @@ exports.handler = async function(event, context) {
           // 504 超时错误，快速重试
           if (response.status === 504 || response.status === 503) {
             console.warn(`[Attempt ${attempt + 1}] Server timeout (${response.status}), will retry...`);
-            throw new Error(`GLM API 暂时不可用：${response.status}`);
+            throw new Error(`SiliconFlow API 暂时不可用：${response.status}`);
           }
-          throw new Error(`GLM API请求失败：${response.status} ${response.statusText} - ${responseText}`);
+          throw new Error(`SiliconFlow API请求失败：${response.status} ${response.statusText} - ${responseText}`);
         }
     
         // 解析响应
