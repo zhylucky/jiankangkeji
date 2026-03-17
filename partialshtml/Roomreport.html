@@ -1073,10 +1073,10 @@
                 // 收集报告数据
                 const reportData = collectReportData();
                 
-                // 构造发送给 AI 的提示 - GLM-4.7-Flash优化版（利用长输出优势）
-                const aiPrompt = `【角色】专业睡眠健康专家，为医生和患者提供详细专业的健康指导。
+                // 构造发送给 AI 的提示 - GLM-4.7-Flash 快速响应版
+                const aiPrompt = `【角色】专业睡眠健康专家，为医生和患者提供精准的健康指导。
 
-【任务】基于以下数据生成一份**详尽的专业健康分析报告**，建议 1500-2000 字。
+【任务】基于以下数据生成一份**专业健康分析报告**，建议 1000-1200 字，简洁明了。
 
 【基础信息】
 ${reportData.patientInfo.name} | ${reportData.patientInfo.gender} | ${reportData.patientInfo.age}岁
@@ -1095,7 +1095,7 @@ return b<18.5?'(偏瘦)':b<24?'(正常)':b<28?'(超重)':'(肥胖)';
 自评：${reportData.selfReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).map(i => `${i.item}(${i.score}分)`).join('; ') || '无'}
 AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).map(i => `${i.item}(${i.score}分)`).join('; ') || '无'}
 
-【输出要求】严格按以下四部分，**每部分 300-400 字**，总字数 1500-2000 字：
+【输出要求】严格按以下四部分，**每部分 200-300 字**，总字数 1000-1200 字：
 
 一、整体睡眠质量评估
 • 综合解读自评和 AI 评估总分，判定等级（优/良/中/差/非常差）
@@ -1237,10 +1237,10 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                         
             console.log('AI API 调用 URL:', functionUrl);
                         
-            // 优化后的超时与重试设置
-            const timeoutMs = 60000; // 增加到 60 秒，给 Netlify Function 足够时间
-            const maxRetries = 3;    // 最多重试 3 次
-            const baseDelay = 2000;  // 基础延迟 2 秒
+            // 优化后的超时与重试设置 - 适配 Netlify 免费计划
+            const timeoutMs = 50000; // 50 秒（Netlify 免费版最大 10 秒，但我们可以多试几次）
+            const maxRetries = 4;    // 增加到 4 次重试
+            const baseDelay = 1000;  // 降低基础延迟到 1 秒
 
             const doRequest = async (attempt) => {
                 console.log(`AI API请求 (尝试 ${attempt + 1}/${maxRetries + 1})`);
@@ -1324,9 +1324,9 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
 
                     // 可重试的错误
                     if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
-                        // 使用线性退避而不是指数退避，更快重试
-                        const delay = baseDelay + (attempt * 1000);
-                        console.log(`将在 ${delay}ms 后重试...`);
+                        // 使用快速重试策略（1s, 2s, 3s）
+                        const delay = baseDelay * (attempt + 1);
+                        console.log(`快速重试：将在 ${delay}ms 后重试（第${attempt + 2}次尝试）...`);
                         await new Promise(r => setTimeout(r, delay));
                         return doRequest(attempt + 1);
                     }

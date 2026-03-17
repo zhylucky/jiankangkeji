@@ -64,12 +64,12 @@ exports.handler = async function(event, context) {
         model: 'glm-4.7-flash',
         messages: messages,
         stream: false,
-        // GLM 推荐参数
-        max_tokens: 65536,  // 支持超长输出
+        // GLM 推荐参数 - 优化响应速度
+        max_tokens: 8192,   // 降低到 8K，足够生成 1500 字报告
         temperature: 0.7,   // GLM 推荐值
         top_p: 0.9,
         thinking: {
-          type: 'enabled'  // 启用深度思考（可选）
+          type: 'disabled'  // 暂时关闭思考模式以加快响应
         }
       };
           
