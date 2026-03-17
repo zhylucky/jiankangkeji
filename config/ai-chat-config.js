@@ -33,7 +33,7 @@ const AI_CHAT_CONFIG = {
     glmSettings: {
         apiProvider: 'zhipu',  // 'siliconflow' | 'zhipu'
         apiKeyEnv: 'ZHIPU_API_KEY',  // Netlify 环境变量名
-        baseUrl: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+        baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
         
         // GLM 特有参数
         enableThinking: true,  // 启用深度思考模式

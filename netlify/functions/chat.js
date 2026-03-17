@@ -58,7 +58,7 @@ exports.handler = async function(event, context) {
         throw new Error('GLM API 密钥未配置，请设置 ZHIPU_API_KEY');
       }
           
-      baseUrl = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+      baseUrl = 'https://open.bigmodel.cn/api/paas/v4';
           
       requestBody = {
         model: 'glm-4.7-flash',
