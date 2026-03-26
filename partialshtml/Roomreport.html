@@ -362,6 +362,39 @@
                 padding: 10px;
                 margin: 0;
             }
+            
+            /* 打印时减少标题周围空白 */
+            .section-title {
+                margin: 12px 0 8px;
+                font-size: 16px;
+            }
+            
+            /* 打印时 AI 分析容器更紧凑 */
+            .ai-analysis-container {
+                margin: 10px 0;
+                padding: 10px;
+            }
+            
+            /* 打印时 AI 标题更紧凑 */
+            .ai-analysis-content h5 {
+                margin: 10px 0 6px 0;
+                font-size: 15px;
+            }
+            
+            /* 打印时段落间距更小 */
+            .ai-analysis-content p {
+                margin: 6px 0;
+            }
+            
+            /* 打印时列表更紧凑 */
+            .ai-analysis-content ul {
+                margin: 8px 0;
+            }
+            
+            /* 打印时部分之间间距减小 */
+            .ai-section-wrapper {
+                margin-bottom: 12px;
+            }
             /* Use page-break-before on subsequent .page elements to avoid a trailing blank page */
             .page + .page {
                 page-break-before: always;
@@ -447,8 +480,8 @@
         
         /* AI 分析报告样式 */
         .ai-analysis-container {
-            margin: 20px 0;
-            padding: 20px;
+            margin: 15px 0;
+            padding: 15px;
             background-color: #f8f9fa;
             border-radius: 8px;
             border-left: 4px solid #1a6dcc;
@@ -491,22 +524,27 @@
                 
         .ai-analysis-content h5 {
             color: #1a6dcc;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 600;
-            margin: 20px 0 12px 0;
-            padding-bottom: 8px;
+            margin: 15px 0 8px 0;
+            padding-bottom: 6px;
             border-bottom: 2px solid #e6f0ff;
         }
                 
         .ai-analysis-content p {
-            margin: 10px 0;
+            margin: 8px 0;
             text-align: justify;
             line-height: 1.8;
         }
-                
+        
         .ai-analysis-content ul {
-            margin: 12px 0;
+            margin: 10px 0;
             padding-left: 20px;
+        }
+        
+        /* 部分之间的分隔 */
+        .ai-section-wrapper {
+            margin-bottom: 16px;
         }
                 
         .ai-analysis-content li {
@@ -1163,11 +1201,24 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                 // 移除所有 Markdown 标题符号 (#, ##, ###, ####)
                 formattedContent = formattedContent.replace(/^#{1,4}\s*/gm, '');
                         
-                // 将中文数字标题转换为 h5 标签
-                formattedContent = formattedContent.replace(/一、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">一、$1</h5>');
-                formattedContent = formattedContent.replace(/二、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">二、$1</h5>');
-                formattedContent = formattedContent.replace(/三、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">三、$1</h5>');
-                formattedContent = formattedContent.replace(/四、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">四、$1</h5>');
+                // 将中文数字标题转换为 h5 标签，并包裹在 section wrapper 中
+                formattedContent = formattedContent.replace(/一、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">一、$1</h5>');
+                formattedContent = formattedContent.replace(/二、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">二、$1</h5>');
+                formattedContent = formattedContent.replace(/三、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">三、$1</h5>');
+                formattedContent = formattedContent.replace(/四、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">四、$1</h5>');
+                        
+                // 在每个 section 结束时添加闭合标签（除了最后一个）
+                const sections = formattedContent.split(/<div class="ai-section-wrapper">/);
+                if (sections.length > 1) {
+                    formattedContent = sections.map((section, index) => {
+                        if (index > 0 && !section.includes('<h5 class="ai-section-title">')) {
+                            return '</div>' + section;
+                        }
+                        return section;
+                    }).join('');
+                    // 在最后添加闭合标签
+                    formattedContent += '</div>';
+                }
                         
                 // 处理列表项（• 或 - 开头）
                 formattedContent = formattedContent.replace(/[•\-]\s*([^\n]+)/g, '<li class="ai-list-item">$1</li>');
@@ -1175,13 +1226,13 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                 // 处理加粗文本 (**text**)
                 formattedContent = formattedContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                         
-                // 处理换行和段落
+                // 处理换行和段落 - 改进段落分割逻辑
                 const paragraphs = formattedContent.split(/\n\n+/);
                 formattedContent = paragraphs.map(p => {
                     p = p.trim();
                     if (!p) return '';
                     // 如果已经是 HTML 标签开头，直接使用
-                    if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<li')) {
+                    if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<li') || p.startsWith('<div')) {
                         return p;
                     }
                     // 普通文本包装为段落
