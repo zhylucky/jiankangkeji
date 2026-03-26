@@ -388,12 +388,18 @@
             
             /* 打印时列表更紧凑 */
             .ai-analysis-content ul {
-                margin: 8px 0;
+                margin: 8px 0 8px 15px;
+            }
+            
+            /* 打印时列表项间距减小 */
+            .ai-analysis-content ul li {
+                margin: 6px 0;
             }
             
             /* 打印时部分之间间距减小 */
             .ai-section-wrapper {
                 margin-bottom: 12px;
+                padding-bottom: 8px;
             }
             /* Use page-break-before on subsequent .page elements to avoid a trailing blank page */
             .page + .page {
@@ -538,13 +544,37 @@
         }
         
         .ai-analysis-content ul {
-            margin: 10px 0;
+            margin: 10px 0 10px 20px;
+            padding-left: 0;
+            list-style-type: none;
+        }
+        
+        .ai-analysis-content ul li {
+            margin: 8px 0;
+            position: relative;
             padding-left: 20px;
+            line-height: 1.7;
+        }
+        
+        .ai-analysis-content ul li::before {
+            content: '•';
+            color: #1a6dcc;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
         }
         
         /* 部分之间的分隔 */
         .ai-section-wrapper {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+        
+        .ai-section-wrapper:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
         }
                 
         .ai-analysis-content li {
@@ -1201,45 +1231,50 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
                 // 移除所有 Markdown 标题符号 (#, ##, ###, ####)
                 formattedContent = formattedContent.replace(/^#{1,4}\s*/gm, '');
                         
-                // 将中文数字标题转换为 h5 标签，并包裹在 section wrapper 中
-                formattedContent = formattedContent.replace(/一、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">一、$1</h5>');
-                formattedContent = formattedContent.replace(/二、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">二、$1</h5>');
-                formattedContent = formattedContent.replace(/三、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">三、$1</h5>');
-                formattedContent = formattedContent.replace(/四、([^\n]+)(\n|$)/g, '<div class="ai-section-wrapper"><h5 class="ai-section-title">四、$1</h5>');
+                // 先处理中文数字标题，在每个标题前添加特殊标记
+                formattedContent = formattedContent.replace(/^(一、[^\n]+)/gm, '\n###SECTION_START###<h5 class="ai-section-title">$1</h5>');
+                formattedContent = formattedContent.replace(/^(二、[^\n]+)/gm, '\n###SECTION_START###<h5 class="ai-section-title">$1</h5>');
+                formattedContent = formattedContent.replace(/^(三、[^\n]+)/gm, '\n###SECTION_START###<h5 class="ai-section-title">$1</h5>');
+                formattedContent = formattedContent.replace(/^(四、[^\n]+)/gm, '\n###SECTION_START###<h5 class="ai-section-title">$1</h5>');
                         
-                // 在每个 section 结束时添加闭合标签（除了最后一个）
-                const sections = formattedContent.split(/<div class="ai-section-wrapper">/);
-                if (sections.length > 1) {
-                    formattedContent = sections.map((section, index) => {
-                        if (index > 0 && !section.includes('<h5 class="ai-section-title">')) {
-                            return '</div>' + section;
-                        }
-                        return section;
-                    }).join('');
-                    // 在最后添加闭合标签
-                    formattedContent += '</div>';
-                }
-                        
-                // 处理列表项（• 或 - 开头）
-                formattedContent = formattedContent.replace(/[•\-]\s*([^\n]+)/g, '<li class="ai-list-item">$1</li>');
+                // 处理列表项（• 或 - 或数字 + 顿号开头）
+                // 匹配：• item、- item、1、item、2、item 等格式
+                formattedContent = formattedContent.replace(/^[\s]*[•\-]\s*([^\n]+)/gm, '<li class="ai-list-item">$1</li>');
+                formattedContent = formattedContent.replace(/^[\s]*(\d+)、([^\n]+)/gm, '<li class="ai-list-item">$1、$2</li>');
                         
                 // 处理加粗文本 (**text**)
                 formattedContent = formattedContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                         
-                // 处理换行和段落 - 改进段落分割逻辑
+                // 按空行分割段落
                 const paragraphs = formattedContent.split(/\n\n+/);
                 formattedContent = paragraphs.map(p => {
                     p = p.trim();
                     if (!p) return '';
+                    
+                    // 如果是 section 标记，直接返回
+                    if (p.startsWith('###SECTION_START###')) {
+                        return p.replace('###SECTION_START###', '<div class="ai-section-wrapper">');
+                    }
+                    
                     // 如果已经是 HTML 标签开头，直接使用
                     if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<li') || p.startsWith('<div')) {
                         return p;
                     }
+                    
+                    // 检查是否包含多个<li>，如果是则包裹在<ul>中
+                    if (p.includes('<li class="ai-list-item">')) {
+                        // 将所有连续的<li>包裹在<ul>中
+                        p = p.replace(/(<li class="ai-list-item">.*?<\/li>\n?)+/gs, (match) => {
+                            return '<ul class="ai-list">' + match + '</ul>';
+                        });
+                        return p;
+                    }
+                    
                     // 普通文本包装为段落
                     return `<p class="ai-paragraph">${p}</p>`;
-                }).join('');
+                }).join('\n');
                         
-                // 将所有连续的<li>包裹在<ul>中
+                // 最后清理：确保所有<li>都在<ul>内
                 formattedContent = formattedContent.replace(/(<li class="ai-list-item">.*?<\/li>\n?)+/gs, (match) => {
                     return '<ul class="ai-list">' + match + '</ul>';
                 });
