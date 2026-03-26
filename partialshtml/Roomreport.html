@@ -445,7 +445,7 @@
             }
         }
         
-        /* AI分析报告样式 */
+        /* AI 分析报告样式 */
         .ai-analysis-container {
             margin: 20px 0;
             padding: 20px;
@@ -453,19 +453,19 @@
             border-radius: 8px;
             border-left: 4px solid #1a6dcc;
         }
-        
+                
         .ai-analysis-loading {
             display: none;
             text-align: center;
             padding: 20px;
         }
-        
+                
         .ai-analysis-loading .loading-text {
             color: #1a6dcc;
             font-size: 16px;
             margin-bottom: 10px;
         }
-        
+                
         .loading-progress-bar {
             width: 100%;
             background-color: #e9ecef;
@@ -474,7 +474,7 @@
             margin: 0 auto;
             max-width: 300px;
         }
-        
+                
         .loading-progress {
             width: 0%;
             height: 100%;
@@ -482,13 +482,39 @@
             border-radius: 4px;
             transition: width 0.3s;
         }
-        
+                
         .ai-analysis-content {
             display: none;
-            line-height: 1.6;
+            line-height: 1.8;
             color: #333;
         }
-        
+                
+        .ai-analysis-content h5 {
+            color: #1a6dcc;
+            font-size: 17px;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e6f0ff;
+        }
+                
+        .ai-analysis-content p {
+            margin: 10px 0;
+            text-align: justify;
+            line-height: 1.8;
+        }
+                
+        .ai-analysis-content ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+                
+        .ai-analysis-content li {
+            margin: 8px 0;
+            position: relative;
+            padding-left: 8px;
+        }
+                
         .ai-analysis-error {
             display: none;
             color: #dc3545;
@@ -496,7 +522,7 @@
             background-color: #f8d7da;
             border-radius: 4px;
         }
-        
+                
         .generate-ai-analysis-btn {
             background: linear-gradient(135deg, #1a6dcc 0%, #0d4d9c 100%);
             color: white;
@@ -509,27 +535,17 @@
             transition: all 0.3s;
             margin-top: 10px;
         }
-        
+                
         .generate-ai-analysis-btn:hover {
             opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(26,109,204,0.2);
         }
-        
+                
         .generate-ai-analysis-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-        }
-        
-        .ai-analysis-content h4 {
-            color: #1a6dcc;
-            margin-bottom: 10px;
-        }
-        
-        .ai-analysis-content ul {
-            padding-left: 20px;
-        }
-        
-        .ai-analysis-content li {
-            margin-bottom: 8px;
+            transform: none;
         }
     </style>
 </head>
@@ -1137,21 +1153,46 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
             }
         }
         
-        // 显示AI分析结果
+        // 显示 AI 分析结果
         function displayAIAnalysis(content) {
             const contentContainers = document.querySelectorAll('.ai-analysis-content');
             contentContainers.forEach(container => {
-                // 将Markdown格式的标题转换为HTML格式
+                // 清理 Markdown 格式的标题符号，转换为 HTML 格式
                 let formattedContent = content;
-                formattedContent = formattedContent.replace(/### (.*?)(\n|$)/g, '<h4>$1</h4>');
-                formattedContent = formattedContent.replace(/一、(.*?)(\n|$)/g, '<h5>一、$1</h5>');
-                formattedContent = formattedContent.replace(/二、(.*?)(\n|$)/g, '<h5>二、$1</h5>');
-                formattedContent = formattedContent.replace(/三、(.*?)(\n|$)/g, '<h5>三、$1</h5>');
-                formattedContent = formattedContent.replace(/四、(.*?)(\n|$)/g, '<h5>四、$1</h5>');
-                formattedContent = formattedContent.replace(/\n\n/g, '</p><p>');
-                formattedContent = formattedContent.replace(/\n/g, '<br>');
-                formattedContent = '<p>' + formattedContent + '</p>';
-                
+                        
+                // 移除所有 Markdown 标题符号 (#, ##, ###, ####)
+                formattedContent = formattedContent.replace(/^#{1,4}\s*/gm, '');
+                        
+                // 将中文数字标题转换为 h5 标签
+                formattedContent = formattedContent.replace(/一、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">一、$1</h5>');
+                formattedContent = formattedContent.replace(/二、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">二、$1</h5>');
+                formattedContent = formattedContent.replace(/三、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">三、$1</h5>');
+                formattedContent = formattedContent.replace(/四、([^\n]+)(\n|$)/g, '<h5 class="ai-section-title">四、$1</h5>');
+                        
+                // 处理列表项（• 或 - 开头）
+                formattedContent = formattedContent.replace(/[•\-]\s*([^\n]+)/g, '<li class="ai-list-item">$1</li>');
+                        
+                // 处理加粗文本 (**text**)
+                formattedContent = formattedContent.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                        
+                // 处理换行和段落
+                const paragraphs = formattedContent.split(/\n\n+/);
+                formattedContent = paragraphs.map(p => {
+                    p = p.trim();
+                    if (!p) return '';
+                    // 如果已经是 HTML 标签开头，直接使用
+                    if (p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<li')) {
+                        return p;
+                    }
+                    // 普通文本包装为段落
+                    return `<p class="ai-paragraph">${p}</p>`;
+                }).join('');
+                        
+                // 将所有连续的<li>包裹在<ul>中
+                formattedContent = formattedContent.replace(/(<li class="ai-list-item">.*?<\/li>\n?)+/gs, (match) => {
+                    return '<ul class="ai-list">' + match + '</ul>';
+                });
+                        
                 container.innerHTML = formattedContent;
                 container.style.display = 'block';
             });

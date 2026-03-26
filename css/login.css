@@ -193,7 +193,25 @@ body, html {
 .login-card {
     display: flex;
     width: 950px;
-    height: 580px;
+    height: 620px;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    /* 玻璃态效果 */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    position: relative;
+    z-index: 2;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+/* 认证卡片（登录/注册通用） */
+.auth-card {
+    display: flex;
+    width: 950px;
+    height: 680px;
     border-radius: var(--radius-xl);
     overflow: hidden;
     /* 玻璃态效果 */
@@ -265,19 +283,454 @@ body, html {
 .right-panel {
     width: 45%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: var(--spacing-3xl);
+    padding: var(--spacing-2xl) var(--spacing-2xl) var(--spacing-lg);
     box-sizing: border-box;
     background: rgba(255, 255, 255, 0.9);
     position: relative;
+    min-height: 500px;
 }
 
-.login-box { 
+/* 切换标签样式 */
+.auth-tabs {
+    display: flex;
+    position: relative;
+    margin-bottom: var(--spacing-xl);
+    background: rgba(247, 250, 252, 0.8);
+    border-radius: var(--radius-full);
+    padding: 4px;
+    width: 280px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    border-radius: var(--radius-full);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tab-btn i {
+    font-size: 1rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+}
+
+.tab-btn.active i {
+    transform: scale(1.1);
+}
+
+/* 悬停效果增强 */
+.tab-btn:hover {
+    color: var(--primary-color);
+    background: rgba(0, 180, 216, 0.05);
+}
+
+.tab-btn:hover i {
+    transform: scale(1.15);
+}
+
+/* 点击效果 */
+.tab-btn:active {
+    transform: scale(0.95);
+}
+
+.tab-slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: var(--primary-gradient);
+    border-radius: var(--radius-full);
+    /* 使用 cubic-bezier 实现更自然的滑动效果 */
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 2px 8px rgba(0, 180, 216, 0.3);
+    will-change: transform;
+}
+
+/* 表单容器 */
+.auth-form-container {
+    width: 100%;
+    /* 延长过渡时间，使用更平滑的缓动曲线 */
+    transition: 
+        opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+}
+
+.auth-form-container.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.auth-form-container:not(.active) {
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+}
+
+/* 淡出动画类 */
+.auth-form-container.fade-out {
+    transform: translateX(-20px);
+}
+
+.login-box, .register-box { 
     width: 100%; 
     padding: var(--spacing-md);
     position: relative;
     z-index: 2;
+}
+
+.register-box h2 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+    font-weight: 700;
+}
+
+/* 进度条样式 */
+.progress-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+    padding: 0 10px;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all var(--transition-fast);
+}
+
+.progress-step.active .step-number {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 4px 10px rgba(26, 109, 204, 0.3);
+}
+
+.progress-step.completed .step-number {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+}
+
+.step-text {
+    font-size: 11px;
+    color: #999;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.progress-step.active .step-text {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.progress-step.completed .step-text {
+    color: #4caf50;
+}
+
+.progress-line {
+    flex: 1;
+    height: 2px;
+    background: #e0e0e0;
+    margin: 0 8px;
+    position: relative;
+    top: -10px;
+}
+
+.progress-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0%;
+    background: var(--primary-gradient);
+    transition: width var(--transition-normal);
+}
+
+.progress-step.completed + .progress-line::after {
+    width: 100%;
+}
+
+/* 验证码组合框 */
+.verification-code-group {
+    display: flex;
+    gap: 8px;
+}
+
+.verification-code-group .input-wrapper {
+    flex: 1;
+}
+
+.get-code-btn {
+    padding: 12px 16px;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    box-shadow: var(--shadow-md);
+}
+
+.get-code-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.get-code-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #ccc;
+}
+
+/* 密码强度指示器 */
+.password-strength {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.strength-bar {
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.strength-bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0%;
+    background: #e0e0e0;
+    transition: all var(--transition-fast);
+}
+
+.strength-bar.weak::after {
+    width: 33%;
+    background: #f44336;
+}
+
+.strength-bar.medium::after {
+    width: 66%;
+    background: #ff9800;
+}
+
+.strength-bar.strong::after {
+    width: 100%;
+    background: #4caf50;
+}
+
+.strength-text {
+    color: #666;
+    font-size: 11px;
+}
+
+/* 错误提示 */
+.input-error {
+    color: #f44336;
+    font-size: 11px;
+    margin-top: 4px;
+    min-height: 16px;
+}
+
+/* 协议勾选 */
+.terms-checkbox {
+    margin: 16px 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-top: 2px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+}
+
+.checkbox-label a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+/* 返回登录链接 */
+.back-to-login {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.back-to-login p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.back-to-login a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.back-to-login a:hover {
+    text-decoration: underline;
+}
+
+/* 成功状态 */
+.success-icon {
+    text-align: center;
+    margin: 20px 0 15px;
+}
+
+.success-icon i {
+    font-size: 60px;
+    color: #4caf50;
+    animation: bounceIn 0.6s;
+}
+
+@keyframes bounceIn {
+    0%, 20%, 40%, 60%, 80%, 100% {
+        animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    0% {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+    }
+    20% {
+        transform: scale3d(1.1, 1.1, 1.1);
+    }
+    40% {
+        transform: scale3d(0.9, 0.9, 0.9);
+    }
+    60% {
+        transform: scale3d(1.03, 1.03, 1.03);
+    }
+    80% {
+        transform: scale3d(0.97, 0.97, 0.97);
+    }
+    100% {
+        opacity: 1;
+        transform: scale3d(1, 1, 1);
+    }
+}
+
+.success-title {
+    font-size: 20px;
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.success-message {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* 统一按钮样式 */
+.auth-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-lg);
+    background: var(--primary-gradient);
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.auth-btn:hover {
+    background: linear-gradient(135deg, #0077B6 0%, #005577 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 119, 182, 0.4);
+}
+
+.auth-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px rgba(0, 119, 182, 0.3);
+}
+
+.login-btn.pressed,
+.register-btn.pressed {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px rgba(0, 119, 182, 0.3);
+}
+
+.btn-icon {
+    transition: transform var(--transition-fast);
+}
+
+.auth-btn:hover .btn-icon {
+    transform: translateX(5px);
 }
 
 .login-box h2 { 
@@ -321,7 +774,7 @@ body, html {
 
 .input-group input { 
     width: 100%; 
-    padding: 16px 16px 16px 50px; 
+    padding: 16px 50px 16px 50px; 
     border: 2px solid var(--border-color); 
     border-radius: var(--radius-lg); 
     background-color: var(--bg-secondary); 
@@ -339,6 +792,29 @@ body, html {
 
 .input-group input:focus + .input-icon {
     color: var(--primary-color);
+}
+
+/* 密码可见性切换按钮 */
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    z-index: 10;
+    font-size: 1rem;
+    padding: 4px;
+    pointer-events: auto;
+}
+
+.password-toggle:hover {
+    color: var(--primary-color);
+}
+
+.password-toggle:active {
+    color: var(--secondary-color);
 }
 
 .form-footer { 
@@ -768,6 +1244,118 @@ body, html {
     }
 }
 
+/* 移动端响应式调整 */
+@media (max-width: 768px) {
+    .auth-card,
+    .login-card {
+        flex-direction: column;
+        height: auto;
+        width: 90%;
+        max-width: 500px;
+    }
+    
+    .left-panel {
+        display: none; /* 在小屏幕上隐藏插画 */
+        padding: 0;
+        min-height: 0;
+    }
+    
+    .right-panel {
+        width: 100%;
+        padding: var(--spacing-xl) var(--spacing-lg);
+        min-height: auto;
+    }
+    
+    .auth-tabs {
+        width: 240px;
+    }
+    
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .step-text {
+        font-size: 10px;
+    }
+    
+    .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    
+    .progress-container {
+        padding: 0 5px;
+    }
+    
+    .verification-code-group {
+        flex-direction: column;
+    }
+    
+    .get-code-btn {
+        width: 100%;
+        padding: 12px;
+    }
+    
+    .input-group input {
+        padding: 14px 14px 14px 45px;
+        font-size: 0.95rem;
+    }
+    
+    .input-icon {
+        left: 12px;
+        font-size: 16px;
+    }
+    
+    .login-box h2,
+    .register-box h2 {
+        font-size: 1.5rem;
+    }
+    
+    .auth-btn {
+        padding: 14px;
+        font-size: 1rem;
+    }
+}
+
+/* 小屏幕手机适配 */
+@media (max-width: 480px) {
+    .auth-card,
+    .login-card {
+        width: 95%;
+        max-width: none;
+    }
+    
+    .right-panel {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+    
+    .auth-tabs {
+        width: 200px;
+    }
+    
+    .tab-btn span {
+        display: none; /* 极小屏幕只显示图标 */
+    }
+    
+    .tab-btn {
+        padding: 12px;
+    }
+    
+    .step-text {
+        display: none; /* 隐藏步骤文字 */
+    }
+    
+    .progress-line {
+        display: none;
+    }
+    
+    .progress-step {
+        gap: 4px;
+    }
+}
+
 /* 减少动画偏好设置支持 */
 @media (prefers-reduced-motion: reduce) {
     .illustration-img {
@@ -778,16 +1366,22 @@ body, html {
         transform: none;
     }
     
-    .login-card {
+    .login-card,
+    .auth-card {
         transition: none;
     }
     
-    .login-card:hover {
+    .login-card:hover,
+    .auth-card:hover {
         transform: none;
     }
     
     .logo {
         animation: none;
+    }
+    
+    .tab-slider {
+        transition: none;
     }
     
     .toast,

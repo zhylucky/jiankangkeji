@@ -4,9 +4,10 @@
   "description": "健康管理中心官方网站",
   "main": "index.html",
   "scripts": {
-    "dev": "live-server",
+    "dev": "netlify dev",
+    "dev:legacy": "live-server",
     "build": "echo 'Static site - no build needed'",
-    "start": "live-server"
+    "start": "netlify dev"
   },
   "keywords": [
     "health",
@@ -20,7 +21,7 @@
     "live-server": "^1.2.2"
   },
   "dependencies": {
-    "node-fetch": "^2.7.0",
-    "@supabase/supabase-js": "^2.44.4"
+    "@supabase/supabase-js": "^2.44.4",
+    "node-fetch": "^2.7.0"
   }
 }

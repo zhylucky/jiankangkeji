@@ -32,39 +32,152 @@
 
     <!-- 主要内容区 -->
     <main class="login-main">
-        <div class="login-card glass-card">
+        <div class="auth-card glass-card">
             <!-- 左侧插画 -->
             <div class="left-panel">
                 <img src="../../images/login-bg.png" alt="医疗健康插画" class="illustration-img">
             </div>
-            <!-- 右侧登录表单 -->
+                
+            <!-- 右侧表单容器 -->
             <div class="right-panel">
-                <div class="login-box">
-                    <h2>登录-健康管理中心</h2>
-                    <form id="loginForm">
-                        <div class="input-group">
-                            <div class="input-wrapper">
-                                <i class="fas fa-user input-icon"></i>
-                                <input type="text" id="username" name="username" placeholder="账号" value="admin" required>
+                <!-- 切换标签 -->
+                <div class="auth-tabs">
+                    <div class="tab-btn active" data-tab="login">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>登录</span>
+                    </div>
+                    <div class="tab-btn" data-tab="register">
+                        <i class="fas fa-user-plus"></i>
+                        <span>注册</span>
+                    </div>
+                    <div class="tab-slider"></div>
+                </div>
+                    
+                <!-- 登录表单 -->
+                <div class="auth-form-container active" id="loginFormContainer">
+                    <div class="login-box">
+                        <h2>欢迎回来</h2>
+                        <form id="loginForm">
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-user input-icon"></i>
+                                    <input type="text" id="username" name="username" placeholder="账号" value="admin" required>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <input type="password" id="password" name="password" placeholder="密码" value="123456" required>
+                                </div>
+                            </div>
+                            <div class="form-footer">
+                                <label class="remember-me">
+                                    <input type="checkbox" id="remember" name="remember">
+                                    <span>记住我</span>
+                                </label>
+                                <a href="#">忘记密码？</a>
+                            </div>
+                            <button type="submit" class="auth-btn login-btn">登 录</button>
+                        </form>
+                    </div>
+                </div>
+                    
+                <!-- 注册表单 -->
+                <div class="auth-form-container" id="registerFormContainer" style="display: none;">
+                    <div class="register-box">
+                        <h2>创建账号</h2>
+                            
+                        <!-- 进度条 -->
+                        <div class="progress-container">
+                            <div class="progress-step active" data-step="1">
+                                <div class="step-number">1</div>
+                                <div class="step-text">验证手机</div>
+                            </div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="2">
+                                <div class="step-number">2</div>
+                                <div class="step-text">设置密码</div>
+                            </div>
+                            <div class="progress-line"></div>
+                            <div class="progress-step" data-step="3">
+                                <div class="step-number">3</div>
+                                <div class="step-text">完成</div>
                             </div>
                         </div>
-                        <div class="input-group">
-                            <div class="input-wrapper">
-                                <i class="fas fa-lock input-icon"></i>
-                                <input type="password" id="password" name="password" placeholder="密码" value="123456" required>
+                            
+                        <form id="registerForm">
+                            <!-- 步骤 1：手机验证 -->
+                            <div class="form-step" id="step1">
+                                <div class="input-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-mobile-alt input-icon"></i>
+                                        <input type="tel" id="phone" name="phone" placeholder="请输入手机号" maxlength="11" required>
+                                    </div>
+                                    <div class="input-error" id="phone-error"></div>
+                                </div>
+                                    
+                                <div class="input-group verification-code-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-shield-alt input-icon"></i>
+                                        <input type="text" id="verificationCode" name="verificationCode" placeholder="输入验证码" maxlength="6" required>
+                                    </div>
+                                    <button type="button" id="getCodeBtn" class="get-code-btn">获取验证码</button>
+                                </div>
+                                <div class="input-error" id="code-error"></div>
                             </div>
+                                
+                            <!-- 步骤 2：设置密码 -->
+                            <div class="form-step" id="step2" style="display: none;">
+                                <div class="input-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-lock input-icon"></i>
+                                        <input type="password" id="password" name="password" placeholder="请设置密码 (6-16 位)" minlength="6" maxlength="16">
+                                        <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                                    </div>
+                                    <div class="password-strength" id="passwordStrength">
+                                        <div class="strength-bar"></div>
+                                        <div class="strength-text">密码强度：未检测</div>
+                                    </div>
+                                </div>
+                                    
+                                <div class="input-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-lock input-icon"></i>
+                                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="请确认密码">
+                                        <i class="fas fa-eye password-toggle" id="confirmPasswordToggle"></i>
+                                    </div>
+                                    <div class="input-error" id="password-match-error"></div>
+                                </div>
+                            </div>
+                                
+                            <!-- 步骤 3：完成 -->
+                            <div class="form-step" id="step3" style="display: none;">
+                                <div class="success-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h3 class="success-title">注册成功！</h3>
+                                <p class="success-message">正在完善您的健康档案...</p>
+                            </div>
+                                
+                            <!-- 协议勾选 -->
+                            <div class="terms-checkbox" id="termsGroup">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                                    <span>我已阅读并同意 <a href="#" target="_blank">《用户服务协议》</a> 和 <a href="#" target="_blank">《隐私政策》</a></span>
+                                </label>
+                                <div class="input-error" id="terms-error"></div>
+                            </div>
+                                
+                            <!-- 提交按钮 -->
+                            <button type="submit" id="submitBtn" class="auth-btn register-btn">
+                                <span class="btn-text">下一步：设置密码</span>
+                                <i class="fas fa-arrow-right btn-icon"></i>
+                            </button>
+                        </form>
+                            
+                        <div class="back-to-login" id="backToLogin" style="display: none;">
+                            <p>已有账号？<a href="#">返回登录</a></p>
                         </div>
-                        <div class="form-footer">
-                            <label class="remember-me">
-                                <input type="checkbox" id="remember" name="remember">
-                                <span>记住我</span>
-                            </label>
-                            <a href="#">忘记密码?</a>
-                        </div>
-                        <button type="submit" class="login-btn">登 录</button>
-                    </form>
-                    <div class="register-link">
-                        <p>还没有账号? <a href="#">立即注册</a></p>
                     </div>
                 </div>
             </div>
