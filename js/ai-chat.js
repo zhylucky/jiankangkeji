@@ -367,7 +367,7 @@ class AIChatWidget {
         this.messages.push({ role: 'assistant', content: acc });
     }
     
-    // 调用 AI 的函数 - 流式响应版本
+    // 调用 AI 的函数 - 非流式版本（更稳定）
     async callAIAPI(userMessage, searchResults = '') {
         // 网络离线直接给出友好提示
         if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -400,111 +400,72 @@ ${searchResults}
             { role: 'user', content: userMessage }
         ];
 
-        // 使用 AbortController 用于流式请求
-        const controller = new AbortController();
-        const timeoutMs = 60000; // 60 秒超时（流式可能需要更长）
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        // 超时与重试设置
+        const timeoutMs = 55000; // 55 秒超时
+        const maxRetries = 2;    // 最多重试 2 次
+        const baseDelay = 800;   // 初始退避 800ms
 
-        try {
-            // 创建 AI 消息元素用于流式显示
-            const container = document.createElement('div');
-            container.className = 'chat-message ai';
-            const avatar = document.createElement('div');
-            avatar.className = 'chat-avatar ai';
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble ai';
-            container.appendChild(avatar);
-            container.appendChild(bubble);
-            this.messagesContainer.appendChild(container);
-            this.scrollToBottom();
+        const doRequest = async (attempt) => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-            let fullContent = '';
+            try {
+                const response = await fetch(this.functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: messageHistory,
+                        model: this.model
+                    }),
+                    signal: controller.signal,
+                    cache: 'no-store'
+                });
 
-            // 发起流式请求
-            const response = await fetch(this.functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'text/event-stream'
-                },
-                body: JSON.stringify({
-                    messages: messageHistory,
-                    model: this.model
-                }),
-                signal: controller.signal,
-                cache: 'no-store'
-            });
+                clearTimeout(timer);
 
-            clearTimeout(timer);
-
-            if (!response.ok) {
-                const errorText = await response.text().catch(() => '');
-                throw new Error(`AI 服务请求失败：${response.status} ${response.statusText}${errorText ? `\n详细信息：${errorText}` : ''}`);
-            }
-
-            // 处理流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                
-                if (done) {
-                    break;
+                if (!response.ok) {
+                    const errorText = await response.text().catch(() => '');
+                    throw new Error(`AI 服务请求失败：${response.status} ${response.statusText}${errorText ? `\n详细信息：${errorText}` : ''}`);
                 }
 
-                // 解码数据块
-                const chunk = decoder.decode(value, { stream: true });
-                buffer += chunk;
+                // 解析 JSON 响应
+                const data = await response.json();
 
-                // 解析 SSE 格式（以双换行分隔）
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || ''; // 保留最后一个不完整的行
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const data = line.slice(6).trim();
-                        
-                        if (data === '[DONE]') {
-                            continue;
-                        }
-
-                        try {
-                            const parsed = JSON.parse(data);
-                            const content = parsed.choices?.[0]?.delta?.content || '';
-                            
-                            if (content) {
-                                fullContent += content;
-                                // 实时更新显示
-                                bubble.innerHTML = this.formatContent(fullContent);
-                                this.scrollToBottom();
-                            }
-                        } catch (e) {
-                            // 忽略解析错误
-                        }
-                    }
+                // 结构校验
+                if (data && Array.isArray(data.choices) && data.choices[0] && data.choices[0].message) {
+                    return data.choices[0].message.content;
                 }
-            }
 
-            // 保存完整的 AI 回复
-            return fullContent;
+                // 兼容部分返回结构
+                if (data && data.message && typeof data.message.content === 'string') {
+                    return data.message.content;
+                }
 
-        } catch (err) {
-            clearTimeout(timer);
+                throw new Error('AI 响应格式不正确');
+            } catch (err) {
+                clearTimeout(timer);
 
-            const isAbort = err?.name === 'AbortError';
-            const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
-            const isNetwork = /Failed to fetch|NetworkError|网络|fetch|504/i.test(err?.message || '');
+                const isAbort = err?.name === 'AbortError';
+                const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
+                const isNetwork = /Failed to fetch|NetworkError|网络|fetch|504/i.test(err?.message || '');
 
-            if (isTimeout) {
-                throw new Error('AI 服务响应超时，请尝试重新提问');
-            } else if (isNetwork) {
-                throw new Error('网络连接失败，请检查网络后重试');
-            } else {
+                // 可重试的错误
+                if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, attempt); // 指数退避
+                    console.log(`[Retry ${attempt + 1}/${maxRetries}] Waiting ${delay}ms before retry...`);
+                    await new Promise(r => setTimeout(r, delay));
+                    return doRequest(attempt + 1);
+                }
+
+                // 其他错误或超过重试次数
                 throw new Error(`调用 AI 失败：${err.message}`);
             }
-        }
+        };
+
+        return doRequest(0);
     }
     
     // 优化内容格式，去除多余的空格和换行
