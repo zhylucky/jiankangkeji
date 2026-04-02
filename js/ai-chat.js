@@ -54,20 +54,21 @@ class AIChatWidget {
         const floatBtn = document.createElement('button');
         floatBtn.className = 'ai-chat-float-btn';
         floatBtn.innerHTML = ''; // 使用背景图片显示头像
-        floatBtn.title = 'AI健康助手';
-        
+        floatBtn.title = 'AI 健康助手';
+            
         // 创建聊天窗口
         const chatContainer = document.createElement('div');
         chatContainer.className = 'ai-chat-container';
-        const headerTitle = this.config?.ui?.title || 'AI健康助手';
+        const headerTitle = this.config?.ui?.title || 'AI 健康助手';
         const inputPlaceholder = this.config?.ui?.placeholder || '请输入您的问题...';
-                    
+                        
         chatContainer.innerHTML = `
             <div class="ai-chat-header">
                 <h3>${headerTitle}</h3>
                 <button class="ai-chat-close" title="关闭">
                     <i class="fas fa-times"></i>
                 </button>
+                <div class="ai-chat-status-bar"></div>
             </div>
             <div class="ai-chat-messages" id="chatMessages">
                 <!-- 消息将在这里显示 -->
@@ -84,17 +85,17 @@ class AIChatWidget {
                 </button>
             </div>
         `;
-        
+            
         // 添加到页面
         document.body.appendChild(floatBtn);
-        
+            
         // 创建遮罩层
         const overlay = document.createElement('div');
         overlay.className = 'ai-chat-overlay';
         document.body.appendChild(overlay);
-        
+            
         document.body.appendChild(chatContainer);
-        
+            
         // 保存引用
         this.floatBtn = floatBtn;
         this.overlay = overlay;
@@ -195,14 +196,59 @@ class AIChatWidget {
     
     showWelcomeMessage() {
         const welcomeText = this.config?.ui?.welcomeMessage || 
-            '您好！我是AI健康助手，我可以帮助您解答关于健康管理、产品功能、技术支持等各种问题。请随时向我提问！';
+            '您好！我是 AI 健康助手，我可以帮助您解答关于健康管理、产品功能、技术支持等各种问题。请随时向我提问！';
+            
+        // 创建欢迎卡片
+        const welcomeCard = document.createElement('div');
+        welcomeCard.className = 'welcome-card';
+        welcomeCard.innerHTML = `
+            <h4>👋 欢迎来到 AI 健康助手</h4>
+            <p>${welcomeText.replace(/\n/g, '<br>')}</p>
+            <div class="quick-actions">
+                <button class="quick-action-btn" data-action="sleep">
+                    <i class="fas fa-bed"></i> 睡眠测评
+                </button>
+                <button class="quick-action-btn" data-action="device">
+                    <i class="fas fa-device"></i> 设备绑定
+                </button>
+                <button class="quick-action-btn" data-action="report">
+                    <i class="fas fa-file-medical"></i> 查看报告
+                </button>
+                <button class="quick-action-btn" data-action="support">
+                    <i class="fas fa-headset"></i> 技术支持
+                </button>
+            </div>
+        `;
+            
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message assistant';
+        messageDiv.appendChild(welcomeCard);
+            
+        this.messagesContainer.appendChild(messageDiv);
+        this.scrollToBottom();
+            
+        // 绑定快速操作按钮事件
+        this.bindQuickActions();
+    }
         
-        const welcomeMsg = {
-            role: 'assistant', // 修正为assistant
-            content: welcomeText
-        };
-        
-        this.addMessage(welcomeMsg);
+    bindQuickActions() {
+        const actionButtons = this.messagesContainer.querySelectorAll('.quick-action-btn');
+        actionButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.getAttribute('data-action');
+                const actionMessages = {
+                    sleep: '请问睡眠测评的具体操作流程是什么？',
+                    device: '如何绑定血压计、血氧仪等配套设备？',
+                    report: '我想查看历史测评报告，应该怎么操作？',
+                    support: '设备连接不上，一直显示搜索中怎么办？'
+                };
+                    
+                if (actionMessages[action]) {
+                    this.inputField.value = actionMessages[action];
+                    this.sendMessage();
+                }
+            });
+        });
     }
     
     async sendMessage() {
@@ -321,7 +367,7 @@ class AIChatWidget {
         this.messages.push({ role: 'assistant', content: acc });
     }
     
-    // 调用 AI 的函数 - 安全版本（性能优化版）
+    // 调用 AI 的函数 - 流式响应版本
     async callAIAPI(userMessage, searchResults = '') {
         // 网络离线直接给出友好提示
         if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -344,7 +390,7 @@ ${searchResults}
             enhancedSystemPrompt += `\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
         }
 
-        // 构建消息历史（裁剪到最近N条）
+        // 构建消息历史（裁剪到最近 N 条）
         const messageHistory = [
             { role: 'system', content: enhancedSystemPrompt },
             ...this.messages.slice(-this.maxMessages).map(msg => ({
@@ -354,73 +400,111 @@ ${searchResults}
             { role: 'user', content: userMessage }
         ];
 
-        // 超时与重试设置（与Roomreport.html保持一致）
-        const timeoutMs = 30000; // 30s 超时
-        const maxRetries = 3;    // 最多重试 3 次（从2次增加到3次）
-        const baseDelay = 1000;   // 初始退避 1000ms
+        // 使用 AbortController 用于流式请求
+        const controller = new AbortController();
+        const timeoutMs = 60000; // 60 秒超时（流式可能需要更长）
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-        const doRequest = async (attempt) => {
-            // 超时控制
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            // 创建 AI 消息元素用于流式显示
+            const container = document.createElement('div');
+            container.className = 'chat-message ai';
+            const avatar = document.createElement('div');
+            avatar.className = 'chat-avatar ai';
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble ai';
+            container.appendChild(avatar);
+            container.appendChild(bubble);
+            this.messagesContainer.appendChild(container);
+            this.scrollToBottom();
 
-            try {
-                const response = await fetch(this.functionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        messages: messageHistory,
-                        model: this.model
-                    }),
-                    signal: controller.signal,
-                    // 避免某些浏览器缓存 POST
-                    cache: 'no-store'
-                });
+            let fullContent = '';
 
-                clearTimeout(timer);
+            // 发起流式请求
+            const response = await fetch(this.functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream'
+                },
+                body: JSON.stringify({
+                    messages: messageHistory,
+                    model: this.model
+                }),
+                signal: controller.signal,
+                cache: 'no-store'
+            });
 
-                if (!response.ok) {
-                    const errorText = await response.text().catch(() => '');
-                    throw new Error(`AI服务请求失败: ${response.status} ${response.statusText}${errorText ? `\n详细信息: ${errorText}` : ''}`);
-                }
+            clearTimeout(timer);
 
-                // 尝试解析 JSON
-                const data = await response.json();
-
-                // 结构校验
-                if (data && Array.isArray(data.choices) && data.choices[0] && data.choices[0].message) {
-                    return data.choices[0].message.content;
-                }
-
-                // 兼容部分返回结构
-                if (data && data.message && typeof data.message.content === 'string') {
-                    return data.message.content;
-                }
-
-                throw new Error('AI响应格式不正确');
-            } catch (err) {
-                clearTimeout(timer);
-
-                const isAbort = err?.name === 'AbortError';
-                const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
-                const isNetwork = /Failed to fetch|NetworkError|网络|fetch|504/i.test(err?.message || '');
-
-                // 可重试的错误
-                if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
-                    const delay = baseDelay * Math.pow(2, attempt); // 指数退避
-                    await new Promise(r => setTimeout(r, delay));
-                    return doRequest(attempt + 1);
-                }
-
-                // 其他错误或超过重试次数
-                throw new Error(`调用AI失败: ${err.message}`);
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => '');
+                throw new Error(`AI 服务请求失败：${response.status} ${response.statusText}${errorText ? `\n详细信息：${errorText}` : ''}`);
             }
-        };
 
-        return doRequest(0);
+            // 处理流式响应
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) {
+                    break;
+                }
+
+                // 解码数据块
+                const chunk = decoder.decode(value, { stream: true });
+                buffer += chunk;
+
+                // 解析 SSE 格式（以双换行分隔）
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // 保留最后一个不完整的行
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6).trim();
+                        
+                        if (data === '[DONE]') {
+                            continue;
+                        }
+
+                        try {
+                            const parsed = JSON.parse(data);
+                            const content = parsed.choices?.[0]?.delta?.content || '';
+                            
+                            if (content) {
+                                fullContent += content;
+                                // 实时更新显示
+                                bubble.innerHTML = this.formatContent(fullContent);
+                                this.scrollToBottom();
+                            }
+                        } catch (e) {
+                            // 忽略解析错误
+                        }
+                    }
+                }
+            }
+
+            // 保存完整的 AI 回复
+            return fullContent;
+
+        } catch (err) {
+            clearTimeout(timer);
+
+            const isAbort = err?.name === 'AbortError';
+            const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
+            const isNetwork = /Failed to fetch|NetworkError|网络|fetch|504/i.test(err?.message || '');
+
+            if (isTimeout) {
+                throw new Error('AI 服务响应超时，请尝试重新提问');
+            } else if (isNetwork) {
+                throw new Error('网络连接失败，请检查网络后重试');
+            } else {
+                throw new Error(`调用 AI 失败：${err.message}`);
+            }
+        }
     }
     
     // 优化内容格式，去除多余的空格和换行
@@ -435,29 +519,36 @@ ${searchResults}
     
     addMessage(message) {
         const messageDiv = document.createElement('div');
-        // 将role为'assistant'的消息显示为'ai'样式
+        // 将 role 为'assistant'的消息显示为'ai'样式
         const displayRole = message.role === 'assistant' ? 'ai' : message.role;
         messageDiv.className = `chat-message ${displayRole}`;
-        
+            
         const avatar = document.createElement('div');
         avatar.className = `chat-avatar ${displayRole}`;
         avatar.innerHTML = displayRole === 'user' ? 
             '<i class="fas fa-user"></i>' : 
-            ''; // AI头像使用背景图片，不需要图标
-        
+            ''; // AI 头像使用背景图片，不需要图标
+            
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${displayRole}`;
-        
-        // 如果内容包含HTML标签，使用innerHTML，否则使用textContent
+            
+        // 如果内容包含 HTML 标签，使用 innerHTML，否则使用 textContent
         if (message.content.includes('<br>') || message.content.includes('<strong>')) {
             bubble.innerHTML = message.content;
         } else {
             bubble.textContent = message.content;
         }
-        
+            
+        // 添加时间戳
+        const timestamp = document.createElement('div');
+        timestamp.className = 'message-timestamp';
+        const now = new Date();
+        timestamp.textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        bubble.appendChild(timestamp);
+            
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(bubble);
-        
+            
         this.messagesContainer.appendChild(messageDiv);
         this.scrollToBottom();
     }

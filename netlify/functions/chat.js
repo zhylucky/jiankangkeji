@@ -54,11 +54,11 @@ exports.handler = async function(event, context) {
       throw new Error('API密钥未配置，请在Netlify环境变量中设置SILICONFLOW_API_KEY或AI_API_KEY');
     }
     
-    // 构建请求参数 - 精简版（控制成本）
+    // 构建请求参数 - 流式响应版本
     const requestBody = {
       model: model || 'Qwen/Qwen3-8B',
       messages: messages,
-      stream: false,
+      stream: true,  // 启用流式响应
       // 性能优化参数 - 平衡质量和成本
       max_tokens: 1200,  // 支持 600-700 字中文报告（约 900-1400 tokens）
       temperature: 0.5,  // 降低随机性，提高响应速度和稳定性
@@ -71,7 +71,7 @@ exports.handler = async function(event, context) {
     if (model && model.includes('Qwen')) {
       requestBody.enable_search = false;  // 禁用搜索
       requestBody.enable_thinking = false;  // 禁用思考模式
-      requestBody.stream = false;  // 确保非流式
+      requestBody.stream = true;  // 确保流式
     }
     
     // 增加重试机制 - 优化超时和重试策略
@@ -84,7 +84,7 @@ exports.handler = async function(event, context) {
       try {
         console.log(`[Attempt ${attempt + 1}/${maxRetries + 1}] Calling SiliconFlow API...`);
             
-        // 使用环境变量中的 API Key
+        // 使用环境变量中的 API Key，启用流式响应
         const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -92,36 +92,79 @@ exports.handler = async function(event, context) {
             'Authorization': `Bearer ${apiKey}`,
             'User-Agent': 'Netlify-Function-Client'
           },
-          body: JSON.stringify(requestBody),
-          // Netlify Functions 最大超时是 60 秒，设置为 55 秒留有余量
-          timeout: 55000
+          body: JSON.stringify(requestBody)
+          // 流式响应不需要设置 timeout，因为数据会持续返回
         });
-
-        // 获取响应文本用于错误处理
-        const responseText = await response.text();
         
+        // 检查响应状态
         if (!response.ok) {
-          // 504 超时错误，快速重试
-          if (response.status === 504 || response.status === 503) {
-            console.warn(`[Attempt ${attempt + 1}] Server timeout (${response.status}), will retry...`);
-            throw new Error(`SiliconFlow API 暂时不可用：${response.status}`);
-          }
-          throw new Error(`SiliconFlow API请求失败：${response.status} ${response.statusText} - ${responseText}`);
-        }
-    
-        // 解析响应
-        let data;
-        try {
-          data = JSON.parse(responseText);
-          console.log(`[Success] API response received in ${Date.now()}ms`);
-        } catch (parseError) {
-          throw new Error(`响应数据解析失败：${parseError.message} - 原始响应：${responseText}`);
+          throw new Error(`SiliconFlow API请求失败：${response.status} ${response.statusText}`);
         }
             
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+                
+        // 创建可读流用于返回给前端
+        const stream = new ReadableStream({
+          async start(controller) {
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                        
+                if (done) {
+                  controller.close();
+                  break;
+                }
+                        
+                const chunk = decoder.decode(value, { stream: true });
+                        
+                // 解析 SSE 格式的数据
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') {
+                      controller.close();
+                      return;
+                    }
+                            
+                    try {
+                      const parsed = JSON.parse(data);
+                      const content = parsed.choices?.[0]?.delta?.content || '';
+                      if (content) {
+                        fullContent += content;
+                        // 将内容推送到流
+                        controller.enqueue(new TextEncoder().encode(JSON.stringify({
+                          choices: [{ delta: { content } }]
+                        }) + '\n'));
+                      }
+                    } catch (e) {
+                      // 忽略解析错误
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              controller.error(error);
+            }
+          }
+        });
+                
+        console.log(`[Stream] Started streaming at ${Date.now()}ms`);
+                    
         return {
           statusCode: 200,
-          headers,
-          body: JSON.stringify(data)
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+          },
+          body: stream,
+          isBase64Encoded: false
         };
       } catch (error) {
         lastError = error;
