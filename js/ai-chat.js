@@ -22,20 +22,21 @@ class AIChatWidget {
         
         if (window.AI_CHAT_CONFIG) {
             this.config = window.AI_CHAT_CONFIG;
-            this.functionUrl = this.config.functionUrl || '/.netlify/functions/chat';
+            // 支持 Vercel 和 Netlify 两种部署方式
+            this.functionUrl = this.config.functionUrl || '/api/chat';
             this.model = this.config.model;
             this.systemPrompt = this.config.systemPrompt;
             this.maxMessages = this.config.maxMessages || 6;
             this.isRequestPending = false; // 添加请求防重标记
-            
+                    
             // 初始化搜索配置
             this.searchConfig = this.config.searchSettings || {};
             this.searchEnabled = this.searchConfig.enabled || false;
         } else {
-            // 使用默认配置
-            this.functionUrl = '/.netlify/functions/chat';
+            // 使用默认配置 - 优先使用 Vercel 的 /api/chat，兼容 Netlify
+            this.functionUrl = '/api/chat';
             this.model = 'Qwen/Qwen3-8B';
-            this.systemPrompt = '你是一个专业的健康管理AI助手。';
+            this.systemPrompt = '你是一个专业的健康管理 AI 助手。';
             this.maxMessages = 10;
             this.searchEnabled = false;
         }

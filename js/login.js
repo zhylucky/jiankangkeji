@@ -4,8 +4,8 @@ const CONFIG = {
     SUPABASE_URL: 'YOUR_SUPABASE_URL',
     SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
     
-    // API 配置
-    API_BASE_URL: '/.netlify/functions',
+    // API 配置 - 支持 Vercel 和 Netlify 两种部署方式
+    API_BASE_URL: '/api',
     
     // 验证码倒计时（秒）
     CODE_COUNTDOWN: 60,

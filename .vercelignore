@@ -1,0 +1,29 @@
+# 忽略 Netlify 相关文件
+.netlify/
+netlify/
+netlify.toml
+
+# 开发工具
+.qoder/
+.vscode/
+.idea/
+
+# 日志文件
+*.log
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Markdown 文档（可选，如果不需要在网站上显示）
+Markdown/
+
+# Git 相关
+.git/
+.gitignore
+
+# 部署配置（二选一）
+# 如果使用 Vercel，可以忽略 Netlify 配置
+# netlify.toml
