@@ -20,7 +20,7 @@ const AI_CHAT_CONFIG = {
         enableThinking: true,
         // 流式响应：默认关闭，Netlify 有 10 秒超时限制
         // 生产环境建议保持 false，使用非流式更稳定
-        enableStream: false,
+        enableStream: true,
         // 仅本地演示使用：不调用后端，模拟流式输出与按钮状态
         demoMode: false,
         enableSSEDemo: false
