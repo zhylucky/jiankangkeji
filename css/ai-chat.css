@@ -435,6 +435,34 @@
     color: #ccc;
 }
 
+/* 图片上传按钮 */
+.chat-image-btn {
+    width: 44px;
+    height: 44px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+.chat-image-btn:hover {
+    background: #e0e0e0;
+    color: #333;
+    transform: scale(1.05);
+}
+
+.chat-image-btn:active {
+    transform: scale(0.95);
+}
+
 /* 发送按钮优化 */
 .chat-send-btn {
     width: 52px;
@@ -691,6 +719,45 @@
 
 .chat-bubble.user .message-timestamp {
     color: rgba(255, 255, 255, 0.8);
+}
+
+/* 图片消息样式 */
+.message-image-container {
+    margin-bottom: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 200px;
+}
+
+.message-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
+.message-text {
+    margin: 8px 0 0 0;
+    line-height: 1.5;
+}
+
+/* 流式响应打字效果 */
+.chat-bubble.ai.streaming::after {
+    content: '|';
+    animation: blink 0.7s infinite;
+    color: #667eea;
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* 错误文本样式 */
+.error-text {
+    color: #e74c3c;
+    font-size: 13px;
 }
 
 /* 加载骨架屏 */

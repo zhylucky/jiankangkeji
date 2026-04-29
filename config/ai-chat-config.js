@@ -14,10 +14,13 @@ const AI_CHAT_CONFIG = {
     
     // API性能优化参数
     performanceSettings: {
-        maxTokens: 2500, // 限制最大token数以提高响应速度
-        temperature: 0.7, // 适度的创造性
-        topP: 0.9, // nucleus采样
-        enableThinking: true, // 明确关闭思考模式
+        maxTokens: 2500,
+        temperature: 0.7,
+        topP: 0.9,
+        enableThinking: true,
+        // 流式响应：默认关闭，Netlify 有 10 秒超时限制
+        // 生产环境建议保持 false，使用非流式更稳定
+        enableStream: false,
         // 仅本地演示使用：不调用后端，模拟流式输出与按钮状态
         demoMode: false,
         enableSSEDemo: false
@@ -25,11 +28,61 @@ const AI_CHAT_CONFIG = {
 
     // 联网搜索配置（默认禁用以提升响应速度）
     searchSettings: {
-        enabled: true, // 默认禁用搜索以提高响应速度
+        enabled: true, 
         provider: 'baidu', 
         maxResults: 3, 
-        autoSearch: true, // 禁用自动搜索
-        searchKeywords: ['最新', '今天', '现在', '当前', '新闻', '近期', '实时', '今年', '2024', '2025'] // 触发搜索的关键词
+        autoSearch: true,
+        searchKeywords: ['最新', '今天', '现在', '当前', '新闻', '近期', '实时', '今年', '2024', '2025']
+    },
+    
+    // 动态回答策略配置（参考 NoteGen 的智能路由）
+    strategySettings: {
+        enabled: true,
+        // 问题分类及对应处理策略
+        intentClassification: {
+            'product-inquiry': {
+                keywords: ['是什么', '功能', '介绍', '产品', '有什么', '特点', '优势'],
+                temperature: 0.6,
+                maxTokens: 800,
+                focus: '产品介绍'
+            },
+            'operation-guide': {
+                keywords: ['怎么', '如何', '操作', '使用', '步骤', '流程', '教程'],
+                temperature: 0.5,
+                maxTokens: 1200,
+                focus: '操作指导',
+                includeSteps: true
+            },
+            'troubleshooting': {
+                keywords: ['问题', '故障', '错误', '失败', '连接不上', '无法', '不行', '不能用'],
+                temperature: 0.5,
+                maxTokens: 1000,
+                focus: '故障排查'
+            },
+            'device-support': {
+                keywords: ['设备', '绑定', '连接', '蓝牙', '发射器', '血压计', '血氧仪', '胸贴'],
+                temperature: 0.5,
+                maxTokens: 900,
+                focus: '设备支持'
+            },
+            'report-related': {
+                keywords: ['报告', '测评', '结果', '数据', '分析', '睡眠', '情绪', '体能'],
+                temperature: 0.6,
+                maxTokens: 1000,
+                focus: '报告解读'
+            },
+            'account-support': {
+                keywords: ['账号', '登录', '注册', '密码', '会员', '订单', '支付'],
+                temperature: 0.5,
+                maxTokens: 600,
+                focus: '账户支持'
+            }
+        },
+        // 默认策略
+        defaultStrategy: {
+            temperature: 0.5,
+            maxTokens: 800
+        }
     },
     
     // 自定义AI助手

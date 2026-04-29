@@ -6,10 +6,8 @@
   "scripts": {
     "dev": "netlify dev",
     "dev:legacy": "live-server",
-    "dev:vercel": "vercel dev",
     "build": "echo 'Static site - no build needed'",
-    "start": "netlify dev",
-    "deploy": "vercel --prod"
+    "start": "netlify dev"
   },
   "keywords": [
     "health",

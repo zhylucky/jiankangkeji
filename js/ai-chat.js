@@ -22,21 +22,23 @@ class AIChatWidget {
         
         if (window.AI_CHAT_CONFIG) {
             this.config = window.AI_CHAT_CONFIG;
-            // 支持 Vercel 和 Netlify 两种部署方式
-            this.functionUrl = this.config.functionUrl || '/api/chat';
+            this.functionUrl = this.config.functionUrl || '/.netlify/functions/chat';
             this.model = this.config.model;
             this.systemPrompt = this.config.systemPrompt;
             this.maxMessages = this.config.maxMessages || 6;
             this.isRequestPending = false; // 添加请求防重标记
-                    
+            
             // 初始化搜索配置
             this.searchConfig = this.config.searchSettings || {};
             this.searchEnabled = this.searchConfig.enabled || false;
+            
+            // 初始化性能配置
+            this.performanceSettings = this.config.performanceSettings || {};
         } else {
-            // 使用默认配置 - 优先使用 Vercel 的 /api/chat，兼容 Netlify
-            this.functionUrl = '/api/chat';
+            // 使用默认配置
+            this.functionUrl = '/.netlify/functions/chat';
             this.model = 'Qwen/Qwen3-8B';
-            this.systemPrompt = '你是一个专业的健康管理 AI 助手。';
+            this.systemPrompt = '你是一个专业的健康管理AI助手。';
             this.maxMessages = 10;
             this.searchEnabled = false;
         }
@@ -75,6 +77,9 @@ class AIChatWidget {
                 <!-- 消息将在这里显示 -->
             </div>
             <div class="ai-chat-input">
+                <button class="chat-image-btn" id="chatImageBtn" title="上传图片" onclick="window.aiChatWidget?.triggerImageUpload()">
+                    <i class="fas fa-image"></i>
+                </button>
                 <textarea 
                     class="chat-input-field" 
                     id="chatInput" 
@@ -148,6 +153,151 @@ class AIChatWidget {
                 this.closeChat();
             }
         });
+        
+        // 绑定图像上传事件
+        this.bindImageUpload();
+    }
+    
+    // 添加图像上传功能
+    bindImageUpload() {
+        // 创建隐藏的文件输入框
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        fileInput.id = 'ai-chat-image-input';
+        document.body.appendChild(fileInput);
+        this.imageInput = fileInput;
+        
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await this.handleImageUpload(file);
+                fileInput.value = ''; // 重置以便再次选择同一文件
+            }
+        });
+    }
+    
+    // 触发图像选择
+    triggerImageUpload() {
+        this.imageInput?.click();
+    }
+    
+    // 处理图像上传
+    async handleImageUpload(file) {
+        // 验证文件大小 (最大 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            this.showError('图片大小不能超过 10MB');
+            return;
+        }
+        
+        // 验证文件类型
+        if (!file.type.startsWith('image/')) {
+            this.showError('请选择图片文件');
+            return;
+        }
+        
+        // 显示加载状态
+        const loadingMsg = { role: 'user', content: '[图片上传中...]' };
+        this.addMessage(loadingMsg);
+        this.messages.push(loadingMsg);
+        
+        try {
+            // 将图片转换为 Base64
+            const base64 = await this.fileToBase64(file);
+            
+            // 显示图片预览
+            const previewMsg = { 
+                role: 'user', 
+                content: '',
+                image: base64,
+                imageName: file.name
+            };
+            this.messages.pop(); // 移除加载消息
+            this.addMessage(previewMsg);
+            this.messages.push(previewMsg);
+            
+            // 发送图片到 AI 分析
+            await this.sendImageToAI(base64, file.name);
+            
+        } catch (error) {
+            console.error('图片处理失败:', error);
+            this.showError('图片处理失败，请重试');
+        }
+    }
+    
+    // 文件转 Base64
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    // 发送图片到 AI 分析
+    async sendImageToAI(imageBase64, imageName) {
+        if (this.isRequestPending) {
+            this.showError('请等待上一个问题回答完成...');
+            return;
+        }
+        this.isRequestPending = true;
+        
+        const originalSendHtml = this.sendBtn.innerHTML;
+        this.sendBtn.disabled = true;
+        this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        this.showTypingIndicator();
+        
+        try {
+            const messageHistory = [
+                { role: 'system', content: this.systemPrompt + '\n\n请分析用户发送的图片内容，并结合个人健康精英Pro+产品功能给出专业解答。' },
+                ...this.messages.slice(-this.maxMessages).map(msg => ({
+                    role: msg.role === 'ai' ? 'assistant' : msg.role,
+                    content: msg.content || '[图片]'
+                }))
+            ];
+            
+            const response = await fetch(this.functionUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messageHistory,
+                    model: 'Qwen/Qwen2.5-VL-72B-Instruct',
+                    image: imageBase64
+                }),
+                cache: 'no-store'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`AI 服务请求失败：${response.status}`);
+            }
+            
+            const data = await response.json();
+            let content = '';
+            
+            if (data.choices && data.choices[0]?.message?.content) {
+                content = data.choices[0].message.content;
+            } else if (data.message?.content) {
+                content = data.message.content;
+            } else {
+                content = '图片分析失败，请稍后重试。';
+            }
+            
+            const aiMsg = { role: 'assistant', content: this.formatContent(content) };
+            this.addMessage(aiMsg);
+            this.messages.push(aiMsg);
+            
+        } catch (error) {
+            console.error('AI 图片分析失败:', error);
+            this.showError('图片分析失败，请重试');
+        } finally {
+            this.hideTypingIndicator();
+            this.sendBtn.disabled = false;
+            this.sendBtn.innerHTML = originalSendHtml;
+            this.isRequestPending = false;
+        }
     }
     
     toggleChat() {
@@ -272,9 +422,6 @@ class AIChatWidget {
         this.sendBtn.disabled = true;
         this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // 发送中
 
-        // 显示打字指示器
-        this.showTypingIndicator();
-
         try {
             this.validateAndCleanMessages();
 
@@ -297,16 +444,27 @@ class AIChatWidget {
                         this.hideSearchingIndicator();
                     }
                 }
-                const response = await this.callAIAPI(message, searchResults);
-                const aiMsg = { role: 'assistant', content: this.formatContent(response) };
-                this.addMessage(aiMsg);
-                this.messages.push(aiMsg);
+                
+                // 根据配置决定使用流式或非流式响应
+                const useStream = this.performanceSettings?.enableStream === true || (this.config?.performanceSettings?.enableStream === true);
+                
+                if (useStream) {
+                    // 流式响应（需要 Netlify Pro 套餐支持）
+                    const response = await this.callAIAPIStream(message, searchResults);
+                    this.messages.push({ role: 'assistant', content: response });
+                } else {
+                    // 非流式响应（更稳定，Netlify 免费套餐推荐）
+                    // 先显示打字指示器
+                    this.showTypingIndicator();
+                    const response = await this.callAIAPI(message, searchResults);
+                    this.hideTypingIndicator();
+                    const aiMsg = { role: 'assistant', content: this.formatContent(response) };
+                    this.addMessage(aiMsg);
+                    this.messages.push(aiMsg);
+                }
             }
-
-            this.hideTypingIndicator();
         } catch (error) {
             console.error('AI API调用失败:', error);
-            this.hideTypingIndicator();
             let errorMsg;
             if (error.message.includes('网络') || error.message.includes('Network')) {
                 errorMsg = this.config?.ui?.errorMessages?.networkError || '网络连接失败，请检查网络后重试';
@@ -316,8 +474,8 @@ class AIChatWidget {
                 errorMsg = this.config?.ui?.errorMessages?.unknownError || '出现了未知错误，请重新尝试';
             }
             this.showError(errorMsg);
+            this.hideSearchingIndicator();
         } finally {
-            // 恢复按钮状态
             this.sendBtn.disabled = false;
             this.sendBtn.innerHTML = originalSendHtml;
             this.isRequestPending = false;
@@ -469,6 +627,111 @@ ${searchResults}
         return doRequest(0);
     }
     
+    // 流式响应版本的 AI 调用
+    async callAIAPIStream(userMessage, searchResults = '') {
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+            throw new Error('当前网络不可用，请检查网络连接后重试');
+        }
+
+        // 问题分类和动态策略选择
+        const strategy = this.classifyIntent(userMessage);
+        
+        // 根据策略调整系统提示词
+        let enhancedSystemPrompt = this.enhanceSystemPrompt(this.systemPrompt, strategy);
+        const currentTime = this.getCurrentTime();
+        if (searchResults) {
+            enhancedSystemPrompt += `
+
+最新网络信息：
+${searchResults}
+
+请基于上述最新信息和你的知识库综合回答用户问题。
+
+重要提醒：${currentTime}，请确保时间信息的准确性。`;
+        } else {
+            enhancedSystemPrompt += `\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
+        }
+
+        const messageHistory = [
+            { role: 'system', content: enhancedSystemPrompt },
+            ...this.messages.slice(-this.maxMessages).map(msg => ({
+                role: msg.role === 'ai' ? 'assistant' : msg.role,
+                content: msg.content
+            })),
+            { role: 'user', content: userMessage }
+        ];
+
+        // 创建流式消息容器
+        const container = document.createElement('div');
+        container.className = 'chat-message ai';
+        const avatar = document.createElement('div');
+        avatar.className = 'chat-avatar ai';
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble ai streaming';  // 添加 streaming 类
+        container.appendChild(avatar);
+        container.appendChild(bubble);
+        this.messagesContainer.appendChild(container);
+        
+        let fullContent = '';
+        
+        try {
+            const response = await fetch(this.functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream'
+                },
+                body: JSON.stringify({
+                    messages: messageHistory,
+                    model: this.model,
+                    stream: true,
+                    temperature: strategy.temperature,
+                    max_tokens: strategy.maxTokens
+                }),
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error(`AI 服务请求失败：${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '));
+                
+                for (const line of lines) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        if (data.choices && data.choices[0]?.delta?.content) {
+                            const content = data.choices[0].delta.content;
+                            fullContent += content;
+                            bubble.innerHTML = this.formatContent(fullContent);
+                            this.scrollToBottom();
+                        }
+                    } catch (e) {
+                        // 忽略解析错误，继续处理下一行
+                    }
+                }
+            }
+            
+            // 流式输出完成，移除光标
+            bubble.classList.remove('streaming');
+            
+            return fullContent;
+            
+        } catch (error) {
+            console.error('流式响应错误:', error);
+            bubble.innerHTML = '<span class="error-text">响应出错: ' + error.message + '</span>';
+            throw error;
+        }
+    }
+    
     // 优化内容格式，去除多余的空格和换行
     formatContent(content) {
         return content
@@ -481,7 +744,6 @@ ${searchResults}
     
     addMessage(message) {
         const messageDiv = document.createElement('div');
-        // 将 role 为'assistant'的消息显示为'ai'样式
         const displayRole = message.role === 'assistant' ? 'ai' : message.role;
         messageDiv.className = `chat-message ${displayRole}`;
             
@@ -489,19 +751,38 @@ ${searchResults}
         avatar.className = `chat-avatar ${displayRole}`;
         avatar.innerHTML = displayRole === 'user' ? 
             '<i class="fas fa-user"></i>' : 
-            ''; // AI 头像使用背景图片，不需要图标
+            '';
             
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${displayRole}`;
+        
+        // 处理图片消息
+        if (message.image) {
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'message-image-container';
             
-        // 如果内容包含 HTML 标签，使用 innerHTML，否则使用 textContent
-        if (message.content.includes('<br>') || message.content.includes('<strong>')) {
-            bubble.innerHTML = message.content;
-        } else {
-            bubble.textContent = message.content;
+            const img = document.createElement('img');
+            img.src = message.image;
+            img.className = 'message-image';
+            img.alt = message.imageName || '用户图片';
+            
+            imgContainer.appendChild(img);
+            bubble.appendChild(imgContainer);
+            
+            if (message.content) {
+                const contentP = document.createElement('p');
+                contentP.className = 'message-text';
+                contentP.textContent = message.content;
+                bubble.appendChild(contentP);
+            }
+        } else if (message.content) {
+            if (message.content.includes('<br>') || message.content.includes('<strong>')) {
+                bubble.innerHTML = message.content;
+            } else {
+                bubble.textContent = message.content;
+            }
         }
             
-        // 添加时间戳
         const timestamp = document.createElement('div');
         timestamp.className = 'message-timestamp';
         const now = new Date();
@@ -682,9 +963,55 @@ ${snippet}
     
     // 获取当前本地时间（优化版本）
     getCurrentTime() {
-        // 直接使用本地时间，避免网络请求
         const now = new Date();
         return `当前时间是${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // 问题分类和策略选择（参考 NoteGen 的智能路由）
+    classifyIntent(message) {
+        const strategyConfig = this.config?.strategySettings || {};
+        if (!strategyConfig.enabled) {
+            return strategyConfig.defaultStrategy || { temperature: 0.5, maxTokens: 800 };
+        }
+        
+        const classifications = strategyConfig.intentClassification || {};
+        const lowerMessage = message.toLowerCase();
+        
+        // 遍历所有分类，找到匹配的关键词
+        for (const [intentName, config] of Object.entries(classifications)) {
+            if (config.keywords && Array.isArray(config.keywords)) {
+                const hasMatch = config.keywords.some(keyword => 
+                    lowerMessage.includes(keyword.toLowerCase())
+                );
+                if (hasMatch) {
+                    console.log(`[Intent Classification] Detected: ${intentName} - ${config.focus}`);
+                    return {
+                        temperature: config.temperature,
+                        maxTokens: config.maxTokens,
+                        focus: config.focus,
+                        includeSteps: config.includeSteps
+                    };
+                }
+            }
+        }
+        
+        // 返回默认策略
+        return strategyConfig.defaultStrategy || { temperature: 0.5, maxTokens: 800 };
+    }
+    
+    // 根据问题类型动态调整系统提示词
+    enhanceSystemPrompt(basePrompt, strategy) {
+        let enhanced = basePrompt;
+        
+        if (strategy.focus) {
+            enhanced += `\n\n[当前问题类型：${strategy.focus}]`;
+            
+            if (strategy.includeSteps) {
+                enhanced += `\n请按步骤详细说明操作流程，使用清晰的数字序号。`;
+            }
+        }
+        
+        return enhanced;
     }
     
     // 显示搜索指示器
