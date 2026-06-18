@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "netlify dev",
     "dev:legacy": "live-server",
+    "proxy": "node proxy-server.js",
     "build": "echo 'Static site - no build needed'",
     "start": "netlify dev"
   },
