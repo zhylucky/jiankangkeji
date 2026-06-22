@@ -51,10 +51,13 @@ exports.handler = async (event) => {
             };
         }
 
-        console.log('Proxying request to:', decodedUrl);
+        // 将HTTPS替换为HTTP（目标API证书过期，HTTP可用）
+        const httpUrl = decodedUrl.replace('https://', 'http://');
 
-        // 代理请求到目标API
-        const response = await fetch(decodedUrl, {
+        console.log('Proxying request to:', httpUrl);
+
+        // 代理请求到目标API（使用HTTP协议）
+        const response = await fetch(httpUrl, {
             method: 'GET',
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
