@@ -1,42 +1,46 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-    const navMenu = document.querySelector('nav ul');
-    const nav = document.querySelector('nav');
-    
-    // 移动端菜单切换
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
+﻿document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu toggle
+    var mobileToggle = document.querySelector('.mobile-menu-toggle');
+    var navMenu = document.querySelector('nav ul');
+
+    if (mobileToggle && navMenu) {
+        mobileToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             this.classList.toggle('active');
+            var isExpanded = navMenu.classList.contains('active');
+            this.setAttribute('aria-expanded', isExpanded);
         });
-    }
-    
-    // 点击菜单项时关闭移动菜单
-    const navLinks = document.querySelectorAll('nav ul a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
+
+        navMenu.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() {
                 navMenu.classList.remove('active');
-                if (mobileMenuToggle) {
-                    mobileMenuToggle.classList.remove('active');
-                }
+                mobileToggle.classList.remove('active');
+                mobileToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!mobileToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+                mobileToggle.classList.remove('active');
+                mobileToggle.setAttribute('aria-expanded', 'false');
             }
         });
-    });
-    
-    // 滚动时导航栏效果 - 优化版本
-    let lastScrollTop = 0;
+    }
+
+    // Nav scroll effect
+    var nav = document.querySelector('nav');
+    var lastScrollTop = 0;
+
     window.addEventListener('scroll', function() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
-        // 添加滚动样式
-        if (scrollTop > 100) {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (scrollTop > 50) {
             nav.classList.add('scrolled');
         } else {
             nav.classList.remove('scrolled');
         }
-        
-        // 自动隐藏导航栏（在桌面端）
+
         if (window.innerWidth > 768) {
             if (scrollTop > lastScrollTop && scrollTop > 300) {
                 nav.style.transform = 'translateY(-100%)';
@@ -44,100 +48,120 @@ document.addEventListener('DOMContentLoaded', function() {
                 nav.style.transform = 'translateY(0)';
             }
         }
-        
+
         lastScrollTop = scrollTop;
     });
-    
-    // 平滑滚动到锦点 - 改进版本
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            const targetId = this.getAttribute('href');
-            if (targetId === '#' || targetId === '#home') {
+
+    // Smooth scroll to anchors
+    document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+        anchor.addEventListener('click', function(e) {
+            var href = this.getAttribute('href');
+            if (href === '#' || href === '#home') {
                 e.preventDefault();
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
-            
-            const target = document.querySelector(targetId);
+            var target = document.querySelector(href);
             if (target) {
                 e.preventDefault();
-                const headerOffset = 80;
-                const elementPosition = target.offsetTop;
-                const offsetPosition = elementPosition - headerOffset;
-                
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
+                var offsetTop = target.offsetTop - 80;
+                window.scrollTo({ top: offsetTop, behavior: 'smooth' });
             }
         });
     });
-    
-    // 高亮当前导航项
-    function highlightCurrentNav() {
-        const sections = document.querySelectorAll('section[id]');
-        const scrollPos = window.scrollY + 100;
-        
-        // 如果在页面顶部，高亮首页
+
+    // Nav highlight on scroll
+    function highlightNav() {
+        var sections = document.querySelectorAll('section[id]');
+        var scrollPos = window.scrollY + 120;
+
         if (window.scrollY < 100) {
-            document.querySelectorAll('nav a').forEach(link => {
-                link.classList.remove('nav-active');
-            });
-            const homeLink = document.querySelector('nav a[href="#home"], nav a[href="#"]');
-            if (homeLink) {
-                homeLink.classList.add('nav-active');
-            }
+            document.querySelectorAll('nav a').forEach(function(l) { l.classList.remove('nav-active'); });
+            var homeLink = document.querySelector('nav a[href="#home"]');
+            if (homeLink) homeLink.classList.add('nav-active');
             return;
         }
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
-            
-            if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
-                document.querySelectorAll('nav a').forEach(link => {
-                    link.classList.remove('nav-active');
-                });
-                
-                const activeLink = document.querySelector(`nav a[href="#${sectionId}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('nav-active');
+
+        sections.forEach(function(section) {
+            var top = section.offsetTop;
+            var height = section.offsetHeight;
+            if (scrollPos >= top && scrollPos < top + height) {
+                document.querySelectorAll('nav a').forEach(function(l) { l.classList.remove('nav-active'); });
+                var active = document.querySelector('nav a[href="#' + section.id + '"]');
+                if (active) active.classList.add('nav-active');
+            }
+        });
+    }
+    window.addEventListener('scroll', highlightNav);
+
+    // Scroll reveal animations
+    var revealElements = document.querySelectorAll('[data-reveal]');
+    var revealObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    revealElements.forEach(function(el) {
+        revealObserver.observe(el);
+    });
+
+    // Counter animation for stats
+    var counters = document.querySelectorAll('[data-count]');
+    var countersAnimated = false;
+
+    function animateCounters() {
+        if (countersAnimated) return;
+        countersAnimated = true;
+
+        counters.forEach(function(counter) {
+            var target = parseInt(counter.getAttribute('data-count'), 10);
+            var duration = 1500;
+            var startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                var progress = Math.min((timestamp - startTime) / duration, 1);
+                var eased = 1 - Math.pow(1 - progress, 3);
+                var current = Math.floor(eased * target);
+                counter.textContent = current;
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    counter.textContent = target;
                 }
             }
+
+            requestAnimationFrame(step);
         });
     }
-    
-    window.addEventListener('scroll', highlightCurrentNav);
-    
-    // 初始化时设置首页为活跃状态
-    const homeLink = document.querySelector('nav a[href="#home"], nav a[href="#"]');
-    if (homeLink) {
-        homeLink.classList.add('nav-active');
+
+    var statsSection = document.querySelector('.stats-section');
+    if (statsSection) {
+        var statsObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    statsObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+        statsObserver.observe(statsSection);
     }
 
-    // 产品卡片动画 - 扩展版本
-    const animateElements = document.querySelectorAll('.feature-item, .video-card, .app-info-card, .qr-code-section, .product-card');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+
+    // Screenshot horizontal scroll with mouse wheel
+    var track = document.getElementById('screenshotTrack');
+    if (track) {
+        // Mouse wheel -> horizontal scroll
+        track.addEventListener('wheel', function(e) {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                track.scrollLeft += e.deltaY * 2.5;
             }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-
-    animateElements.forEach(element => {
-        element.style.opacity = '0';
-        element.style.transform = 'translateY(20px)';
-        element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(element);
-    });
+        }, { passive: false });
+    }
 });

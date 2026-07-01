@@ -1,401 +1,569 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="./images/dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- SEO 基础信息 -->
+    <!-- SEO -->
     <title>健康科技官网</title>
-    <meta name="description" content="健康科技提供AI驱动的精准健康管理解决方案，包括个人健康精英Pro+、企业健康管理、医疗机构解决方案。医疗级传感器，智能睡眠监测，24/7健康守护。">
-    <meta name="keywords" content="健康管理,AI健康分析,睡眠监测,智能健康监测设备,个人健康管理app,企业员工健康管理,医疗级监测,健康科技,数字健康">
+    <meta name="description" content="AI驱动的睡眠健康分析平台，医疗级传感器精准监测ECG、HRV、血氧、呼吸率，AI智能分析生成专属健康报告。">
+    <meta name="keywords" content="AI健康分析,睡眠监测,健康报告,ECG监测,HRV分析,血氧监测,智能健康,个人健康管理">
     <meta name="author" content="健康科技">
     <meta name="robots" content="index, follow">
-    <meta name="language" content="zh-CN">
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jkkeji.netlify.app/">
-    <meta property="og:title" content="健康科技 - AI驱动的精准健康管理">
-    <meta property="og:description" content="医疗级监测技术，智能健康分析，24/7健康守护。提供个人、企业、医疗机构全场景健康管理解决方案。">
-    <meta property="og:image" content="https://jkkeji.netlify.app/dzlogo.png">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://jkkeji.netlify.app/dzlogo.png">
-    <meta property="twitter:title" content="健康科技 - AI驱动的精准健康管理">
-    <meta property="twitter:description" content="医疗级监测技术，智能健康分析，24/7健康守护。">
-    <meta property="twitter:image" content="https://jkkeji.netlify.app/dzlogo.png">
+    <meta property="og:title" content="睡眠健康科技官网">
+    <meta property="og:description" content="用一夜的数据，读懂你的睡眠与健康。医疗级监测+AI分析，生成专属健康报告。">
+    <meta property="og:image" content="https://jkkeji.netlify.app/images/dzlogo.png">
     
     <!-- 结构化数据 -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "健康科技",
-        "url": "https://jkkeji.netlify.app/",
-        "logo": "https://jkkeji.netlify.app/dzlogo.png",
-        "description": "AI驱动的精准健康管理解决方案提供商",
-        "foundingDate": "2020",
-        "founder": {
-            "@type": "Person",
-            "name": "健康科技创始人"
-        },
-        "contactPoint": {
-            "@type": "ContactPoint",
-            "telephone": "+86-400-XXX-XXXX",
-            "contactType": "customer service",
-            "availableLanguage": "Chinese"
-        },
-        "hasOfferCatalog": {
-            "@type": "OfferCatalog",
-            "name": "健康管理产品及服务",
-            "itemListElement": [
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Product",
-                        "name": "个人健康精英Pro+",
-                        "description": "智能健康监测应用，支持睡眠监测、情绪管理、体能评估"
-                    }
-                },
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service",
-                        "name": "企业健康管理解决方案",
-                        "description": "为企业提供员工健康管理整体解决方案"
-                    }
-                }
-            ]
-        }
+        "@type": "MobileApplication",
+        "name": "睡眠健康科技官网",
+        "operatingSystem": "Android",
+        "applicationCategory": "HealthApplication",
+        "description": "AI驱动的睡眠健康分析平台",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" }
     }
     </script>
     
-    <!-- 面包屑导航 -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-            {
-                "@type": "ListItem",
-                "position": 1,
-                "name": "首页",
-                "item": "https://jkkeji.netlify.app/"
-            }
-        ]
-    }
-    </script>
-    <!-- 预加载关键资源 -->
-    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <!-- 预加载 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
     
     <!-- 样式表 -->
     <link rel="stylesheet" href="./css/index.css">
     <link rel="stylesheet" href="./css/ai-chat.css">
-    <!-- Font Awesome 图标库 -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+   
+   <!-- Lucide Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- 导航栏 -->
     <nav role="navigation" aria-label="主导航">
-        <div class="logo">
-            <img src="./images/dzlogo.png" alt="健康科技标志">
-            <div class="logo-text">
-                <div class="logo-text-cn">健康科技</div>
-                <div class="logo-text-en">Health Technology</div>
+        <div class="nav-inner">
+            <div class="logo">
+                <img src="./images/dzlogo.png" alt="健康科技标志">
+                <span class="logo-text">健康科技</span>
             </div>
+            <ul role="menubar">
+                <li role="none"><a href="#home" class="nav-active" role="menuitem" aria-current="page">首页</a></li>        
+                <li role="none"><a href="html/login.html" class="nav-btn-primary" role="menuitem">健康管理中心</a></li>
+                <li role="none"><a href="http://anxiety.lifetide.cn/login/" class="nav-btn-outline" role="menuitem">老版中心</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="切换菜单" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
         </div>
-        <ul role="menubar">
-            <li role="none"><a href="#home" class="nav-active" role="menuitem" aria-current="page">首页</a></li>        
-            <li role="none"><a href="html/login.html" class="nav-button" role="menuitem">新版健康管理中心</a></li>
-            <!-- <li role="none"><a href="http://management.lifetide.cn/login" class="nav-button" role="menuitem">后台管理系统</a></li> -->
-            <li role="none"><a href="http://anxiety.lifetide.cn/login/" class="nav-button legacy" role="menuitem">老版健康管理中心</a></li>
-        </ul>
-        <!-- 移动端菜单按钮 -->
-        <button class="mobile-menu-toggle" aria-label="切换移动端菜单" aria-expanded="false">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-        </button>
     </nav>
 
-    <!-- 主要内容 -->
     <main>
-        <!-- Hero 首屏区域 -->
-        <section id="home" class="hero-section" role="banner" aria-labelledby="hero-title">
-            <div class="hero-container">
-                <div class="hero-content">
-                    <div class="hero-badge" role="note" aria-label="荣誉徽章">
-                        <i class="fas fa-award" aria-hidden="true"></i>
+        <!-- ═══════════════ HERO ═══════════════ -->
+        <section id="home" class="hero" role="banner" aria-labelledby="hero-title">
+            <div class="hero-bg" aria-hidden="true">
+                <div class="hero-grid"></div>
+                <div class="hero-glow glow-1"></div>
+                <div class="hero-glow glow-2"></div>
+                <div class="hero-glow glow-3"></div>
+            </div>
+            <div class="container hero-grid-layout">
+                <div class="hero-content" data-reveal>
+                    <div class="hero-badge">
+                        <i data-lucide="award" class="icon-sm"></i>
                         <span>央视《发现者》栏目推荐</span>
                     </div>
-                    <h1 id="hero-title" class="hero-title">
-                        <span class="title-main">用一夜的数据，读懂你的睡眠与健康</span>
-                        <span class="title-gradient">让每一次睡眠更安心</span>
+                    <h1 id="hero-title">
+                        <span class="hero-label">AI睡眠健康分析平台</span>
+                        <span class="hero-headline">用一夜的数据<br>读懂你的睡眠与健康</span>
                     </h1>
-                    <p class="hero-subtitle" role="text">
-                        高精度监测 + AI 分析，生成专属健康报告与改善建议，将复杂的健康数据转化为您可以轻松理解和行动的指南。
-                    </p>
-                    <div class="hero-cta" role="group" aria-label="主要操作按钮">
-                        <a href="#download" class="cta-primary" aria-label="立即下载个人健康精英Pro+应用">
-                            <i class="fas fa-download" aria-hidden="true"></i>
-                            <span>立即下载App</span>
+                    <p class="hero-desc">支持 ECG · HRV · 血氧 · 呼吸率 · AI分析</p>
+                    <div class="hero-actions">
+                        <a href="#download" class="btn btn-primary btn-lg">
+                            <i data-lucide="download" class="icon-sm"></i>
+                            立即下载
                         </a>
-                        <a href="#about" class="cta-secondary" aria-label="观看介绍视频">
-                            <i class="fas fa-play-circle" aria-hidden="true"></i>
-                            <span>观看视频</span>
+                        <a href="#about" class="btn btn-ghost btn-lg">
+                            <i data-lucide="play-circle" class="icon-sm"></i>
+                            观看演示
                         </a>
                     </div>
-                </div>
-                <div class="hero-visual" role="img" aria-label="产品展示和功能演示">
-                    <div class="hero-image">
-                        <img src="./images/pro.png" alt="个人健康精英Pro+手机应用界面展示" class="phone-mockup">
-                        <div class="floating-card card-1" role="note" aria-label="心率监测数据">
-                            <i class="fas fa-heart" aria-hidden="true"></i>
-                            <div class="card-content">
-                                <span class="card-title">心率监测</span>
-                                <span class="card-value">72 BPM</span>
-                            </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <span class="hero-stat-num">10000<strong>+</strong></span>
+                            <span class="hero-stat-label">用户信赖</span>
                         </div>
-                        <div class="floating-card card-2" role="note" aria-label="睡眠质量数据">
-                            <i class="fas fa-bed" aria-hidden="true"></i>
-                            <div class="card-content">
-                                <span class="card-title">睡眠质量</span>
-                                <span class="card-value">85%</span>
-                            </div>
+                        <div class="hero-stat">
+                            <span class="hero-stat-num">98<strong>%</strong></span>
+                            <span class="hero-stat-label">好评率</span>
                         </div>
-                        <div class="floating-card card-3" role="note" aria-label="AI分析结果">
-                            <i class="fas fa-brain" aria-hidden="true"></i>
-                            <div class="card-content">
-                                <span class="card-title">AI分析</span>
-                                <span class="card-value">优秀</span>
-                            </div>
+                        <div class="hero-stat">
+                            <span class="hero-stat-num">★★★★★</span>
+                            <span class="hero-stat-label">用户评价</span>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="hero-background" aria-hidden="true">
-                <div class="bg-shape shape-1"></div>
-                <div class="bg-shape shape-2"></div>
-                <div class="bg-shape shape-3"></div>
+                <div class="hero-visual" data-reveal>
+                    <div class="phone-float">
+                        <div class="phone-frame">
+                            <img src="images/ChatGPT Image 睡眠健康报告.png" alt="个人健康精英Pro+ 应用界面" class="phone-mockup">
+                        </div>
+                        <!-- 漂浮卡片 -->
+                        <div class="float-card fc-heart">
+                            <i data-lucide="heart-pulse" class="icon-md"></i>
+                            <div>
+                                <span class="fc-label">心率监测</span>
+                                <span class="fc-value">72 BPM</span>
+                            </div>
+                        </div>
+                        <div class="float-card fc-sleep">
+                            <i data-lucide="moon" class="icon-md"></i>
+                            <div>
+                                <span class="fc-label">睡眠质量</span>
+                                <span class="fc-value">95分</span>
+                            </div>
+                        </div>
+                        <div class="float-card fc-ai">
+                            <i data-lucide="bot" class="icon-md"></i>
+                            <div>
+                                <span class="fc-label">AI分析</span>
+                                <span class="fc-value">分析完成</span>
+                            </div>
+                        </div>
+                        <div class="float-card fc-trend">
+                            <i data-lucide="trending-up" class="icon-md"></i>
+                            <div>
+                                <span class="fc-label">睡眠趋势</span>
+                                <span class="fc-value">+18%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
-        <!-- 公司介绍部分 -->
-        <section id="about" class="about-section">
-            <div class="section-content">
-                <div class="section-header">
-                    <h2>媒体认可 权威推荐</h2>
-                    <p>央视《发现者》栏目深度报道，展现数字健康领域的创新突破</p>
-                </div>
-                <!-- 央视视频卡片 -->
-                <div class="featured-media">
-                    <div class="video-card video-card--cctv">
-                        <div class="video-card__logo">
+
+        <!-- ═══════════════ BRAND TRUST ═══════════════ -->
+        <section id="about" class="brand-trust" aria-labelledby="brand-title">
+            <div class="container">
+                <h2 id="brand-title" class="section-title" data-reveal>权威推荐，值得信赖</h2>
+                <p class="section-subtitle" data-reveal>央视《发现者》栏目深度报道，展现数字健康领域的创新突破</p>
+                
+                <div class="media-card" data-reveal>
+                    <div class="media-card-inner">
+                        <div class="media-card-logo">
                             <img src="./images/logo.png" alt="发现者栏目Logo">
                         </div>
-                        <div class="video-card__info">
-                            <h3 class="video-card__title">央视《发现者》栏目:生命潮®《数字健康之路》</h3>
-                            <p class="video-card__description">深度探索AI与数字化技术在健康管理领域的创新应用</p>
+                        <div class="media-card-info">
+                            <h3>央视《发现者》: 生命潮®《数字健康之路》</h3>
+                            <p>深度探索AI与数字化技术在健康管理领域的创新应用</p>
                         </div>
-                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E3%80%8A%E6%95%B0%E5%AD%97%E5%81%A5%E5%BA%B7%E4%B9%8B%E8%B7%AF%E3%80%8B_20241111-HD%EF%BC%88%E6%92%AD%E5%87%BA%E7%89%88%EF%BC%89.mp4" class="video-card__button" target="_blank" rel="noopener noreferrer">
-                            <span class="play-icon">▶</span>
+                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E3%80%8A%E6%95%B0%E5%AD%97%E5%81%A5%E5%BA%B7%E4%B9%8B%E8%B7%AF%E3%80%8B_20241111-HD%EF%BC%88%E6%92%AD%E5%87%BA%E7%89%88%EF%BC%89.mp4" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                            <i data-lucide="play" class="icon-sm"></i>
                             观看视频
                         </a>
                     </div>
                 </div>
-                
-                <!-- 核心价值主张 -->
-                <div class="value-proposition">
-                    <div class="value-grid">
-                        <div class="value-item">
-                            <div class="value-icon">
-                                <i class="fas fa-award"></i>
-                            </div>
-                            <h3>医疗级精准监测</h3>
-                            <p>医疗级传感器，准确捕捉睡眠中的每一次呼吸与心跳</p>
-                        </div>
-                        <div class="value-item">
-                            <div class="value-icon">
-                                <i class="fas fa-brain"></i>
-                            </div>
-                            <h3>AI智能健康分析</h3>
-                            <p>基于大数据的智能算法，提供专业易懂的健康报告</p>
-                        </div>
-                        <div class="value-item">
-                            <div class="value-icon">
-                                <i class="fas fa-user-md"></i>
-                            </div>
-                            <h3>个性化干预方案</h3>
-                            <p>根据您的健康状况，量身定制改善建议和专业指导</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
 
-                <!-- 产品核心优势 -->
-        <section class="features-section">
+        <!-- ═══════════════ AI CAPABILITIES ═══════════════ -->
+        <section class="ai-capabilities" aria-labelledby="ai-title">
             <div class="container">
-                <div class="section-title">
-                    <h2>产品的核心优势</h2>
-                </div>
-                <div class="features-grid">
-                    <div class="feature-item">
-                        <i class="fas fa-bed"></i>
-                        <h3>精准睡眠监测</h3>
-                        <p>经临床对照验证的传感器，检测误差≤<strong>2%</strong>，准确捕捉睡眠中的每一次呼吸与心跳，全面评估睡眠质量。</p>
+                <h2 id="ai-title" class="section-title" data-reveal>为什么选择个人健康Pro+</h2>
+                <p class="section-subtitle" data-reveal>医疗级传感器 × AI智能算法，让健康管理更精准</p>
+                <div class="cap-grid" data-reveal>
+                    <div class="cap-card">
+                        <div class="cap-icon"><i data-lucide="activity" class="icon-lg"></i></div>
+                        <h3>精准监测</h3>
+                        <p>医疗级传感器，检测误差≤2%，准确捕捉每一次呼吸与心跳</p>
                     </div>
-                    <div class="feature-item">
-                        <i class="fas fa-chart-pie"></i>
-                        <h3>多维度健康评估</h3>
-                        <p>综合分析睡眠、情绪、体能数据，生成全面健康画像，洞察潜在风险。识别健康风险准确率达<strong>92%</strong>。</p>
+                    <div class="cap-card">
+                        <div class="cap-icon"><i data-lucide="brain" class="icon-lg"></i></div>
+                        <h3>AI分析</h3>
+                        <p>基于大数据的智能算法，报告生成＜10秒，识别准确率达92%</p>
                     </div>
-                    <div class="feature-item">
-                        <i class="fas fa-file-medical"></i>
-                        <h3>AI智能健康报告</h3>
-                        <p>基于大数据的智能算法，报告生成<strong>&lt;10秒</strong>，为您解读健康数据背后的意义，提供专业、易懂的健康报告。</p>
+                    <div class="cap-card">
+                        <div class="cap-icon"><i data-lucide="bar-chart-3" class="icon-lg"></i></div>
+                        <h3>长期趋势</h3>
+                        <p>365天持续追踪，洞察睡眠与健康变化趋势，早发现早干预</p>
                     </div>
-                    <div class="feature-item">
-                        <i class="fas fa-hand-holding-heart"></i>
-                        <h3>个性化干预方案</h3>
-                        <p>根据您的健康状况，量身定制改善建议，干预完成率提升<strong>85%</strong>，从生活方式到专业指导，助您持续改善。</p>
-                    </div>
-                </div>
-            </div>
-        </section>       
-        
-        <!-- 产品介绍部分 -->
-        <section id="products" class="products-section">
-            <div class="section-content">
-                <h2>产品介绍</h2>
-                <div class="product-showcase">
-                    <div class="product-info">
-                        <h3>个人健康精英Pro+</h3>
-                        <p>随时随地掌握健康，包含了睡眠、情绪、体能、健康、导航管理及测评，可多维度进行健康追踪和管理。
-                            通过直观的界面和深度的数据分析，将复杂的健康数据转化为您可以轻松理解和行动的指南。</p>
-                    </div>
-                    <!-- 产品视频卡片 -->
-                    <div class="video-card video-card--pro">
-                        <div class="video-card__logo">
-                            <img src="./images/pro.png" alt="个人健康管家Pro+ Logo">
-                        </div>
-                        <div class="video-card__info">
-                            <h3 class="video-card__title">个人健康精英Pro+</h3>
-                        </div>
-                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E4%B8%AA%E4%BA%BA%E5%81%A5%E5%BA%B7PRO%2B_V2SD.mp4" class="video-card__button" target="_blank" rel="noopener noreferrer">
-                            <span class="play-icon">▶</span>
-                            产品介绍
-                        </a>
+                    <div class="cap-card">
+                        <div class="cap-icon"><i data-lucide="lightbulb" class="icon-lg"></i></div>
+                        <h3>个性建议</h3>
+                        <p>根据您的健康状况，量身定制改善方案，干预完成率提升85%</p>
                     </div>
                 </div>
             </div>
         </section>
 
-
-
-        <!-- APP下载部分 -->
-        <section id="download" class="download-section">
-            <div class="section-content">
-                <div class="download-header">
-                    <h2>立即下载应用 <i class="fas fa-download"></i></h2>
+        <!-- ═══════════════ AI FLOW ═══════════════ -->
+        <section class="ai-flow" aria-labelledby="flow-title">
+            <div class="container">
+                <h2 id="flow-title" class="section-title" data-reveal>AI智能分析流程</h2>
+                <p class="section-subtitle" data-reveal>从佩戴到报告，全程智能自动化</p>
+                <div class="flow-steps" data-reveal>
+                    <div class="flow-step">
+                        <div class="flow-icon"><i data-lucide="watch" class="icon-lg"></i></div>
+                        <span class="flow-label">佩戴设备</span>
+                    </div>
+                    <div class="flow-arrow" aria-hidden="true">
+                        <svg width="48" height="24" viewBox="0 0 48 24"><path d="M0 12h40M34 5l8 7-8 7" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon"><i data-lucide="upload-cloud" class="icon-lg"></i></div>
+                        <span class="flow-label">上传数据</span>
+                    </div>
+                    <div class="flow-arrow" aria-hidden="true">
+                        <svg width="48" height="24" viewBox="0 0 48 24"><path d="M0 12h40M34 5l8 7-8 7" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon"><i data-lucide="cpu" class="icon-lg"></i></div>
+                        <span class="flow-label">AI模型分析</span>
+                    </div>
+                    <div class="flow-arrow" aria-hidden="true">
+                        <svg width="48" height="24" viewBox="0 0 48 24"><path d="M0 12h40M34 5l8 7-8 7" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon"><i data-lucide="gauge" class="icon-lg"></i></div>
+                        <span class="flow-label">健康评分</span>
+                    </div>
+                    <div class="flow-arrow" aria-hidden="true">
+                        <svg width="48" height="24" viewBox="0 0 48 24"><path d="M0 12h40M34 5l8 7-8 7" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon"><i data-lucide="clipboard-check" class="icon-lg"></i></div>
+                        <span class="flow-label">干预建议</span>
+                    </div>
                 </div>
-                <div class="download-container">
-                    <div class="app-info-card">
-                        <div class="app-icon">
-                            <img src="./images/pro.png" alt="健康管家Pro+ App图标">
-                        </div>
-                        <div class="app-details">
-                            <h3 class="app-name">个人健康精英Pro+</h3>
-                            <p class="app-description">让每一次监测充满意义</p>
-                            <div class="app-meta">
-                                <span class="app-version">版本: v1.2.0</span>
-                                <span class="app-size">大小: 15.7MB</span>
-                            </div>
-                            <div class="download-options">
-                                <a href="http://management.lifetide.cn/aloneCode?type=0" class="android-download-btn primary" target="_blank" rel="noopener noreferrer">
-                                    <i class="fab fa-android"></i>
-                                    Android 点击下载
-                                </a>
+            </div>
+        </section>
 
+        <!-- ═══════════════ STATS ═══════════════ -->
+        <section class="stats-section" aria-label="产品数据统计">
+            <div class="container">
+                <div class="stats-grid" data-reveal>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="365">0</span>
+                        <span class="stat-unit">天</span>
+                        <span class="stat-label">趋势追踪</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="20">0</span>
+                        <span class="stat-unit">+</span>
+                        <span class="stat-label">AI分析模型</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="100">0</span>
+                        <span class="stat-unit">+</span>
+                        <span class="stat-label">睡眠指标</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="30">0</span>
+                        <span class="stat-unit">秒</span>
+                        <span class="stat-label">生成报告</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ APP SCREENSHOTS ═══════════════ -->
+        <section class="screenshots" aria-labelledby="screenshots-title">
+            <div class="container">
+                <h2 id="screenshots-title" class="section-title" data-reveal>真实应用体验</h2>
+                <p class="section-subtitle" data-reveal>从首页到报告，每一帧都是真实的健康管理界面</p>
+                <div class="screenshot-scroll" data-reveal>
+                    <div class="screenshot-scroll-track" id="screenshotTrack">
+                            <div class="screenshot-item">
+                                <div class="screenshot-phone">
+                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="应用首页 - 健康概览">
+                                </div>
+                                <span class="screenshot-label">健康首页</span>
                             </div>
-                            <p class="system-requirement">
-                                <i class="fas fa-info-circle"></i>
-                                支持Android 8.0及以上系统
-                            </p>
+                            <div class="screenshot-item">
+                                <div class="screenshot-phone">
+                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="睡眠监测详情">
+                                </div>
+                                <span class="screenshot-label">睡眠监测</span>
+                            </div>
+                            <div class="screenshot-item">
+                                <div class="screenshot-phone">
+                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="AI健康报告">
+                                </div>
+                                <span class="screenshot-label">AI报告</span>
+                            </div>
+                            <div class="screenshot-item">
+                                <div class="screenshot-phone">
+                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="历史趋势数据">
+                                </div>
+                                <span class="screenshot-label">历史趋势</span>
+                            </div>
+                            <div class="screenshot-item">
+                                <div class="screenshot-phone">
+                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="心率监测详情">
+                                </div>
+                                <span class="screenshot-label">心率监测</span>
+                            </div>
+                            <div class="screenshot-item">
+                                <div class="screenshot-phone">
+                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="血氧分析">
+                                </div>
+                                <span class="screenshot-label">血氧分析</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="qr-code-section">
-                        <img src="./images/health-pro-qr.png" alt="下载个人健康精英Pro" class="qr-code-img">
-                        <div class="qr-code-info">
-                            <h4>扫描二维码下载</h4>
-                            <p>使用手机浏览器扫描二维码打开官网下载</p>
-                            <div class="compatibility-notice">
-                                <div class="device-support supported">
-                                    <i class="fab fa-android"></i>
-                                    <span>支持 Android 8.0+</span>
-                                </div>
+                </div>
+        </section>
+
+        <!-- ═══════════════ AI HEALTH REPORT ═══════════════ -->
+        <section class="ai-report" aria-labelledby="report-title">
+            <div class="container">
+                <h2 id="report-title" class="section-title" data-reveal>AI健康报告，一眼看懂</h2>
+                <p class="section-subtitle" data-reveal>AI自动生成专业级健康分析，从数据到建议，清晰易懂</p>
+                <div class="report-showcase" data-reveal>
+                    <div class="report-card">
+                        <div class="report-card-img">
+                            <img src="images/ChatGPT Image 睡眠健康报告.png" alt="AI睡眠健康报告">
+                        </div>
+                        <div class="report-card-overlay">
+                            <div class="report-card-badge">
+                                <i data-lucide="sparkles" class="icon-sm"></i>
+                                AI自动生成
                             </div>
                         </div>
+                    </div>
+                    <div class="report-features">
+                        <div class="report-feature">
+                            <i data-lucide="moon" class="icon-md"></i>
+                            <div>
+                                <h4>睡眠结构分析</h4>
+                                <p>深度睡眠、浅度睡眠、REM、清醒各阶段精准拆解</p>
+                            </div>
+                        </div>
+                        <div class="report-feature">
+                            <i data-lucide="heart-pulse" class="icon-md"></i>
+                            <div>
+                                <h4>HRV心率变异性</h4>
+                                <p>自主神经系统状态评估，压力与恢复指标一目了然</p>
+                            </div>
+                        </div>
+                        <div class="report-feature">
+                            <i data-lucide="alert-triangle" class="icon-md"></i>
+                            <div>
+                                <h4>风险预警提示</h4>
+                                <p>智能识别潜在健康风险，提供早期干预建议</p>
+                            </div>
+                        </div>
+                        <div class="report-feature">
+                            <i data-lucide="clipboard-list" class="icon-md"></i>
+                            <div>
+                                <h4>个性化建议</h4>
+                                <p>根据您的数据，量身定制作息调整与改善方案</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
+        <section class="testimonials" aria-labelledby="test-title">
+            <div class="container">
+                <h2 id="test-title" class="section-title" data-reveal>用户真实评价</h2>
+                <p class="section-subtitle" data-reveal>来自真实用户的使用反馈</p>
+                <div class="test-grid" data-reveal>
+                    <div class="test-card">
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-text">连续戴了7天，AI发现我的睡眠质量一直在下降，原来是工作压力太大。现在每天都会看健康报告，真的很有用。</p>
+                        <div class="test-author">
+                            <div class="test-avatar">张</div>
+                            <div>
+                                <span class="test-name">张先生</span>
+                                <span class="test-role">软件工程师</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="test-card">
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-text">之前一直以为自己睡眠挺好的，结果AI分析显示深睡时间严重不足。按照建议调整作息后，白天精力明显好转了。</p>
+                        <div class="test-author">
+                            <div class="test-avatar">李</div>
+                            <div>
+                                <span class="test-name">李女士</span>
+                                <span class="test-role">产品经理</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="test-card">
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-text">报告非常详细，心率、血氧、呼吸率都有。最惊喜的是AI给出的改善建议很专业，感觉像有个私人健康顾问。</p>
+                        <div class="test-author">
+                            <div class="test-avatar">王</div>
+                            <div>
+                                <span class="test-name">王同学</span>
+                                <span class="test-role">在校生</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ FAQ ═══════════════ -->
+        <section class="faq" aria-labelledby="faq-title">
+            <div class="container">
+                <h2 id="faq-title" class="section-title" data-reveal>常见问题</h2>
+                <div class="faq-list" data-reveal>
+                    <details class="faq-item">
+                        <summary>
+                            <span>支持哪些设备？</span>
+                            <i data-lucide="chevron-down" class="icon-sm faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">目前支持 Android 8.0 及以上系统的智能手机。HarmonyOS 和 iOS 版本正在规划中，敬请期待。</div>
+                    </details>
+                    <details class="faq-item">
+                        <summary>
+                            <span>AI分析准确吗？</span>
+                            <i data-lucide="chevron-down" class="icon-sm faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">我们的AI分析基于临床对照验证，传感器检测误差≤2%，健康风险识别准确率达92%，报告经过专业医疗团队审核校准。</div>
+                    </details>
+                    <details class="faq-item">
+                        <summary>
+                            <span>数据安全吗？</span>
+                            <i data-lucide="chevron-down" class="icon-sm faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">所有健康数据均采用端到端加密存储，符合国家数据安全法规。我们严格遵守隐私保护政策，不会将您的数据用于商业用途。</div>
+                    </details>
+                    <details class="faq-item">
+                        <summary>
+                            <span>如何下载？</span>
+                            <i data-lucide="chevron-down" class="icon-sm faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">您可以直接在本页面下方点击下载按钮获取APK安装包，或扫描二维码在手机浏览器中打开官网下载。安装包约15.7MB。</div>
+                    </details>
+                    <details class="faq-item">
+                        <summary>
+                            <span>收费吗？</span>
+                            <i data-lucide="chevron-down" class="icon-sm faq-chevron"></i>
+                        </summary>
+                        <div class="faq-answer">App免费下载，基础健康监测和报告功能完全免费。高级AI深度分析功能提供会员订阅服务，详情请查看App内说明。</div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════ DOWNLOAD ═══════════════ -->
+        <section id="download" class="download" aria-labelledby="dl-title">
+            <div class="container">
+                <h2 id="dl-title" class="section-title" data-reveal>立即下载</h2>
+                <p class="section-subtitle" data-reveal>开启您的AI健康管理之旅</p>
+                <div class="dl-grid" data-reveal>
+                    <div class="dl-info">
+                        <div class="dl-app-icon">
+                            <img src="./images/pro.png" alt="健康精英Pro+">
+                        </div>
+                        <h3>个人健康精英Pro+</h3>
+                        <p class="dl-tagline">让每一次监测充满意义</p>
+                        <div class="dl-meta">
+                            <span><i data-lucide="info" class="icon-xs"></i> 版本 v1.2.0</span>
+                            <span><i data-lucide="calendar" class="icon-xs"></i> 2025年更新</span>
+                            <span><i data-lucide="hard-drive" class="icon-xs"></i> 15.7MB</span>
+                        </div>
+                        <a href="http://management.lifetide.cn/aloneCode?type=0" class="btn btn-primary btn-lg dl-btn" target="_blank" rel="noopener noreferrer">
+                            <i data-lucide="download" class="icon-sm"></i>
+                            Android 立即下载
+                        </a>
+                        <p class="dl-req"><i data-lucide="smartphone" class="icon-xs"></i> 支持 Android 8.0 及以上系统</p>
+                        <div class="dl-platforms">
+                            <span class="dl-platform available"><i data-lucide="check-circle" class="icon-xs"></i> Android</span>
+                            <span class="dl-platform available"><i data-lucide="check-circle" class="icon-xs"></i> HarmonyOS</span>
+                            <span class="dl-platform coming"><i data-lucide="clock" class="icon-xs"></i> Apple（规划中）</span>
+                        </div>
+                    </div>
+                    <div class="dl-qr">
+                        <img src="./images/health-pro-qr.png" alt="扫描二维码下载" class="qr-img">
+                        <p class="dl-qr-text">使用手机浏览器扫描二维码</p>
+                        <p class="dl-qr-sub">打开官网即可下载</p>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- 页脚 -->
+    <!-- ═══════════════ FOOTER ═══════════════ -->
     <footer role="contentinfo" aria-label="网站页脚">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>产品链接</h4>
-                <ul role="list">
-                    <li><a href="html/QRcode.html" aria-label="下载更多应用">APP全家桶下载</a></li>
-                    <li><a href="https://incomparable-axolotl.netlify.app/" aria-label="查看成功案例">糖尿病管理平台</a></li>
-                    <li><a href="https://glistening-bxy.netlify.app/" aria-label="bxy彩蛋😍😶🐷">彩蛋🎄</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>公司信息</h4>
-                <ul role="list">
-                    <li><a href="about.html#company" aria-label="了解公司介绍">关于我们</a></li>
-                    <li><a href="about.html#contact" aria-label="联系我们">联系方式</a></li>
-                    <li><a href="about.html#careers" aria-label="查看招聘信息">招聘信息</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>法律信息</h4>
-                <ul role="list">
-                    <li><a href="privacy.html" aria-label="阅读隐私政策">隐私政策</a></li>
-                    <li><a href="terms.html" aria-label="阅读服务条款">服务条款</a></li>
-                    <li><a href="#" aria-label="ICP备案信息">ICP备案</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>关注我们</h4>
-                <div class="social-links" role="list">
-                    <a href="#" aria-label="微信公众号"><i class="fab fa-weixin" aria-hidden="true"></i> 微信公众号</a>
-                    <a href="#" aria-label="企业介绍视频"><i class="fas fa-video" aria-hidden="true"></i> 企业介绍</a>
+        <div class="footer-inner">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <img src="./images/dzlogo.png" alt="健康科技">
+                        <span>健康科技</span>
+                    </div>
+                    <p class="footer-desc">AI驱动的精准健康管理解决方案</p>
+                </div>
+                <div class="footer-col">
+                    <h4>产品</h4>
+                    <ul>
+                        <li><a href="html/QRcode.html">APP下载</a></li>
+                        <li><a href="https://incomparable-axolotl.netlify.app/">糖尿病管理平台</a></li>
+                        <li><a href="#download">最新版本</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>公司</h4>
+                    <ul>
+                        <li><a href="about.html#company">关于我们</a></li>
+                        <li><a href="about.html#contact">联系我们</a></li>
+                        <li><a href="about.html#careers">招聘信息</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>法律</h4>
+                    <ul>
+                        <li><a href="privacy.html">隐私政策</a></li>
+                        <li><a href="terms.html">用户协议</a></li>
+                        <li><a href="#">ICP备案</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>联系我们</h4>
+                    <ul>
+                        <li><a href="mailto:contact@lifetide.cn"><i data-lucide="mail" class="icon-xs"></i> contact@lifetide.cn</a></li>
+                        <li><a href="#"><i data-lucide="github" class="icon-xs"></i> GitHub</a></li>
+                        <li><a href="#"><i data-lucide="message-circle" class="icon-xs"></i> 微信公众号</a></li>
+                    </ul>
                 </div>
             </div>
-        </div>
-        <div class="footer-bottom">
-            <div class="compliance-notice">
-                <p><i class="fas fa-shield-alt"></i> 合规说明：本产品为健康管理工具，不用于医疗诊断。所有数据仅供参考，具体健康问题请咨询专业医生。</p>
+            <div class="footer-bottom">
+                <p class="footer-compliance"><i data-lucide="shield-check" class="icon-xs"></i> 本产品为健康管理工具，不用于医疗诊断。所有数据仅供参考，具体健康问题请咨询专业医生。</p>
+                <p>© 2025 健康科技有限公司 版权所有 | 京ICP备2024011111号-1</p>
             </div>
-            <p>© 2025 健康科技有限公司 版权所有</p>
-            <p>京ICP备2024011111号-1 | 京公网安备87777777号</p>
         </div>
     </footer>
-    <!-- 性能优化脚本 -->
+
+    <!-- Scripts -->
     <script src="js/performance-optimizer.js" defer></script>
     <script src="js/mobile-nav.js" defer></script>
     <script src="js/index.js" defer></script>
-    <!-- AI聊天组件 -->
     <script src="config/ai-chat-config.js"></script>
     <script src="js/ai-chat.js" defer></script>
+    <script>
+    // Initialize Lucide icons
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+    </script>
 </body>
 </html>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

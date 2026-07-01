@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI聊天功能实现
  * 包含界面控制、消息管理和API调用逻辑
  */
@@ -77,9 +77,6 @@ class AIChatWidget {
                 <!-- 消息将在这里显示 -->
             </div>
             <div class="ai-chat-input">
-                <button class="chat-image-btn" id="chatImageBtn" title="上传图片" onclick="window.aiChatWidget?.triggerImageUpload()">
-                    <i class="fas fa-image"></i>
-                </button>
                 <textarea 
                     class="chat-input-field" 
                     id="chatInput" 
@@ -145,159 +142,6 @@ class AIChatWidget {
         this.overlay.addEventListener('click', () => {
             this.closeChat();
         });
-        
-        document.addEventListener('click', (e) => {
-            if (this.isOpen && 
-                !this.chatContainer.contains(e.target) && 
-                !this.floatBtn.contains(e.target)) {
-                this.closeChat();
-            }
-        });
-        
-        // 绑定图像上传事件
-        this.bindImageUpload();
-    }
-    
-    // 添加图像上传功能
-    bindImageUpload() {
-        // 创建隐藏的文件输入框
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.style.display = 'none';
-        fileInput.id = 'ai-chat-image-input';
-        document.body.appendChild(fileInput);
-        this.imageInput = fileInput;
-        
-        fileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                await this.handleImageUpload(file);
-                fileInput.value = ''; // 重置以便再次选择同一文件
-            }
-        });
-    }
-    
-    // 触发图像选择
-    triggerImageUpload() {
-        this.imageInput?.click();
-    }
-    
-    // 处理图像上传
-    async handleImageUpload(file) {
-        // 验证文件大小 (最大 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            this.showError('图片大小不能超过 10MB');
-            return;
-        }
-        
-        // 验证文件类型
-        if (!file.type.startsWith('image/')) {
-            this.showError('请选择图片文件');
-            return;
-        }
-        
-        // 显示加载状态
-        const loadingMsg = { role: 'user', content: '[图片上传中...]' };
-        this.addMessage(loadingMsg);
-        this.messages.push(loadingMsg);
-        
-        try {
-            // 将图片转换为 Base64
-            const base64 = await this.fileToBase64(file);
-            
-            // 显示图片预览
-            const previewMsg = { 
-                role: 'user', 
-                content: '',
-                image: base64,
-                imageName: file.name
-            };
-            this.messages.pop(); // 移除加载消息
-            this.addMessage(previewMsg);
-            this.messages.push(previewMsg);
-            
-            // 发送图片到 AI 分析
-            await this.sendImageToAI(base64, file.name);
-            
-        } catch (error) {
-            console.error('图片处理失败:', error);
-            this.showError('图片处理失败，请重试');
-        }
-    }
-    
-    // 文件转 Base64
-    fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    }
-    
-    // 发送图片到 AI 分析
-    async sendImageToAI(imageBase64, imageName) {
-        if (this.isRequestPending) {
-            this.showError('请等待上一个问题回答完成...');
-            return;
-        }
-        this.isRequestPending = true;
-        
-        const originalSendHtml = this.sendBtn.innerHTML;
-        this.sendBtn.disabled = true;
-        this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        
-        this.showTypingIndicator();
-        
-        try {
-            const messageHistory = [
-                { role: 'system', content: this.systemPrompt + '\n\n请分析用户发送的图片内容，并结合个人健康精英Pro+产品功能给出专业解答。' },
-                ...this.messages.slice(-this.maxMessages).map(msg => ({
-                    role: msg.role === 'ai' ? 'assistant' : msg.role,
-                    content: msg.content || '[图片]'
-                }))
-            ];
-            
-            const response = await fetch(this.functionUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: messageHistory,
-                    model: 'Qwen/Qwen2.5-VL-72B-Instruct',
-                    image: imageBase64
-                }),
-                cache: 'no-store'
-            });
-            
-            if (!response.ok) {
-                throw new Error(`AI 服务请求失败：${response.status}`);
-            }
-            
-            const data = await response.json();
-            let content = '';
-            
-            if (data.choices && data.choices[0]?.message?.content) {
-                content = data.choices[0].message.content;
-            } else if (data.message?.content) {
-                content = data.message.content;
-            } else {
-                content = '图片分析失败，请稍后重试。';
-            }
-            
-            const aiMsg = { role: 'assistant', content: this.formatContent(content) };
-            this.addMessage(aiMsg);
-            this.messages.push(aiMsg);
-            
-        } catch (error) {
-            console.error('AI 图片分析失败:', error);
-            this.showError('图片分析失败，请重试');
-        } finally {
-            this.hideTypingIndicator();
-            this.sendBtn.disabled = false;
-            this.sendBtn.innerHTML = originalSendHtml;
-            this.isRequestPending = false;
-        }
     }
     
     toggleChat() {
@@ -352,27 +196,41 @@ class AIChatWidget {
         // 创建欢迎卡片
         const welcomeCard = document.createElement('div');
         welcomeCard.className = 'welcome-card';
-        welcomeCard.innerHTML = `
-            <h4>👋 欢迎来到 AI 健康助手</h4>
-            <p>${welcomeText.replace(/\n/g, '<br>')}</p>
+        
+                welcomeCard.innerHTML = `
+            <div class="welcome-avatar-row">
+                <div class="welcome-avatar">
+                    <i class="fas fa-robot" style=""></i>
+                </div>
+                <div class="welcome-name">豆眼儿</div>
+            </div>
+            <div class="welcome-desc">您好！我是豆眼儿，您的专属AI健康助手 🌟<br>请随时向我提问，我会尽力为您提供帮助！</div>
             <div class="quick-actions">
                 <button class="quick-action-btn" data-action="sleep">
-                    <i class="fas fa-bed"></i> 睡眠测评
+                    <span class="quick-action-icon">🛏️</span>
+                    <span class="quick-action-title">睡眠测评</span>
+                    <span class="quick-action-desc">分析昨晚的睡眠质量</span>
                 </button>
                 <button class="quick-action-btn" data-action="device">
-                    <i class="fas fa-device"></i> 设备绑定
+                    <span class="quick-action-icon">🔌</span>
+                    <span class="quick-action-title">设备绑定</span>
+                    <span class="quick-action-desc">一键连接你的智能手环</span>
                 </button>
                 <button class="quick-action-btn" data-action="report">
-                    <i class="fas fa-file-medical"></i> 查看报告
+                    <span class="quick-action-icon">📄</span>
+                    <span class="quick-action-title">查看健康报告</span>
+                    <span class="quick-action-desc">生成最新的AI分析报告</span>
                 </button>
                 <button class="quick-action-btn" data-action="support">
-                    <i class="fas fa-headset"></i> 技术支持
+                    <span class="quick-action-icon">🛠️</span>
+                    <span class="quick-action-title">技术支持</span>
+                    <span class="quick-action-desc">解决设备与数据同步问题</span>
                 </button>
             </div>
         `;
             
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'chat-message assistant';
+        messageDiv.className = 'welcome-wrapper';
         messageDiv.appendChild(welcomeCard);
             
         this.messagesContainer.appendChild(messageDiv);
