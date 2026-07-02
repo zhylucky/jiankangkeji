@@ -27,17 +27,12 @@ class AIChatWidget {
             this.systemPrompt = this.config.systemPrompt;
             this.maxMessages = this.config.maxMessages || 6;
             this.isRequestPending = false; // 添加请求防重标记
-            
-            // 初始化搜索配置
-            this.searchConfig = this.config.searchSettings || {};
-            this.searchEnabled = this.searchConfig.enabled || false;
         } else {
             // 使用默认配置
             this.functionUrl = '/.netlify/functions/chat';
             this.model = 'Qwen/Qwen3-8B';
-            this.systemPrompt = '你是一个专业的健康管理AI助手。';
+            this.systemPrompt = '你是一个专业的健康管理AI助手，负责解答个人健康Pro+和睡眠呼吸监测仪两款产品的问题。';
             this.maxMessages = 10;
-            this.searchEnabled = false;
         }
         
         this.init();
@@ -280,22 +275,9 @@ class AIChatWidget {
         try {
             this.validateAndCleanMessages();
 
-            // 可选搜索
-            let searchResults = '';
-            if (this.searchEnabled && this.shouldSearch(message)) {
-                try {
-                    this.showSearchingIndicator();
-                    searchResults = await this.performWebSearch(message);
-                    this.hideSearchingIndicator();
-                } catch (searchError) {
-                    console.warn('搜索失败:', searchError);
-                    this.hideSearchingIndicator();
-                }
-            }
-
             // 非流式响应
             this.showTypingIndicator();
-            const response = await this.callAIAPI(message, searchResults);
+            const response = await this.callAIAPI(message);
             this.hideTypingIndicator();
             const aiMsg = { role: 'assistant', content: this.formatContent(response) };
             this.addMessage(aiMsg);
@@ -311,7 +293,6 @@ class AIChatWidget {
                 errorMsg = this.config?.ui?.errorMessages?.unknownError || '出现了未知错误，请重新尝试';
             }
             this.showError(errorMsg);
-            this.hideSearchingIndicator();
         } finally {
             this.sendBtn.disabled = false;
             this.sendBtn.innerHTML = originalSendHtml;
@@ -320,27 +301,14 @@ class AIChatWidget {
     }
 
     // 调用 AI 的函数
-    async callAIAPI(userMessage, searchResults = '') {
+    async callAIAPI(userMessage) {
         // 网络离线直接给出友好提示
         if (typeof navigator !== 'undefined' && navigator.onLine === false) {
             throw new Error('当前网络不可用，请检查网络连接后重试');
         }
 
         // 组合系统提示
-        let enhancedSystemPrompt = this.systemPrompt;
-        const currentTime = this.getCurrentTime();
-        if (searchResults) {
-            enhancedSystemPrompt += `
-
-最新网络信息：
-${searchResults}
-
-请基于上述最新信息和你的知识库综合回答用户问题。
-
-重要提醒：${currentTime}，请确保时间信息的准确性。`;
-        } else {
-            enhancedSystemPrompt += `\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
-        }
+        const enhancedSystemPrompt = this.systemPrompt + `\n\n重要提醒：${this.getCurrentTime()}，请确保时间信息的准确性。`;
 
         // 构建消息历史（裁剪到最近 N 条）
         const messageHistory = [
@@ -564,92 +532,7 @@ ${searchResults}
             content: msg.content
         }));
     }
-    
-    // 判断是否需要进行网络搜索
-    shouldSearch(message) {
-        if (!this.searchConfig || !this.searchConfig.autoSearch) {
-            return false;
-        }
-        
-        const searchKeywords = this.searchConfig.searchKeywords || ['最新', '今天', '现在', '当前', '新闻', '近期', '实时'];
-        return searchKeywords.some(keyword => message.includes(keyword));
-    }
-    
-    // 执行网络搜索（仅支持百度搜索）
-    async performWebSearch(query) {
-        const maxResults = this.searchConfig.maxResults || 5;
-        
-        try {
-            return await this.searchWithBaidu(query, maxResults);
-        } catch (error) {
-            console.warn('百度搜索失败:', error);
-            throw new Error(`搜索服务暂时不可用: ${error.message}`);
-        }
-    }
-    
-    // 格式化搜索结果
-    formatSearchResults(results, provider) {
-        if (!results || results.length === 0) {
-            return '未找到相关的最新信息。';
-        }
-        
-        let formattedResults = '最新网络搜索结果：\n\n';
-        
-        results.slice(0, this.searchConfig.maxResults || 5).forEach((result, index) => {
-            let title, snippet, link;
-            
-            if (provider === 'serper') {
-                title = result.title || '无标题';
-                snippet = result.snippet || '无描述';
-                link = result.link || '';
-            } else if (provider === 'bing') {
-                title = result.name || '无标题';
-                snippet = result.snippet || '无描述';
-                link = result.url || '';
-            } else {
-                // 通用格式处理（适用于百度、360、搜狗等）
-                title = result.title || '无标题';
-                snippet = result.snippet || '无描述';
-                link = result.link || '';
-            }
-            
-            formattedResults += `${index + 1}. ${title}
-${snippet}
-来源: ${link}
 
-`;
-        });
-        
-        return formattedResults;
-    }
-    
-    // 使用百度搜索
-    async searchWithBaidu(query, maxResults) {
-        try {
-            // 使用百度搜索的公开API（无需密钥）
-            const searchUrl = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}&rn=${maxResults}`;
-            
-            // 由于跨域限制，这里使用模拟搜索结果
-            // 实际部署时可以通过后端代理实现
-            const mockResults = [
-                {
-                    title: `关于"${query}"的最新信息`,
-                    snippet: `正在为您搜索"${query}"的最新内容和相关信息。百度为您提供最全面、最及时的搜索结果。`,
-                    link: searchUrl
-                },
-                {
-                    title: `${query} - 相关资讯`,
-                    snippet: `包含"${query}"的最新新闻、资讯和热点话题，帮助您了解最新动态。`,
-                    link: `https://www.baidu.com/s?wd=${encodeURIComponent(query + ' 最新')}`
-                }
-            ];
-            
-            return this.formatSearchResults(mockResults, 'baidu');
-        } catch (error) {
-            throw new Error(`百度搜索失败: ${error.message}`);
-        }
-    }
-    
     // 获取当前本地时间（优化版本）
     getCurrentTime() {
         const now = new Date();
@@ -701,30 +584,6 @@ ${snippet}
         }
         
         return enhanced;
-    }
-    
-    // 显示搜索指示器
-    showSearchingIndicator() {
-        const searchDiv = document.createElement('div');
-        searchDiv.className = 'chat-message ai searching';
-        searchDiv.innerHTML = `
-            <div class="chat-avatar ai"></div>
-            <div class="chat-bubble ai">
-                <i class="fas fa-search"></i> 正在搜索最新信息...
-            </div>
-        `;
-        
-        this.messagesContainer.appendChild(searchDiv);
-        this.searchingIndicator = searchDiv;
-        this.scrollToBottom();
-    }
-    
-    // 隐藏搜索指示器
-    hideSearchingIndicator() {
-        if (this.searchingIndicator) {
-            this.searchingIndicator.remove();
-            this.searchingIndicator = null;
-        }
     }
 }
 
