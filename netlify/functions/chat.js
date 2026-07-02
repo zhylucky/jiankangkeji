@@ -1,5 +1,47 @@
 // netlify/functions/chat.js
 const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
+
+// 知识库缓存（避免每次请求都读文件）
+let knowledgeBaseCache = null;
+let knowledgeBaseLoadTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
+
+/**
+ * 加载知识库文件（带缓存）
+ */
+function loadKnowledgeBase() {
+  const now = Date.now();
+  // 如果缓存有效，直接返回
+  if (knowledgeBaseCache && (now - knowledgeBaseLoadTime) < CACHE_TTL) {
+    return knowledgeBaseCache;
+  }
+
+  try {
+    // 尝试多个可能的路径
+    const possiblePaths = [
+      path.join(__dirname, '../../Markdown/knowledge-base.md'),
+      path.join(process.cwd(), 'Markdown/knowledge-base.md'),
+      path.join('/opt/build/repo', 'Markdown/knowledge-base.md')
+    ];
+
+    for (const filePath of possiblePaths) {
+      if (fs.existsSync(filePath)) {
+        knowledgeBaseCache = fs.readFileSync(filePath, 'utf8');
+        knowledgeBaseLoadTime = now;
+        console.log(`[KnowledgeBase] Loaded from: ${filePath}`);
+        return knowledgeBaseCache;
+      }
+    }
+
+    console.warn('[KnowledgeBase] File not found in any path');
+    return null;
+  } catch (error) {
+    console.error('[KnowledgeBase] Load error:', error.message);
+    return null;
+  }
+}
 
 exports.handler = async function(event, context) {
   // 处理预检请求 (OPTIONS)
@@ -40,11 +82,32 @@ exports.handler = async function(event, context) {
       throw new Error('请求体为空');
     }
 
-    const { messages, model, stream, image } = JSON.parse(event.body);
-    
+    const { messages, model, image, injectKnowledge } = JSON.parse(event.body);
+
     // 验证参数
     if (!messages || !Array.isArray(messages)) {
       throw new Error('messages 参数无效或缺失');
+    }
+
+    // ========== 知识库注入 ==========
+    // 仅当 injectKnowledge 为 true 时注入（聊天功能），报告功能不注入
+    if (injectKnowledge === true && !image && messages.length > 0) {
+      const knowledgeBase = loadKnowledgeBase();
+      if (knowledgeBase) {
+        // 找到system message并注入知识库
+        const systemMsgIndex = messages.findIndex(m => m.role === 'system');
+        if (systemMsgIndex !== -1) {
+          messages[systemMsgIndex].content += `\n\n--- 产品知识库 ---\n${knowledgeBase}`;
+          console.log('[KnowledgeBase] Injected into system message');
+        } else {
+          // 如果没有system message，在最前面添加
+          messages.unshift({
+            role: 'system',
+            content: `你是"个人健康精英Pro+"的AI健康助手。\n\n--- 产品知识库 ---\n${knowledgeBase}`
+          });
+          console.log('[KnowledgeBase] Created new system message');
+        }
+      }
     }
 
     // 检查环境变量（优先使用SILICONFLOW_API_KEY，兼容AI_API_KEY）
@@ -104,61 +167,24 @@ exports.handler = async function(event, context) {
         })
       };
     }
-    
-    // ========== 流式响应处理 ==========
-    const useStream = stream === true;
-    
+
     // 构建请求参数
     const requestBody = {
       model: model || 'Qwen/Qwen3-8B',
       messages: messages,
-      stream: useStream,
+      stream: false,
       max_tokens: 1200,
       temperature: 0.5,
       top_p: 0.8,
       presence_penalty: 0.1,
       frequency_penalty: 0.3
     };
-        
+
     // 明确关闭思考模式和其他耗时功能
     if (model && model.includes('Qwen')) {
       requestBody.enable_search = false;
       requestBody.enable_thinking = false;
     }
-    
-    // 流式响应处理
-    if (useStream) {
-      console.log('[Stream] Starting SSE stream...');
-      
-      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'User-Agent': 'Netlify-Function-Client'
-        },
-        body: JSON.stringify(requestBody),
-        timeout: 55000
-      });
-
-      if (!response.ok) {
-        throw new Error(`API请求失败：${response.status}`);
-      }
-
-      // 返回流式响应
-      return {
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          ...corsHeaders
-        },
-        body: response.body
-      };
-    }
-    
-    // ========== 非流式响应处理（保持原有逻辑）==========
     const maxRetries = 2;
     const baseDelay = 500;
         

@@ -283,44 +283,26 @@ class AIChatWidget {
         try {
             this.validateAndCleanMessages();
 
-            // 演示模式：本地模拟流式输出，不调用后端
-            const demoMode = this.performanceSettings?.demoMode === true || (this.config?.performanceSettings?.demoMode === true);
-            const sseDemo = this.performanceSettings?.enableSSEDemo === true || (this.config?.performanceSettings?.enableSSEDemo === true);
-
-            if (demoMode) {
-                await this.runLocalDemoSSE(message, sseDemo);
-            } else {
-                // 正常路径：可选搜索
-                let searchResults = '';
-                if (this.searchEnabled && this.shouldSearch(message)) {
-                    try {
-                        this.showSearchingIndicator();
-                        searchResults = await this.performWebSearch(message);
-                        this.hideSearchingIndicator();
-                    } catch (searchError) {
-                        console.warn('搜索失败:', searchError);
-                        this.hideSearchingIndicator();
-                    }
-                }
-                
-                // 根据配置决定使用流式或非流式响应
-                const useStream = this.performanceSettings?.enableStream === true || (this.config?.performanceSettings?.enableStream === true);
-                
-                if (useStream) {
-                    // 流式响应（需要 Netlify Pro 套餐支持）
-                    const response = await this.callAIAPIStream(message, searchResults);
-                    this.messages.push({ role: 'assistant', content: response });
-                } else {
-                    // 非流式响应（更稳定，Netlify 免费套餐推荐）
-                    // 先显示打字指示器
-                    this.showTypingIndicator();
-                    const response = await this.callAIAPI(message, searchResults);
-                    this.hideTypingIndicator();
-                    const aiMsg = { role: 'assistant', content: this.formatContent(response) };
-                    this.addMessage(aiMsg);
-                    this.messages.push(aiMsg);
+            // 可选搜索
+            let searchResults = '';
+            if (this.searchEnabled && this.shouldSearch(message)) {
+                try {
+                    this.showSearchingIndicator();
+                    searchResults = await this.performWebSearch(message);
+                    this.hideSearchingIndicator();
+                } catch (searchError) {
+                    console.warn('搜索失败:', searchError);
+                    this.hideSearchingIndicator();
                 }
             }
+
+            // 非流式响应
+            this.showTypingIndicator();
+            const response = await this.callAIAPI(message, searchResults);
+            this.hideTypingIndicator();
+            const aiMsg = { role: 'assistant', content: this.formatContent(response) };
+            this.addMessage(aiMsg);
+            this.messages.push(aiMsg);
         } catch (error) {
             console.error('AI API调用失败:', error);
             let errorMsg;
@@ -340,51 +322,7 @@ class AIChatWidget {
         }
     }
 
-    // 本地演示：模拟SSE流式输出/重试视觉
-    async runLocalDemoSSE(userMessage, enableStream = true) {
-        // 模拟重试视觉：第一次“失败”，触发重试中状态
-        const showRetry = userMessage.includes('重试') || userMessage.toLowerCase().includes('retry');
-        if (showRetry) {
-            this.sendBtn.innerHTML = '<i class="fas fa-rotate"></i>'; // 重试中图标
-            await new Promise(r => setTimeout(r, 600));
-            this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // 再次发送
-        }
-
-        const demoText = `这是本地演示回复：\n- 发送按钮会在发送/重试时展示不同图标\n- ${enableStream ? '当前以流式方式逐字输出' : '当前以整段方式输出'}\n- 真正的线上环境会由后端携带API Key调用AI`;
-
-        if (!enableStream) {
-            const aiMsg = { role: 'assistant', content: this.formatContent(demoText) };
-            this.addMessage(aiMsg);
-            this.messages.push(aiMsg);
-            return;
-        }
-
-        // 流式逐字输出
-        const container = document.createElement('div');
-        container.className = 'chat-message ai';
-        const avatar = document.createElement('div');
-        avatar.className = 'chat-avatar ai';
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble ai';
-        container.appendChild(avatar);
-        container.appendChild(bubble);
-        this.messagesContainer.appendChild(container);
-        this.scrollToBottom();
-
-        const tokens = demoText.split('');
-        let acc = '';
-        for (let i = 0; i < tokens.length; i++) {
-            acc += tokens[i];
-            bubble.textContent = acc;
-            this.scrollToBottom();
-            await new Promise(r => setTimeout(r, 15));
-        }
-
-        // 保存消息
-        this.messages.push({ role: 'assistant', content: acc });
-    }
-    
-    // 调用 AI 的函数 - 非流式版本（更稳定）
+    // 调用 AI 的函数
     async callAIAPI(userMessage, searchResults = '') {
         // 网络离线直接给出友好提示
         if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -435,7 +373,8 @@ ${searchResults}
                     },
                     body: JSON.stringify({
                         messages: messageHistory,
-                        model: this.model
+                        model: this.model,
+                        injectKnowledge: true
                     }),
                     signal: controller.signal,
                     cache: 'no-store'
@@ -484,112 +423,7 @@ ${searchResults}
 
         return doRequest(0);
     }
-    
-    // 流式响应版本的 AI 调用
-    async callAIAPIStream(userMessage, searchResults = '') {
-        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-            throw new Error('当前网络不可用，请检查网络连接后重试');
-        }
 
-        // 问题分类和动态策略选择
-        const strategy = this.classifyIntent(userMessage);
-        
-        // 根据策略调整系统提示词
-        let enhancedSystemPrompt = this.enhanceSystemPrompt(this.systemPrompt, strategy);
-        const currentTime = this.getCurrentTime();
-        if (searchResults) {
-            enhancedSystemPrompt += `
-
-最新网络信息：
-${searchResults}
-
-请基于上述最新信息和你的知识库综合回答用户问题。
-
-重要提醒：${currentTime}，请确保时间信息的准确性。`;
-        } else {
-            enhancedSystemPrompt += `\n\n重要提醒：${currentTime}，请确保时间信息的准确性。`;
-        }
-
-        const messageHistory = [
-            { role: 'system', content: enhancedSystemPrompt },
-            ...this.messages.slice(-this.maxMessages).map(msg => ({
-                role: msg.role === 'ai' ? 'assistant' : msg.role,
-                content: msg.content
-            })),
-            { role: 'user', content: userMessage }
-        ];
-
-        // 创建流式消息容器
-        const container = document.createElement('div');
-        container.className = 'chat-message ai';
-        const avatar = document.createElement('div');
-        avatar.className = 'chat-avatar ai';
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble ai streaming';  // 添加 streaming 类
-        container.appendChild(avatar);
-        container.appendChild(bubble);
-        this.messagesContainer.appendChild(container);
-        
-        let fullContent = '';
-        
-        try {
-            const response = await fetch(this.functionUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'text/event-stream'
-                },
-                body: JSON.stringify({
-                    messages: messageHistory,
-                    model: this.model,
-                    stream: true,
-                    temperature: strategy.temperature,
-                    max_tokens: strategy.maxTokens
-                }),
-                cache: 'no-store'
-            });
-
-            if (!response.ok) {
-                throw new Error(`AI 服务请求失败：${response.status}`);
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '));
-                
-                for (const line of lines) {
-                    try {
-                        const data = JSON.parse(line.slice(6));
-                        if (data.choices && data.choices[0]?.delta?.content) {
-                            const content = data.choices[0].delta.content;
-                            fullContent += content;
-                            bubble.innerHTML = this.formatContent(fullContent);
-                            this.scrollToBottom();
-                        }
-                    } catch (e) {
-                        // 忽略解析错误，继续处理下一行
-                    }
-                }
-            }
-            
-            // 流式输出完成，移除光标
-            bubble.classList.remove('streaming');
-            
-            return fullContent;
-            
-        } catch (error) {
-            console.error('流式响应错误:', error);
-            bubble.innerHTML = '<span class="error-text">响应出错: ' + error.message + '</span>';
-            throw error;
-        }
-    }
-    
     // 优化内容格式，去除多余的空格和换行
     formatContent(content) {
         return content
