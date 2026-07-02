@@ -11,14 +11,8 @@ const AI_CHAT_CONFIG = {
     
     // 聊天配置
     maxMessages: 9, // 减少上下文消息数量以提高响应速度
-    
-    // API性能优化参数
-    performanceSettings: {
-        maxTokens: 2500,
-        temperature: 0.7,
-        topP: 0.9,
-        enableThinking: true
-    },
+
+    // API参数由后端统一控制（chat.js）
 
     // 联网搜索配置（默认禁用以提升响应速度）
     searchSettings: {

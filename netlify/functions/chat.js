@@ -173,10 +173,10 @@ exports.handler = async function(event, context) {
       model: model || 'Qwen/Qwen3-8B',
       messages: messages,
       stream: false,
-      max_tokens: 1200,
+      max_tokens: 1500,
       temperature: 0.5,
       top_p: 0.8,
-      presence_penalty: 0.1,
+      presence_penalty: 0.2,
       frequency_penalty: 0.3
     };
 

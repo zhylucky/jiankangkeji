@@ -31,9 +31,6 @@ class AIChatWidget {
             // 初始化搜索配置
             this.searchConfig = this.config.searchSettings || {};
             this.searchEnabled = this.searchConfig.enabled || false;
-            
-            // 初始化性能配置
-            this.performanceSettings = this.config.performanceSettings || {};
         } else {
             // 使用默认配置
             this.functionUrl = '/.netlify/functions/chat';

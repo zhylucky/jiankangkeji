@@ -492,34 +492,82 @@
             border-radius: 8px;
             border-left: 4px solid #1a6dcc;
         }
-                
+
         .ai-analysis-loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 25px 20px;
         }
-                
-        .ai-analysis-loading .loading-text {
+
+        /* AI 图标动画 */
+        .loading-ai-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #1a6dcc, #3b82f6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(26, 109, 204, 0.4);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 20px 10px rgba(26, 109, 204, 0.1);
+                transform: scale(1.05);
+            }
+        }
+
+        .loading-stage-text {
             color: #1a6dcc;
             font-size: 16px;
-            margin-bottom: 10px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            min-height: 24px;
+            transition: opacity 0.3s;
         }
-                
+
+        .loading-sub-text {
+            color: #6c757d;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
         .loading-progress-bar {
             width: 100%;
             background-color: #e9ecef;
-            border-radius: 4px;
-            height: 6px;
-            margin: 0 auto;
-            max-width: 300px;
+            border-radius: 6px;
+            height: 8px;
+            margin: 0 auto 10px;
+            max-width: 320px;
+            overflow: hidden;
         }
-                
+
         .loading-progress {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, #1a6dcc, #3b82f6);
-            border-radius: 4px;
-            transition: width 0.3s;
+            background: linear-gradient(90deg, #1a6dcc, #3b82f6, #1a6dcc);
+            background-size: 200% 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease-out;
+            animation: shimmer 1.5s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .loading-time-hint {
+            color: #adb5bd;
+            font-size: 12px;
+            margin-top: 5px;
         }
                 
         .ai-analysis-content {
@@ -986,11 +1034,14 @@
             <!-- AI报告总结部分 -->
             <div class="section-title">三：AI智能分析总结</div>
             <div class="ai-analysis-container">
-                <div class="ai-analysis-loading">
-                    <div class="loading-text">🤖 AI正在分析您的睡眠数据...</div>
+                <div class="ai-analysis-loading" id="ai-loading">
+                    <div class="loading-ai-icon">🤖</div>
+                    <div class="loading-stage-text" id="loading-stage-text">正在准备...</div>
+                    <div class="loading-sub-text" id="loading-sub-text">正在收集报告数据</div>
                     <div class="loading-progress-bar">
                         <div class="loading-progress" id="loading-progress"></div>
                     </div>
+                    <div class="loading-time-hint" id="loading-time-hint">预计等待 5-10 秒</div>
                 </div>
                 <div class="ai-analysis-content" id="ai-analysis-content">
                 </div>
@@ -1089,6 +1140,50 @@
             };
         }
         
+        // 更新加载阶段显示
+        function updateLoadingStage(elapsed) {
+            const stageText = document.getElementById('loading-stage-text');
+            const subText = document.getElementById('loading-sub-text');
+            const timeHint = document.getElementById('loading-time-hint');
+            const progressBars = document.querySelectorAll('.loading-progress');
+
+            let stage, sub, progress, hint;
+
+            if (elapsed < 3000) {
+                // 0-3秒：收集数据阶段
+                stage = '📊 正在收集数据';
+                sub = '正在从报告中提取关键指标...';
+                progress = Math.min((elapsed / 3000) * 20, 20);
+                hint = '预计等待 5-10 秒';
+            } else if (elapsed < 8000) {
+                // 3-8秒：分析阶段
+                stage = '🔍 正在分析睡眠指标';
+                sub = 'AI 正在解读各项评分和数据...';
+                progress = 20 + Math.min(((elapsed - 3000) / 5000) * 30, 30);
+                hint = '预计等待 5-10 秒';
+            } else if (elapsed < 18000) {
+                // 8-18秒：生成阶段
+                stage = '🧠 AI 正在生成分析报告';
+                sub = '正在撰写专业的睡眠分析建议...';
+                progress = 50 + Math.min(((elapsed - 8000) / 10000) * 30, 30);
+                hint = '正在处理中，请稍候...';
+            } else {
+                // 18秒+：即将完成
+                stage = '✨ 报告即将完成';
+                sub = '正在优化报告内容和格式...';
+                progress = 80 + Math.min(((elapsed - 18000) / 10000) * 15, 15);
+                hint = '马上就好，请稍候...';
+            }
+
+            if (stageText) stageText.textContent = stage;
+            if (subText) subText.textContent = sub;
+            if (timeHint) timeHint.textContent = hint;
+
+            progressBars.forEach(bar => {
+                bar.style.width = `${progress}%`;
+            });
+        }
+
         // 生成AI分析总结的函数
         async function generateAIAnalysis() {
             // 预先加载AI配置，确保配置已加载
@@ -1099,64 +1194,44 @@
                     console.warn('AI配置加载失败，使用默认配置');
                 }
             }
-            
+
             // 获取所有AI分析按钮和容器
             const buttons = document.querySelectorAll('.generate-ai-analysis-btn');
             const loadingIndicators = document.querySelectorAll('.ai-analysis-loading');
             const contentContainers = document.querySelectorAll('.ai-analysis-content');
             const errorContainers = document.querySelectorAll('.ai-analysis-error');
-            
+
             // 禁用所有按钮并显示加载状态
             buttons.forEach(button => {
                 button.disabled = true;
                 button.textContent = '生成中...';
             });
-            
+
             loadingIndicators.forEach(indicator => {
                 indicator.style.display = 'block';
             });
-            
+
             contentContainers.forEach(container => {
                 container.style.display = 'none';
             });
-            
+
             errorContainers.forEach(container => {
                 container.style.display = 'none';
             });
-            
-            // 模拟进度条动画 - 更真实的进度模拟
-            const progressBars = document.querySelectorAll('.loading-progress');
-            let progress = 0;
-            
-            // 使用非线性进度增加，开始慢，中间快，最后慢
-            const interval = setInterval(() => {
-                if (progress < 30) {
-                    // 初始阶段较慢
-                    progress += 1;
-                } else if (progress < 70) {
-                    // 中间阶段较快
-                    progress += 3;
-                } else if (progress < 90) {
-                    // 后期较慢
-                    progress += 1;
-                } else {
-                    // 最后阶段非常慢，模拟AI处理时间
-                    progress += 0.5;
-                }
-                
-                progressBars.forEach(bar => {
-                    bar.style.width = `${Math.min(progress, 100)}%`;
-                });
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                }
-            }, 200); // 降低更新频率，让进度条变化更平滑
-            
+
+            // 记录开始时间
+            const startTime = Date.now();
+
+            // 智能进度条：基于实际耗时更新阶段
+            const timer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                updateLoadingStage(elapsed);
+            }, 1000);
+
             try {
                 // 收集报告数据
                 const reportData = collectReportData();
-                
+
                 // 构造发送给 AI 的提示 - 精简专业版（控制 Token 消耗）
                 const aiPrompt = `【角色】专业睡眠健康专家，为医生和患者提供精准的健康指导。
 
@@ -1172,7 +1247,7 @@ return b<18.5?'(偏瘦)':b<24?'(正常)':b<28?'(超重)':'(肥胖)';
 【核心评分】
 自评：${reportData.scoreData.selfTotal}分 | AI 评估：${reportData.scoreData.aiTotal}分
 
-【危险项】${reportData.warningData.length > 0 ? 
+【危险项】${reportData.warningData.length > 0 ?
 '\n⚠️ ' + reportData.warningData.join('; ') : '✅ 无'}
 
 【关键低分项】(≤3 分)
@@ -1200,21 +1275,38 @@ AI: ${reportData.aiReportData.filter(i => parseFloat(i.score) <= 3).slice(0,3).m
 • 无危险项：提醒需关注的预警信号
 
 【语言要求】专业但易懂，温暖鼓励，避免绝对化表述，基于数据说话。`;
-                
+
                 // 调用AI API生成分析报告
                 const aiResponse = await callAIAPI(aiPrompt);
+
+                // 显示完成状态
+                const stageText = document.getElementById('loading-stage-text');
+                const subText = document.getElementById('loading-sub-text');
+                const progressBars = document.querySelectorAll('.loading-progress');
+                const timeHint = document.getElementById('loading-time-hint');
+
+                if (stageText) stageText.textContent = '✅ 报告生成完成';
+                if (subText) subText.textContent = '正在展示分析结果...';
+                if (timeHint) timeHint.textContent = '';
+                progressBars.forEach(bar => {
+                    bar.style.width = '100%';
+                });
+
+                // 延迟一下再显示结果，让用户看到完成状态
+                await new Promise(r => setTimeout(r, 500));
+
                 displayAIAnalysis(aiResponse);
             } catch (error) {
                 console.error('AI分析失败:', error);
                 displayAIError(`AI分析失败，请稍后重试 (${error.message})`);
             } finally {
-                clearInterval(interval);
+                clearInterval(timer);
                 // 恢复按钮状态
                 buttons.forEach(button => {
                     button.disabled = false;
                     button.textContent = '生成AI智能分析总结';
                 });
-                
+
                 loadingIndicators.forEach(indicator => {
                     indicator.style.display = 'none';
                 });
