@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="../../images/dzlogo.png">
+    <link rel="icon" href="../images/dzlogo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登录 - 健康管理中心</title>
-    <link rel="stylesheet" href="../../css/login.css">
+    <link rel="stylesheet" href="../css/login.css">
     <!-- Font Awesome 图标库 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -17,7 +17,7 @@
     <header class="login-header">
         <div class="header-content">
             <div class="header-left">
-                <img src="../../images/dzlogo.png" alt="Logo" class="logo">
+                <img src="../images/dzlogo.png" alt="Logo" class="logo">
                 <div class="system-title">
                     <h1>健康管理中心客户管理系统</h1>
                     <p>Life tide health management center</p>
@@ -35,7 +35,7 @@
         <div class="auth-card glass-card">
             <!-- 左侧插画 -->
             <div class="left-panel">
-                <img src="../../images/login-bg.png" alt="医疗健康插画" class="illustration-img">
+                <img src="../images/login-bg.png" alt="医疗健康插画" class="illustration-img">
             </div>
                 
             <!-- 右侧表单容器 -->
@@ -61,13 +61,13 @@
                             <div class="input-group">
                                 <div class="input-wrapper">
                                     <i class="fas fa-user input-icon"></i>
-                                    <input type="text" id="username" name="username" placeholder="账号" value="admin" required>
+                                    <input type="text" id="username" name="username" placeholder="账号 / 邮箱" required>
                                 </div>
                             </div>
                             <div class="input-group">
                                 <div class="input-wrapper">
                                     <i class="fas fa-lock input-icon"></i>
-                                    <input type="password" id="password" name="password" placeholder="密码" value="123456" required>
+                                    <input type="password" id="password" name="password" placeholder="密码" required>
                                 </div>
                             </div>
                             <div class="form-footer">
@@ -91,7 +91,7 @@
                         <div class="progress-container">
                             <div class="progress-step active" data-step="1">
                                 <div class="step-number">1</div>
-                                <div class="step-text">验证手机</div>
+                                <div class="step-text">验证邮箱</div>
                             </div>
                             <div class="progress-line"></div>
                             <div class="progress-step" data-step="2">
@@ -106,20 +106,20 @@
                         </div>
                             
                         <form id="registerForm">
-                            <!-- 步骤 1：手机验证 -->
+                            <!-- 步骤 1：邮箱验证 -->
                             <div class="form-step" id="step1">
                                 <div class="input-group">
                                     <div class="input-wrapper">
-                                        <i class="fas fa-mobile-alt input-icon"></i>
-                                        <input type="tel" id="phone" name="phone" placeholder="请输入手机号" maxlength="11" required>
+                                        <i class="fas fa-envelope input-icon"></i>
+                                        <input type="email" id="phone" name="email" placeholder="请输入邮箱" required>
                                     </div>
                                     <div class="input-error" id="phone-error"></div>
                                 </div>
                                     
-                                <div class="input-group verification-code-group">
+                                <div class="input-group verification-code-group" style="display: none;">
                                     <div class="input-wrapper">
                                         <i class="fas fa-shield-alt input-icon"></i>
-                                        <input type="text" id="verificationCode" name="verificationCode" placeholder="输入验证码" maxlength="6" required>
+                                        <input type="text" id="verificationCode" name="verificationCode" placeholder="输入验证码" maxlength="6">
                                     </div>
                                     <button type="button" id="getCodeBtn" class="get-code-btn">获取验证码</button>
                                 </div>
@@ -131,8 +131,8 @@
                                 <div class="input-group">
                                     <div class="input-wrapper">
                                         <i class="fas fa-lock input-icon"></i>
-                                        <input type="password" id="password" name="password" placeholder="请设置密码 (6-16 位)" minlength="6" maxlength="16">
-                                        <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                                        <input type="password" id="regPassword" name="regPassword" placeholder="请设置密码 (6-16 位)" minlength="6" maxlength="16">
+                                        <i class="fas fa-eye password-toggle" id="regPasswordToggle"></i>
                                     </div>
                                     <div class="password-strength" id="passwordStrength">
                                         <div class="strength-bar"></div>
@@ -156,7 +156,7 @@
                                     <i class="fas fa-check-circle"></i>
                                 </div>
                                 <h3 class="success-title">注册成功！</h3>
-                                <p class="success-message">正在完善您的健康档案...</p>
+                                <p class="success-message">注册成功，请使用邮箱登录</p>
                             </div>
                                 
                             <!-- 协议勾选 -->
@@ -201,6 +201,6 @@
         </a>
     </div>
 
-    <script src="../../js/login.js"></script>
+    <script src="../js/login.js"></script>
 </body>
 </html>

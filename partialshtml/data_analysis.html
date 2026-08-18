@@ -391,11 +391,13 @@
 }
 
 .stat-value {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
-    color: #1a1d23;
+    letter-spacing: -0.03em;
+    color: #0F1F33;
+    font-variant-numeric: tabular-nums;
     line-height: 1.1;
-    letter-spacing: -0.5px;
+    margin-top: 2px;
 }
 
 .stat-label {
@@ -643,7 +645,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(2px);
+    backdrop-filter: none;
     z-index: 10;
     transition: opacity 0.3s ease;
     border-radius: 6px;
@@ -796,6 +798,157 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ═══ Minimalist UI 覆盖 ═══ */
+.dashboard-stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.stat-card {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF2;
+    border-radius: 8px;
+    padding: 20px 24px;
+    box-shadow: none;
+    position: relative;
+}
+.stat-card::before { display: none; }
+.stat-card:hover { box-shadow: none; transform: none; }
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #F0F4F8;
+    color: #4A5A6E;
+    font-size: 16px;
+}
+.stat-card.total .stat-icon { background: #E8F3FF; color: #1677FF; }
+.stat-card.diabetes .stat-icon { background: #FDEEEE; color: #C62828; }
+.stat-card.sub-health .stat-icon { background: #FEF6E7; color: #9A6B00; }
+.stat-card.other .stat-icon { background: #E8F3FF; color: #1677FF; }
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #0F1F33;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+.stat-label { font-size: 13px; color: #6B7A90; }
+.stat-trend {
+    position: static;
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 9999px;
+}
+.stat-trend.up { background: #E8F6EC; color: #2E7D32; }
+.stat-trend.down { background: #FDEEEE; color: #C62828; }
+.stat-trend.neutral { background: #F0F4F8; color: #8A9BB0; }
+
+.user-select-section {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF2;
+    border-radius: 8px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+}
+.user-select, .time-range, .metric-select {
+    border: 1px solid #C9D6E4;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1F2A3D;
+}
+.user-select:focus, .time-range:focus, .metric-select:focus {
+    border-color: #1F2A3D;
+    box-shadow: none;
+}
+.refresh-btn {
+    background: #1677FF;
+    border-radius: 6px;
+    font-weight: 500;
+    box-shadow: none;
+}
+.refresh-btn:hover { background: #4096FF; box-shadow: none; }
+
+.analysis-section { gap: 16px; }
+.analysis-card {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF2;
+    border-radius: 8px;
+    box-shadow: none;
+}
+.analysis-card:hover { box-shadow: none; }
+.card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #E3EAF2;
+}
+.card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #F0F4F8;
+    color: #4A5A6E;
+    font-size: 14px;
+}
+.card-icon.health { background: #FDEEEE; color: #C62828; }
+.card-icon.profile { background: #E8F3FF; color: #1677FF; }
+.card-icon.risk { background: #FDEEEE; color: #C62828; }
+.card-icon.treatment { background: #E8F6EC; color: #2E7D32; }
+.card-title-text h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1F2A3D;
+    letter-spacing: -0.01em;
+}
+.card-title-text p { font-size: 12px; color: #8A9BB0; }
+.card-content { padding: 24px; }
+.chart-loading {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: none;
+    border-radius: 6px;
+}
+.analysis-summary {
+    border-top: 1px solid #E3EAF2;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+}
+.summary-item {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF2;
+    border-radius: 6px;
+    padding: 12px;
+}
+.summary-item:hover { background: #F0F4F8; }
+.summary-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #F0F4F8;
+    color: #4A5A6E;
+    font-size: 13px;
+}
+.summary-icon.median, .summary-icon.gender, .summary-icon.warning,
+.summary-item.high .summary-icon.danger { background: #FDEEEE; color: #C62828; }
+.summary-icon.deviation, .summary-icon.age, .summary-icon.info,
+.summary-item.medium .summary-icon.warning { background: #E8F3FF; color: #1677FF; }
+.summary-icon.avg, .summary-icon.success, .summary-icon.safe,
+.summary-item.low .summary-icon.safe,
+.summary-item.improved .summary-icon.success { background: #E8F6EC; color: #2E7D32; }
+.summary-icon.pending,
+.summary-item.pending .summary-icon.pending { background: #F0F4F8; color: #8A9BB0; }
+.summary-content .label { font-size: 11px; color: #8A9BB0; }
+.summary-content .value {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1F2A3D;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
 </style>
 
 <script>
@@ -881,16 +1034,14 @@
                                 barWidth: '50%',
                                 itemStyle: {
                                     color: function(params) {
-                                        const colors = ['#91cc75', '#5470c6', '#fac858', '#ee6666'];
+                                        const colors = ['#8A9BB0', '#1677FF', '#FAAD14', '#F5222D'];
                                         return colors[params.dataIndex];
                                     },
-                                    borderRadius: [6, 6, 0, 0]
+                                    borderRadius: [4, 4, 0, 0]
                                 },
                                 emphasis: {
                                     itemStyle: {
-                                        shadowBlur: 10,
-                                        shadowOffsetX: 0,
-                                        shadowColor: 'rgba(0, 0, 0, 0.2)'
+                                        shadowBlur: 0
                                     }
                                 }
                             }],
@@ -920,9 +1071,9 @@
                                 center: ['60%', '50%'],
                                 avoidLabelOverlap: false,
                                 itemStyle: { 
-                                    borderRadius: 10, 
+                                    borderRadius: 4, 
                                     borderColor: '#fff', 
-                                    borderWidth: 3 
+                                    borderWidth: 2 
                                 },
                                 label: { 
                                     show: false, 
@@ -931,20 +1082,18 @@
                                 emphasis: { 
                                     label: { 
                                         show: true, 
-                                        fontSize: '20', 
-                                        fontWeight: 'bold',
-                                        color: '#1a1a2e'
+                                        fontSize: '16', 
+                                        fontWeight: '500',
+                                        color: '#1F2A3D'
                                     },
                                     itemStyle: {
-                                        shadowBlur: 20,
-                                        shadowOffsetX: 0,
-                                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                                        shadowBlur: 0
                                     }
                                 },
                                 labelLine: { show: false },
                                 data: [ 
-                                    { value: 12, name: '男性', itemStyle: { color: '#667eea' } }, 
-                                    { value: 12, name: '女性', itemStyle: { color: '#f093fb' } } 
+                                    { value: 12, name: '男性', itemStyle: { color: '#1677FF' } }, 
+                                    { value: 12, name: '女性', itemStyle: { color: '#00B96B' } } 
                                 ]
                             }],
                             animationDuration: 1500,
@@ -973,9 +1122,9 @@
                                 center: ['60%', '50%'],
                                 avoidLabelOverlap: false,
                                 itemStyle: { 
-                                    borderRadius: 8, 
+                                    borderRadius: 4, 
                                     borderColor: '#fff', 
-                                    borderWidth: 3 
+                                    borderWidth: 2 
                                 },
                                 label: { 
                                     show: false, 
@@ -984,21 +1133,19 @@
                                 emphasis: { 
                                     label: { 
                                         show: true, 
-                                        fontSize: '18', 
-                                        fontWeight: 'bold',
-                                        color: '#1a1a2e'
+                                        fontSize: '16', 
+                                        fontWeight: '500',
+                                        color: '#1F2A3D'
                                     },
                                     itemStyle: {
-                                        shadowBlur: 20,
-                                        shadowOffsetX: 0,
-                                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                                        shadowBlur: 0
                                     }
                                 },
                                 labelLine: { show: false },
                                 data: [ 
-                                    { value: 3, name: '高风险', itemStyle: { color: '#ee6666' } }, 
-                                    { value: 8, name: '中风险', itemStyle: { color: '#fac858' } }, 
-                                    { value: 13, name: '低风险', itemStyle: { color: '#91cc75' } } 
+                                    { value: 3, name: '高风险', itemStyle: { color: '#F5222D' } }, 
+                                    { value: 8, name: '中风险', itemStyle: { color: '#FAAD14' } }, 
+                                    { value: 13, name: '低风险', itemStyle: { color: '#00B96B' } } 
                                 ]
                             }],
                             animationDuration: 1500,
@@ -1040,41 +1187,34 @@
                                     name: '改善', 
                                     type: 'line', 
                                     data: [15, 16, 17, 18, 29, 30],
-                                    smooth: true,
+                                    smooth: false,
                                     symbol: 'circle',
-                                    symbolSize: 6,
-                                    lineStyle: { color: '#91cc75', width: 2 },
-                                    itemStyle: { color: '#91cc75' },
+                                    symbolSize: 5,
+                                    lineStyle: { color: '#00B96B', width: 2 },
+                                    itemStyle: { color: '#00B96B' },
                                     areaStyle: {
-                                        color: {
-                                            type: 'linear',
-                                            x: 0, y: 0, x2: 0, y2: 1,
-                                            colorStops: [
-                                                { offset: 0, color: 'rgba(145, 204, 117, 0.25)' },
-                                                { offset: 1, color: 'rgba(145, 204, 117, 0.02)' }
-                                            ]
-                                        }
+                                        color: 'rgba(0, 185, 107, 0.08)'
                                     }
                                 },
                                 { 
                                     name: '稳定', 
                                     type: 'line', 
                                     data: [5, 4, 3, 2, 1, 0],
-                                    smooth: true,
+                                    smooth: false,
                                     symbol: 'circle',
-                                    symbolSize: 6,
-                                    lineStyle: { color: '#4facfe', width: 2 },
-                                    itemStyle: { color: '#4facfe' }
+                                    symbolSize: 5,
+                                    lineStyle: { color: '#1677FF', width: 2 },
+                                    itemStyle: { color: '#1677FF' }
                                 },
                                 { 
                                     name: '待改善', 
                                     type: 'line', 
                                     data: [2, 2, 3, 4, 5, 6],
-                                    smooth: true,
+                                    smooth: false,
                                     symbol: 'circle',
-                                    symbolSize: 6,
-                                    lineStyle: { color: '#ee6666', width: 2 },
-                                    itemStyle: { color: '#ee6666' }
+                                    symbolSize: 5,
+                                    lineStyle: { color: '#F5222D', width: 2 },
+                                    itemStyle: { color: '#F5222D' }
                                 }
                             ],
                             animationDuration: 1500
@@ -1125,8 +1265,7 @@
             loadingElements.forEach(el => {
                 el.style.display = 'flex';
                 el.innerHTML = `
-                    <div style="color: #f44336; text-align: center;">
-                        <div style="font-size: 32px; margin-bottom: 16px;">⚠️</div>
+                    <div style="color: #C62828; text-align: center;">
                         <p style="font-size: 14px;">图表加载失败，请刷新页面重试</p>
                     </div>
                 `;

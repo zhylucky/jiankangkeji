@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    DESIGN SYSTEM - 个人健康精英Pro+ V2
    ═══════════════════════════════════════════════════ */
 
@@ -9,6 +9,8 @@
     --c-primary-dark: #1D4ED8;
     --c-primary-50: rgba(37,99,235,0.06);
     --c-primary-100: rgba(37,99,235,0.12);
+    --c-danger: #DC2626;
+    --c-danger-dark: #B91C1C;
     --c-success: #22C55E;
     --c-success-bg: rgba(34,197,94,0.1);
     --c-text: #0F172A;
@@ -128,6 +130,25 @@ button{border:none;background:none;cursor:pointer;font:inherit}
 .btn-primary:hover {
     transform: translateY(-2px) scale(1.03);
     box-shadow: 0 8px 32px rgba(37,99,235,0.4);
+}
+
+.btn-danger {
+    background: var(--c-danger);
+    color: #fff;
+    padding: 12px 24px;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+.btn-danger:hover {
+    background: var(--c-danger-dark);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+    transform: translateY(-1px);
+}
+.btn-danger:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+.btn-danger i {
+    color: #fff;
 }
 
 .btn-ghost {
@@ -702,35 +723,32 @@ nav ul li a.nav-active {
     background: var(--c-bg-alt);
 }
 
-.screenshot-scroll {
+/* 轮播容器 */
+.app-carousel {
     position: relative;
-    max-width: 1280px;
+    max-width: 640px;
     margin: 0 auto;
+    padding: 0 12px;
+}
+
+.carousel-viewport {
     overflow: hidden;
+    border-radius: 24px;
 }
 
-.screenshot-scroll-track {
+.carousel-track {
     display: flex;
-    gap: 0px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    padding: var(--sp-md) var(--sp-sm);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
 }
 
-.screenshot-scroll-track::-webkit-scrollbar {
-    display: none;
-}
-
-.screenshot-item {
-    flex: 0 0 calc(36% - var(--sp-sm));
+.carousel-slide {
+    flex: 0 0 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--sp-md);
+    padding: 8px 0;
 }
 
 .screenshot-phone {
@@ -740,10 +758,11 @@ nav ul li a.nav-active {
     border: 3px solid #1a1a2e;
     background: #fff;
     transition: transform var(--tr-normal);
-    max-width: 260px;
+    max-width: 300px;
+    width: 100%;
 }
 .screenshot-phone:hover {
-    transform: scale(1.03);
+    transform: none;
 }
 .screenshot-phone img {
     width: 100%;
@@ -755,6 +774,12 @@ nav ul li a.nav-active {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--c-text-secondary);
+}
+
+/* 轮播控制按钮（已隐藏 - 仅自动轮播） */
+.carousel-btn,
+.carousel-dots {
+    display: none;
 }
 
 
@@ -1291,7 +1316,8 @@ footer {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .stat-item { border-right: none !important; }
 
-    .screenshot-item { flex: 0 0 200px; }
+    .app-carousel { max-width: 100%; padding: 0 8px; }
+    .screenshot-phone { max-width: 260px; }
 
     .report-showcase { grid-template-columns: 1fr; }
 

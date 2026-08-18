@@ -3,6 +3,31 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 
+// CORS 白名单：仅允许官方站点与本地开发环境
+const ALLOWED_ORIGINS = [
+  'https://jkkeji.netlify.app',
+  'http://localhost:8888',
+  'http://127.0.0.1:8888',
+  'http://localhost:8080',
+  'http://127.0.0.1:8080'
+];
+
+// 根据请求 Origin 动态生成 CORS 头
+// 不在白名单的来源不返回 Access-Control-Allow-Origin，浏览器将阻止跨域读取
+function buildCorsHeaders(event) {
+  const origin = (event.headers && event.headers.origin) || (event.headers && event.headers.Origin) || '';
+  const headers = {
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin'
+  };
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+  return headers;
+}
+
 // 知识库缓存（避免每次请求都读文件）
 let knowledgeBaseCache = null;
 let knowledgeBaseLoadTime = 0;
@@ -48,12 +73,7 @@ exports.handler = async function(event, context) {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Max-Age': '86400'
-      },
+      headers: buildCorsHeaders(event),
       body: ''
     };
   }
@@ -63,18 +83,15 @@ exports.handler = async function(event, context) {
     return { 
       statusCode: 405, 
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...buildCorsHeaders(event)
       },
       body: JSON.stringify({ error: 'Method Not Allowed' }) 
     };
   }
 
-  // 处理 CORS（允许前端访问）
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  };
+  // 处理 CORS（仅放行白名单来源）
+  const corsHeaders = buildCorsHeaders(event);
 
   try {
     // 检查请求体是否存在

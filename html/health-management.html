@@ -10,6 +10,42 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- 登录守卫：未登录跳回登录页 -->
+    <script>
+        (function() {
+            // Supabase persistSession 存储的 key 格式: sb-<ref>-auth-token
+            var tokenKey = null;
+            for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (k && k.indexOf('auth-token') !== -1) {
+                    tokenKey = k;
+                    break;
+                }
+            }
+            var session = tokenKey ? localStorage.getItem(tokenKey) : null;
+            var isLoggedIn = false;
+            try {
+                var parsed = session ? JSON.parse(session) : null;
+                isLoggedIn = !!(parsed && parsed.access_token);
+            } catch (e) { isLoggedIn = false; }
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+            }
+            // 显示登录邮箱
+            document.addEventListener('DOMContentLoaded', function() {
+                var email = null;
+                try {
+                    var info = JSON.parse(localStorage.getItem('userInfo') || 'null');
+                    email = info && (info.email || info.username);
+                } catch (e) {}
+                if (email) {
+                    var userInfoEl = document.querySelector('.user-info');
+                    if (userInfoEl) userInfoEl.innerHTML = '<i class="fas fa-user-circle"></i> ' + email;
+                }
+            });
+        })();
+    </script>
+
     <!-- 顶部导航 -->
 <nav class="top-nav">
     <div class="nav-left">

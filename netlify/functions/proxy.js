@@ -1,19 +1,37 @@
 // Netlify Function: CORS Proxy for management API
 // 解决前端直接调用API时的CORS跨域问题
 
-// CORS headers for all responses
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
+// CORS 白名单：仅允许官方站点与本地开发环境
+const ALLOWED_ORIGINS = [
+    'https://jkkeji.netlify.app',
+    'http://localhost:8888',
+    'http://127.0.0.1:8888',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080'
+];
+
+// 根据请求 Origin 动态生成 CORS 头
+// 不在白名单的来源不返回 Access-Control-Allow-Origin，浏览器将阻止跨域读取
+function buildCorsHeaders(event) {
+    const origin = (event.headers && event.headers.origin) || (event.headers && event.headers.Origin) || '';
+    const headers = {
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Max-Age': '86400',
+        'Vary': 'Origin'
+    };
+    if (ALLOWED_ORIGINS.includes(origin)) {
+        headers['Access-Control-Allow-Origin'] = origin;
+    }
+    return headers;
+}
 
 exports.handler = async (event) => {
     // Handle CORS preflight
     if (event.httpMethod === 'OPTIONS') {
         return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers: buildCorsHeaders(event),
             body: ''
         };
     }
@@ -26,7 +44,7 @@ exports.handler = async (event) => {
             statusCode: 400,
             headers: {
                 'Content-Type': 'application/json',
-                ...corsHeaders,
+                ...buildCorsHeaders(event),
             },
             body: JSON.stringify({ error: 'Missing url parameter' })
         };
@@ -45,7 +63,7 @@ exports.handler = async (event) => {
                 statusCode: 403,
                 headers: {
                     'Content-Type': 'application/json',
-                    ...corsHeaders,
+                    ...buildCorsHeaders(event),
                 },
                 body: JSON.stringify({ error: 'Domain not allowed', domain: urlObj.hostname })
             };
@@ -75,7 +93,7 @@ exports.handler = async (event) => {
             headers: {
                 'Content-Type': response.headers.get('content-type') || 'application/json',
                 'Cache-Control': 'no-cache',
-                ...corsHeaders,
+                ...buildCorsHeaders(event),
             },
             body: data
         };
@@ -85,7 +103,7 @@ exports.handler = async (event) => {
             statusCode: 500,
             headers: {
                 'Content-Type': 'application/json',
-                ...corsHeaders,
+                ...buildCorsHeaders(event),
             },
             body: JSON.stringify({
                 error: 'Proxy request failed',

@@ -1,6 +1,6 @@
 # Local Netlify folder
 .netlify
-
+CLAUDE.md
 # Dependencies
 node_modules/
 

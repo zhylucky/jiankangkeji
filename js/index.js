@@ -153,15 +153,66 @@
     }
 
 
-    // Screenshot horizontal scroll with mouse wheel
-    var track = document.getElementById('screenshotTrack');
-    if (track) {
-        // Mouse wheel -> horizontal scroll
-        track.addEventListener('wheel', function(e) {
-            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-                e.preventDefault();
-                track.scrollLeft += e.deltaY * 2.5;
+    // ═══ 应用截图轮播（无缝连续滚动） ═══
+    var carousel = document.getElementById('appCarousel');
+    if (carousel) {
+        var track = document.getElementById('appCarouselTrack');
+        var originalSlides = Array.prototype.slice.call(track.querySelectorAll('.carousel-slide'));
+        var slideCount = originalSlides.length;
+        var SPEED = 0.2; // 每像素/帧，控制滚动速度
+        var paused = false;
+        var pos = 0;
+        var lastTime = null;
+        var totalWidth = 0;
+        var viewportWidth = 0;
+
+        // 克隆首尾幻灯片用于无缝循环
+        var firstClone = originalSlides[0].cloneNode(true);
+        firstClone.classList.add('carousel-clone');
+        track.appendChild(firstClone);
+
+        // 移除 CSS transition（用 requestAnimationFrame 驱动）
+        track.style.transition = 'none';
+
+        function measure() {
+            var vw = carousel.querySelector('.carousel-viewport');
+            viewportWidth = vw.offsetWidth;
+            totalWidth = slideCount * viewportWidth;
+            // 初始偏移到第一张原始幻灯片
+            pos = -viewportWidth;
+            track.style.transform = 'translateX(' + pos + 'px)';
+        }
+
+        function animate(time) {
+            if (!lastTime) lastTime = time;
+            var dt = time - lastTime;
+            lastTime = time;
+
+            if (!paused && dt < 200) {
+                pos -= SPEED * dt;
+
+                // 到达克隆幻灯片（越过最后一张原始幻灯片）→ 无缝重置
+                if (pos <= -(slideCount + 1) * viewportWidth) {
+                    pos = -viewportWidth;
+                }
             }
-        }, { passive: false });
+
+            track.style.transform = 'translateX(' + pos + 'px)';
+            requestAnimationFrame(animate);
+        }
+
+        measure();
+        requestAnimationFrame(animate);
+
+        // 窗口 resize 时重新测量
+        var resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(measure, 200);
+        });
+
+        // 鼠标悬停暂停
+        carousel.addEventListener('mouseenter', function() { paused = true; });
+        carousel.addEventListener('mouseleave', function() { paused = false; lastTime = null; });
     }
 });

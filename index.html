@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -166,7 +166,7 @@
                             <h3>央视《发现者》: 生命潮®《数字健康之路》</h3>
                             <p>深度探索AI与数字化技术在健康管理领域的创新应用</p>
                         </div>
-                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E3%80%8A%E6%95%B0%E5%AD%97%E5%81%A5%E5%BA%B7%E4%B9%8B%E8%B7%AF%E3%80%8B_20241111-HD%EF%BC%88%E6%92%AD%E5%87%BA%E7%89%88%EF%BC%89.mp4" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                        <a href="https://lifetide.oss-cn-beijing.aliyuncs.com/mp4/%E3%80%8A%E6%95%B0%E5%AD%97%E5%81%A5%E5%BA%B7%E4%B9%8B%E8%B7%AF%E3%80%8B_20241111-HD%EF%BC%88%E6%92%AD%E5%87%BA%E7%89%88%EF%BC%89.mp4" class="btn btn-danger" target="_blank" rel="noopener noreferrer">
                             <i data-lucide="play" class="icon-sm"></i>
                             观看视频
                         </a>
@@ -280,47 +280,50 @@
             <div class="container">
                 <h2 id="screenshots-title" class="section-title" data-reveal>真实应用体验</h2>
                 <p class="section-subtitle" data-reveal>从首页到报告，每一帧都是真实的健康管理界面</p>
-                <div class="screenshot-scroll" data-reveal>
-                    <div class="screenshot-scroll-track" id="screenshotTrack">
-                            <div class="screenshot-item">
+                <div class="app-carousel" id="appCarousel" data-reveal>
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="appCarouselTrack">
+                            <div class="carousel-slide">
                                 <div class="screenshot-phone">
-                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="应用首页 - 健康概览">
+                                    <img src="images/app-home.png" alt="健康首页 - 健康概览">
                                 </div>
                                 <span class="screenshot-label">健康首页</span>
                             </div>
-                            <div class="screenshot-item">
+                            <div class="carousel-slide">
                                 <div class="screenshot-phone">
-                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="睡眠监测详情">
+                                    <img src="images/app-sleep.png" alt="睡眠监测详情">
                                 </div>
                                 <span class="screenshot-label">睡眠监测</span>
                             </div>
-                            <div class="screenshot-item">
+                            <div class="carousel-slide">
                                 <div class="screenshot-phone">
-                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="AI健康报告">
-                                </div>
-                                <span class="screenshot-label">AI报告</span>
-                            </div>
-                            <div class="screenshot-item">
-                                <div class="screenshot-phone">
-                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="历史趋势数据">
+                                    <img src="images/app-history.png" alt="历史趋势数据">
                                 </div>
                                 <span class="screenshot-label">历史趋势</span>
                             </div>
-                            <div class="screenshot-item">
+                            <div class="carousel-slide">
                                 <div class="screenshot-phone">
-                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="心率监测详情">
+                                    <img src="images/app-heartrate.png" alt="心率监测详情">
                                 </div>
                                 <span class="screenshot-label">心率监测</span>
                             </div>
-                            <div class="screenshot-item">
+                            <div class="carousel-slide">
                                 <div class="screenshot-phone">
-                                    <img src="images/ChatGPT Image 睡眠健康报告.png" alt="血氧分析">
+                                    <img src="images/app-bloodoxygen.png" alt="血氧分析">
                                 </div>
                                 <span class="screenshot-label">血氧分析</span>
                             </div>
+                            <div class="carousel-slide">
+                                <div class="screenshot-phone">
+                                    <img src="images/app-ai-report.png" alt="AI健康报告">
+                                </div>
+                                <span class="screenshot-label">AI健康报告</span>
+                            </div>
                         </div>
                     </div>
+
                 </div>
+            </div>
         </section>
 
         <!-- ═══════════════ AI HEALTH REPORT ═══════════════ -->
@@ -513,24 +516,24 @@
                 <div class="footer-col">
                     <h4>产品</h4>
                     <ul>
-                        <li><a href="html/QRcode.html">APP下载</a></li>
+                        <li><a href="html/QRcode.html">APP下载中心</a></li>
                         <li><a href="https://incomparable-axolotl.netlify.app/">糖尿病管理平台</a></li>
-                        <li><a href="#download">最新版本</a></li>
+                        <li><a href="https://management.ccwu.cc/">健康数据看板</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>公司</h4>
                     <ul>
-                        <li><a href="about.html#company">关于我们</a></li>
-                        <li><a href="about.html#contact">联系我们</a></li>
-                        <li><a href="about.html#careers">招聘信息</a></li>
+                        <li><a href="#about">关于我们</a></li>
+                        <li><a href="mailto:contact@lifetide.cn">联系我们</a></li>
+                        <li><a href="#">招聘信息</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>法律</h4>
                     <ul>
-                        <li><a href="privacy.html">隐私政策</a></li>
-                        <li><a href="terms.html">用户协议</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                        <li><a href="#">用户协议</a></li>
                         <li><a href="#">ICP备案</a></li>
                     </ul>
                 </div>
@@ -545,7 +548,7 @@
             </div>
             <div class="footer-bottom">
                 <p class="footer-compliance"><i data-lucide="shield-check" class="icon-xs"></i> 本产品为健康管理工具，不用于医疗诊断。所有数据仅供参考，具体健康问题请咨询专业医生。</p>
-                <p>© 2025 健康科技有限公司 版权所有 | 京ICP备2024011111号-1</p>
+                <p>© 2026 健康科技有限公司 版权所有 | 京ICP备2024011111号-1</p>
             </div>
         </div>
     </footer>
@@ -566,4 +569,3 @@
     </script>
 </body>
 </html>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

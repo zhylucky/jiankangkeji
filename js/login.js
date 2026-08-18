@@ -1,18 +1,15 @@
 // 全局配置
 const CONFIG = {
-    // Supabase 配置（需要根据实际情况替换）
-    SUPABASE_URL: 'YOUR_SUPABASE_URL',
-    SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
-    
+    // Supabase 配置
+    SUPABASE_URL: 'https://gxohpxiekmpsmkzkcxfc.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4b2hweGlla21wc21remtjeGZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MTg0NDQsImV4cCI6MjA2NTI5NDQ0NH0.sUleRxPQsEMxNqGPWUfZBDbjvDR5huZ7hGQkrHoahqk',
+
     // API 配置
     API_BASE_URL: '/.netlify/functions',
-    
-    // 验证码倒计时（秒）
-    CODE_COUNTDOWN: 60,
-    
-    // 手机号正则
-    PHONE_REGEX: /^1[3-9]\d{9}$/,
-    
+
+    // 邮箱正则
+    EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+
     // 密码正则（至少 6 位，包含数字和字母，允许特殊字符）
     PASSWORD_REGEX: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#$%^&*(),.?":{}|<>!_\-+=\[\]{};'/\\~`]{6,16}$/
 };
@@ -20,7 +17,7 @@ const CONFIG = {
 // 注册状态管理
 const registerState = {
     currentStep: 1,
-    phone: '',
+    email: '',
     verificationCode: '',
     password: '',
     isSendingCode: false,
@@ -37,6 +34,7 @@ initializeAuth();
 function initializeAuth() {
     initializeElements();
     bindEvents();
+    // Supabase 异步加载，不阻塞表单渲染
     initializeSupabase();
 }
 
@@ -60,7 +58,7 @@ function initializeElements() {
         phone: document.getElementById('phone'),
         verificationCode: document.getElementById('verificationCode'),
         getCodeBtn: document.getElementById('getCodeBtn'),
-        passwordToggle: document.getElementById('passwordToggle'),
+        passwordToggle: document.getElementById('regPasswordToggle'),
         confirmPasswordToggle: document.getElementById('confirmPasswordToggle'),
         agreeTerms: document.getElementById('agreeTerms'),
         submitBtn: document.getElementById('submitBtn'),
@@ -112,19 +110,18 @@ function bindEvents() {
     
     // 密码可见性切换
     if (elements.passwordToggle) {
-        elements.passwordToggle.addEventListener('click', () => togglePasswordVisibility('password'));
+        elements.passwordToggle.addEventListener('click', () => togglePasswordVisibility('regPassword'));
     }
     if (elements.confirmPasswordToggle) {
         elements.confirmPasswordToggle.addEventListener('click', () => togglePasswordVisibility('confirmPassword'));
     }
     
-    // 实时验证
+    // 实时验证（邮箱）
     if (elements.phone) {
-        elements.phone.addEventListener('blur', validatePhone);
+        elements.phone.addEventListener('blur', validateEmail);
     }
     
-    // 注意：注册密码框在第二步才显示，需要在 goToStep(2) 后重新绑定事件
-    
+    // 注册密码框在第二步才显示，需要动态绑定
     // 返回登录
     if (elements.backToLogin) {
         elements.backToLogin.querySelector('a').addEventListener('click', (e) => {
@@ -237,49 +234,162 @@ function fadeInContainer(container) {
     });
 }
 
-// 初始化 Supabase
-function initializeSupabase() {
+// 初始化 Supabase（动态加载库，兼容 CDN 失败场景）
+async function initializeSupabase() {
+    // 如果库未加载，先动态加载
+    if (typeof window.supabase === 'undefined') {
+        const cdnUrls = [
+            'https://unpkg.com/@supabase/supabase-js@2',
+            'https://cdnjs.cloudflare.com/ajax/libs/supabase/2.0.0/supabase.min.js',
+            'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+        ];
+        let loaded = false;
+        for (const url of cdnUrls) {
+            try {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                loaded = true;
+                break;
+            } catch (e) { /* 尝试下一个 CDN */ }
+        }
+        if (!loaded) {
+            console.error('Supabase 库加载失败');
+            return null;
+        }
+    }
+
     if (typeof window.supabase !== 'undefined') {
         window.supabaseClient = window.supabase.createClient(
             CONFIG.SUPABASE_URL,
-            CONFIG.SUPABASE_ANON_KEY
+            CONFIG.SUPABASE_ANON_KEY,
+            {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true
+                }
+            }
         );
+        return window.supabaseClient;
     }
+    return null;
 }
 
+// 账号名 -> 邮箱映射（方便用简短账号登录）
+const USERNAME_EMAIL_MAP = {
+    'admin': 'admin@163.com'
+};
+
 // 处理登录
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
-    
-    const username = elements.username.value;
+
+    const input = elements.username.value.trim();
     const password = elements.password.value;
 
-    // 固定的测试账号
-    const testAccount = {
-        username: 'admin',
-        password: '123456'
-    };
+    if (!input || !password) {
+        showToast('请输入账号和密码', 'error');
+        return;
+    }
 
-    // 验证账号密码
-    if (username.toLowerCase() === testAccount.username && 
-        password === testAccount.password) {
-        
-        showToast('登录成功，正在跳转...', 'success');
+    // 解析邮箱：直接输入邮箱，或通过账号名映射
+    let email = input;
+    if (input.indexOf('@') === -1) {
+        const mapped = USERNAME_EMAIL_MAP[input.toLowerCase()];
+        if (mapped) {
+            email = mapped;
+        } else {
+            showToast('未找到该账号，请使用邮箱登录或先注册', 'error');
+            return;
+        }
+    }
 
-        // 登录成功
+    if (!CONFIG.EMAIL_REGEX.test(email)) {
+        showToast('请输入正确的邮箱格式', 'error');
+        return;
+    }
+
+    // 确保 Supabase 已初始化
+    if (!window.supabaseClient) {
+        await initializeSupabase();
+        if (!window.supabaseClient) {
+            showToast('认证服务未就绪，请刷新页面重试', 'error');
+            return;
+        }
+    }
+
+    const submitBtn = document.querySelector('.login-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '登录中...';
+    }
+
+    try {
+        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        if (error) throw error;
+
+        if (!data.user) {
+            throw new Error('登录失败，未获取到用户信息');
+        }
+
+        // 检查管理员角色（仅 admin 可进入健康管理中心）
+        const { data: profile } = await window.supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
+
+        const role = profile?.role;
+
+        if (role !== 'admin') {
+            // 非管理员：登出并提示无权限
+            await window.supabaseClient.auth.signOut();
+            showToast('该账号无管理员权限，无法访问健康管理中心', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '登 录';
+            }
+            return;
+        }
+
+        // 管理员登录成功
         localStorage.setItem('userInfo', JSON.stringify({
-            username: username,
+            username: input,
+            email: email,
+            role: role,
             isLoggedIn: true
         }));
 
-        // 延迟跳转，让用户看到提示
+        showToast('登录成功，正在跳转...', 'success');
+
         setTimeout(() => {
             window.location.href = 'health-management.html';
-        }, 1500);
+        }, 1000);
 
-    } else {
-        // 登录失败
-        showToast('账号或密码错误!', 'error');
+    } catch (error) {
+        console.error('登录失败:', error.message);
+        let msg = '登录失败：';
+        if (error.message?.includes('Invalid login credentials')) {
+            msg += '账号或密码错误';
+        } else if (error.message?.includes('Email not confirmed')) {
+            msg += '邮箱未验证，请先查收验证邮件';
+        } else {
+            msg += error.message;
+        }
+        showToast(msg, 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '登 录';
+        }
     }
 }
 
@@ -308,77 +418,34 @@ function togglePasswordVisibility(fieldId) {
     }
 }
 
-// 处理获取验证码
+// 邮箱注册不再需要短信验证码，此函数保留兼容但不参与流程
 async function handleGetVerificationCode() {
-    if (!validatePhone()) return;
-    
-    if (registerState.isSendingCode) return;
-    
-    try {
-        registerState.isSendingCode = true;
-        elements.getCodeBtn.disabled = true;
-        elements.getCodeBtn.textContent = '发送中...';
-        
-        // 开发模式：固定验证码 8888
-        startCountdown();
-        
-    } catch (error) {
-        console.error('发送验证码失败:', error);
-        showError(elements.codeError, '网络连接失败，请检查网络后重试');
-    } finally {
-        registerState.isSendingCode = false;
-        elements.getCodeBtn.disabled = false;
-        elements.getCodeBtn.textContent = '获取验证码';
-    }
+    showToast('邮箱注册无需验证码，请直接设置密码', 'info');
 }
 
-// 开始倒计时
-function startCountdown() {
-    registerState.countdown = CONFIG.CODE_COUNTDOWN;
-    updateCountdownDisplay();
-    
-    registerState.countdownTimer = setInterval(() => {
-        registerState.countdown--;
-        updateCountdownDisplay();
-        
-        if (registerState.countdown <= 0) {
-            clearInterval(registerState.countdownTimer);
-            elements.getCodeBtn.disabled = false;
-            elements.getCodeBtn.textContent = '重新获取';
-        }
-    }, 1000);
-}
+// 验证邮箱
+function validateEmail() {
+    const email = elements.phone.value.trim();
+    registerState.email = email;
 
-// 更新倒计时显示
-function updateCountdownDisplay() {
-    if (registerState.countdown > 0) {
-        elements.getCodeBtn.disabled = true;
-        elements.getCodeBtn.textContent = `${registerState.countdown}秒后重试`;
-    }
-}
-
-// 验证手机号
-function validatePhone() {
-    const phone = elements.phone.value.trim();
-    registerState.phone = phone;
-    
-    if (!phone) {
-        showError(elements.phoneError, '请输入手机号');
+    if (!email) {
+        showError(elements.phoneError, '请输入邮箱');
         return false;
     }
-    
-    if (!CONFIG.PHONE_REGEX.test(phone)) {
-        showError(elements.phoneError, '请输入正确的 11 位手机号');
+
+    if (!CONFIG.EMAIL_REGEX.test(email)) {
+        showError(elements.phoneError, '请输入正确的邮箱格式');
         return false;
     }
-    
+
     clearError(elements.phoneError);
     return true;
 }
 
-// 验证密码匹配
+// 验证密码匹配（注册密码框）
 function validatePasswordMatch() {
-    const password = elements.password.value;
+    const passwordInput = document.getElementById('regPassword');
+    const password = passwordInput ? passwordInput.value : '';
     const confirmPassword = elements.confirmPassword.value;
     
     if (confirmPassword && password !== confirmPassword) {
@@ -390,9 +457,10 @@ function validatePasswordMatch() {
     return true;
 }
 
-// 检查密码强度
+// 检查密码强度（注册密码框）
 function checkPasswordStrength() {
-    const password = elements.password.value;
+    const passwordInput = document.getElementById('regPassword');
+    const password = passwordInput ? passwordInput.value : '';
     registerState.password = password;
     
     if (!password) {
@@ -437,96 +505,100 @@ function resetPasswordStrength() {
 // 处理注册表单提交
 async function handleRegisterSubmit(e) {
     e.preventDefault();
-    
+
     if (registerState.currentStep === 1) {
-        if (!validatePhone()) return;
-        
-        const code = elements.verificationCode.value.trim();
-        if (!code) {
-            showError(elements.codeError, '输入验证码');
-            return;
-        }
-        
-        // 固定验证码 123456
-        if (code !== '123456') {
-            showError(elements.codeError, '验证码错误，请输入 123456');
-            return;
-        }
-        
+        if (!validateEmail()) return;
+
         // 清除错误提示
         clearError(elements.codeError);
-        
+        clearError(elements.termsError);
+
         if (!elements.agreeTerms.checked) {
             showError(elements.termsError, '请先同意用户服务协议和隐私政策');
             return;
         }
-        
+
         goToStep(2);
-        
+
     } else if (registerState.currentStep === 2) {
-        const passwordInput = document.getElementById('password');
+        const passwordInput = document.getElementById('regPassword');
         const confirmPasswordInput = document.getElementById('confirmPassword');
-            
+
         if (!passwordInput || !confirmPasswordInput) {
             showToast('表单元素未准备好，请刷新页面重试', 'error');
             return;
         }
-            
+
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
-                
-        console.log('密码验证:', {
-            password: password,
-            length: password.length,
-            hasLetter: /[A-Za-z]/.test(password),
-            hasDigit: /\d/.test(password)
-        });
-                
-        // 简化验证：固定密码 123456
-        if (password !== '123456') {
-            showToast('密码错误，请使用固定密码 123456', 'error');
+
+        // 密码强度校验
+        if (!password || password.length < 6) {
+            showToast('密码长度至少 6 位', 'error');
             return;
         }
-            
+        if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+            showToast('密码需同时包含字母和数字', 'error');
+            return;
+        }
+
         if (confirmPassword && password !== confirmPassword) {
             showError(elements.passwordMatchError, '两次输入的密码不一致');
             return;
         }
-            
+
+        clearError(elements.passwordMatchError);
+        registerState.password = password;
         await performRegistration();
     }
 }
 
-// 执行注册
+// 执行注册（邮箱 + 密码）
 async function performRegistration() {
     try {
         elements.submitBtn.disabled = true;
         elements.submitBtn.innerHTML = '<span class="btn-text">注册中...</span>';
-        
+
+        // 确保 Supabase 已初始化
+        if (!window.supabaseClient) {
+            initializeSupabase();
+        }
+
         if (window.supabaseClient) {
             const { data, error } = await window.supabaseClient.auth.signUp({
-                phone: registerState.phone,
+                email: registerState.email,
                 password: registerState.password,
                 options: {
                     data: {
-                        phone: registerState.phone,
-                        created_at: new Date().toISOString()
+                        name: registerState.email.split('@')[0],
+                        phone: ''
                     }
                 }
             });
-            
+
             if (error) throw error;
-            
-            if (data.user) {
-                await createUserProfile(data.user.id, registerState.phone);
+
+            // 注册成功后，由数据库触发器 handle_new_user 自动创建 profiles
+            if (!data.user) {
+                throw new Error('注册失败，请稍后重试');
             }
+        } else {
+            throw new Error('认证服务未就绪，请刷新页面重试');
         }
-        
+
         registrationSuccess();
-        
+
     } catch (error) {
-        console.error('注册失败:', error);
-        showToast(`注册失败：${error.message}`, 'error');
+        console.error('注册失败:', error.message);
+        let msg = '注册失败：';
+        if (error.message?.includes('already registered')) {
+            msg += '该邮箱已注册，请直接登录';
+        } else if (error.message?.includes('Password should be')) {
+            msg += '密码不符合要求';
+        } else {
+            msg += error.message;
+        }
+        showToast(msg, 'error');
         elements.submitBtn.disabled = false;
         elements.submitBtn.innerHTML = `
             <span class="btn-text">下一步：设置密码</span>
@@ -535,24 +607,14 @@ async function performRegistration() {
     }
 }
 
-// 创建用户档案
-async function createUserProfile(userId, phone) {
-    try {
-        await window.supabaseClient
-            .from('user_profiles')
-            .insert({ id: userId, phone, created_at: new Date().toISOString() });
-    } catch (error) {
-        console.error('创建用户档案失败:', error);
-    }
-}
-
 // 注册成功后的处理
 function registrationSuccess() {
     goToStep(3);
-    
+
     setTimeout(() => {
-        showToast('注册成功！即将完善健康档案...', 'success');
-        // window.location.href = 'health-profile.html';
+        showToast('注册成功！请使用邮箱登录', 'success');
+        // 切换到登录表单
+        switchTab('login');
     }, 1500);
 }
 
@@ -589,9 +651,9 @@ function goToStep(step) {
         `;
         
         // 重新获取密码输入框并绑定事件
-        const passwordInput = document.getElementById('password');
+        const passwordInput = document.getElementById('regPassword');
         const confirmPasswordInput = document.getElementById('confirmPassword');
-        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordToggle = document.getElementById('regPasswordToggle');
         const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
         
         if (passwordInput) {
@@ -601,7 +663,7 @@ function goToStep(step) {
             confirmPasswordInput.addEventListener('input', validatePasswordMatch);
         }
         if (passwordToggle) {
-            passwordToggle.addEventListener('click', () => togglePasswordVisibility('password'));
+            passwordToggle.addEventListener('click', () => togglePasswordVisibility('regPassword'));
         }
         if (confirmPasswordToggle) {
             confirmPasswordToggle.addEventListener('click', () => togglePasswordVisibility('confirmPassword'));

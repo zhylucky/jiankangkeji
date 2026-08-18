@@ -1583,9 +1583,25 @@ function initReportDropdownHover() {
     });
 }
 
-function logout() {
+async function logout() {
+    try {
+        // 调用 Supabase 登出，清除会话
+        const supabaseClient = await loadSupabase();
+        if (supabaseClient) {
+            await supabaseClient.auth.signOut();
+        }
+    } catch (error) {
+        console.warn('登出时 Supabase 调用失败:', error.message);
+    }
+    // 清理本地存储
     localStorage.removeItem('userInfo');
     sessionStorage.removeItem('userInfo');
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf('auth-token') !== -1) {
+            localStorage.removeItem(k);
+        }
+    }
     window.location.href = 'login.html';
 }
 

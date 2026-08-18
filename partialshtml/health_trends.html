@@ -275,11 +275,13 @@
 }
 
 .stat-value {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
-    color: #1a1d23;
+    letter-spacing: -0.03em;
+    color: #0F1F33;
+    font-variant-numeric: tabular-nums;
     line-height: 1.1;
-    letter-spacing: -0.5px;
+    margin-top: 2px;
 }
 
 .stat-label {
@@ -551,7 +553,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(2px);
+    backdrop-filter: none;
     z-index: 10;
     transition: opacity 0.3s ease;
     border-radius: 6px;
@@ -692,6 +694,141 @@
         justify-content: center;
     }
 }
+
+/* ═══ Minimalist UI 覆盖 ═══ */
+.dashboard-stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.stat-card {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF2;
+    border-radius: 8px;
+    padding: 20px 24px;
+    box-shadow: none;
+    overflow: hidden;
+    position: relative;
+}
+.stat-card::before { display: none; }
+.stat-card:hover { box-shadow: none; transform: none; }
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #F0F4F8;
+    color: #4A5A6E;
+    font-size: 16px;
+}
+.stat-card.total .stat-icon { background: #E8F3FF; color: #1677FF; }
+.stat-card.diabetes .stat-icon { background: #FDEEEE; color: #C62828; }
+.stat-card.sub-health .stat-icon { background: #FEF6E7; color: #9A6B00; }
+.stat-card.other .stat-icon { background: #E8F3FF; color: #1677FF; }
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #0F1F33;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    margin-top: 2px;
+}
+.stat-label { font-size: 13px; color: #6B7A90; }
+.stat-trend {
+    position: static;
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 9999px;
+}
+.stat-trend.up { background: #E8F6EC; color: #2E7D32; }
+.stat-trend.down { background: #FDEEEE; color: #C62828; }
+.stat-trend.neutral { background: #F0F4F8; color: #8A9BB0; }
+
+.user-select-section {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF2;
+    border-radius: 8px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+}
+.user-select, .time-range, .metric-select {
+    border: 1px solid #C9D6E4;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1F2A3D;
+}
+.user-select:focus, .time-range:focus, .metric-select:focus {
+    border-color: #1F2A3D;
+    box-shadow: none;
+}
+.refresh-btn {
+    background: #1677FF;
+    border-radius: 6px;
+    font-weight: 500;
+    box-shadow: none;
+}
+.refresh-btn:hover { background: #4096FF; box-shadow: none; }
+
+.trend-charts { gap: 16px; }
+.chart-container {
+    background: #FFFFFF;
+    border: 1px solid #E3EAF2;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: none;
+}
+.chart-container:hover { box-shadow: none; }
+.chart-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #F0F4F8;
+    color: #4A5A6E;
+    font-size: 14px;
+}
+.chart-icon.health { background: #FDEEEE; color: #C62828; }
+.chart-icon.age { background: #E8F3FF; color: #1677FF; }
+.chart-icon.direction { background: #E8F6EC; color: #2E7D32; }
+.chart-title-text h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1F2A3D;
+    letter-spacing: -0.01em;
+}
+.chart-title-text p { font-size: 12px; color: #8A9BB0; }
+.time-tabs {
+    background: #F0F4F8;
+    border-radius: 6px;
+    padding: 2px;
+}
+.time-tab {
+    border-radius: 4px;
+    font-size: 12px;
+    color: #6B7A90;
+}
+.time-tab:hover { color: #1F2A3D; }
+.time-tab.active {
+    background: #FFFFFF;
+    color: #1F2A3D;
+    box-shadow: none;
+    font-weight: 500;
+}
+.chart-loading {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: none;
+    border-radius: 6px;
+}
+.chart-insight {
+    background: #FFFFFF;
+    border-left: 2px solid #1677FF;
+    border-radius: 4px;
+}
+.chart-insight i { color: #4A5A6E; }
+.chart-insight span { color: #4A5A6E; }
+.chart-legend { border-top: 1px solid #E3EAF2; }
+.legend-item { color: #4A5A6E; }
 </style>
 
 <script>
@@ -788,20 +925,13 @@
                             series: [{ 
                                 data: [20, 21, 22, 23, 24, 24, 24], 
                                 type: 'line', 
-                                smooth: true, 
+                                smooth: false, 
                                 symbol: 'circle',
-                                symbolSize: 8,
-                                lineStyle: { color: '#667eea', width: 3 },
-                                itemStyle: { color: '#667eea', borderWidth: 2, borderColor: '#fff' },
+                                symbolSize: 6,
+                                lineStyle: { color: '#1677FF', width: 2 },
+                                itemStyle: { color: '#1677FF', borderWidth: 1, borderColor: '#fff' },
                                 areaStyle: {
-                                    color: {
-                                        type: 'linear',
-                                        x: 0, y: 0, x2: 0, y2: 1,
-                                        colorStops: [
-                                            { offset: 0, color: 'rgba(102, 126, 234, 0.3)' },
-                                            { offset: 1, color: 'rgba(102, 126, 234, 0.02)' }
-                                        ]
-                                    }
+                                    color: 'rgba(22, 119, 255, 0.08)'
                                 }
                             }],
                             animationDuration: 1500,
@@ -843,21 +973,21 @@
                                     name: '正常', 
                                     type: 'line', 
                                     data: [15, 26, 17, 28, 39, 20],
-                                    smooth: true,
+                                    smooth: false,
                                     symbol: 'circle',
-                                    symbolSize: 6,
-                                    lineStyle: { color: '#5470c6', width: 2 },
-                                    itemStyle: { color: '#5470c6' }
+                                    symbolSize: 5,
+                                    lineStyle: { color: '#1677FF', width: 2 },
+                                    itemStyle: { color: '#1677FF' }
                                 }, 
                                 { 
                                     name: '异常', 
                                     type: 'line', 
                                     data: [5, 14, 3, 2, 1, 0],
-                                    smooth: true,
+                                    smooth: false,
                                     symbol: 'circle',
-                                    symbolSize: 6,
-                                    lineStyle: { color: '#ee6666', width: 2 },
-                                    itemStyle: { color: '#ee6666' }
+                                    symbolSize: 5,
+                                    lineStyle: { color: '#F5222D', width: 2 },
+                                    itemStyle: { color: '#F5222D' }
                                 }
                             ],
                             animationDuration: 1500
@@ -885,9 +1015,9 @@
                                 center: ['60%', '50%'],
                                 avoidLabelOverlap: false,
                                 itemStyle: { 
-                                    borderRadius: 8, 
+                                    borderRadius: 4, 
                                     borderColor: '#fff', 
-                                    borderWidth: 3 
+                                    borderWidth: 2 
                                 },
                                 label: { 
                                     show: false, 
@@ -896,22 +1026,20 @@
                                 emphasis: { 
                                     label: { 
                                         show: true, 
-                                        fontSize: '18', 
-                                        fontWeight: 'bold',
-                                        color: '#1a1a2e'
+                                        fontSize: '16', 
+                                        fontWeight: '500',
+                                        color: '#1F2A3D'
                                     },
                                     itemStyle: {
-                                        shadowBlur: 20,
-                                        shadowOffsetX: 0,
-                                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                                        shadowBlur: 0
                                     }
                                 },
                                 labelLine: { show: false },
                                 data: [
-                                    { value: 8, name: '20-30岁', itemStyle: { color: '#667eea' } }, 
-                                    { value: 10, name: '31-40岁', itemStyle: { color: '#f093fb' } }, 
-                                    { value: 4, name: '41-50岁', itemStyle: { color: '#4facfe' } }, 
-                                    { value: 2, name: '50岁以上', itemStyle: { color: '#43e97b' } }
+                                    { value: 8, name: '20-30岁', itemStyle: { color: '#1677FF' } }, 
+                                    { value: 10, name: '31-40岁', itemStyle: { color: '#00B96B' } }, 
+                                    { value: 4, name: '41-50岁', itemStyle: { color: '#FAAD14' } }, 
+                                    { value: 2, name: '50岁以上', itemStyle: { color: '#8A9BB0' } }
                                 ]
                             }],
                             animationDuration: 1500,
@@ -940,9 +1068,9 @@
                                 center: ['60%', '50%'],
                                 avoidLabelOverlap: false,
                                 itemStyle: { 
-                                    borderRadius: 8, 
+                                    borderRadius: 4, 
                                     borderColor: '#fff', 
-                                    borderWidth: 3 
+                                    borderWidth: 2 
                                 },
                                 label: { 
                                     show: false, 
@@ -951,21 +1079,19 @@
                                 emphasis: { 
                                     label: { 
                                         show: true, 
-                                        fontSize: '18', 
-                                        fontWeight: 'bold',
-                                        color: '#1a1a2e'
+                                        fontSize: '16', 
+                                        fontWeight: '500',
+                                        color: '#1F2A3D'
                                     },
                                     itemStyle: {
-                                        shadowBlur: 20,
-                                        shadowOffsetX: 0,
-                                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                                        shadowBlur: 0
                                     }
                                 },
                                 labelLine: { show: false },
                                 data: [
-                                    { value: 8, name: '糖代谢', itemStyle: { color: '#f5576c' } }, 
-                                    { value: 8, name: '亚健康', itemStyle: { color: '#4facfe' } }, 
-                                    { value: 8, name: '其他', itemStyle: { color: '#43e97b' } }
+                                    { value: 8, name: '糖代谢', itemStyle: { color: '#F5222D' } }, 
+                                    { value: 8, name: '亚健康', itemStyle: { color: '#1677FF' } }, 
+                                    { value: 8, name: '其他', itemStyle: { color: '#00B96B' } }
                                 ]
                             }],
                             animationDuration: 1500,
@@ -1017,8 +1143,7 @@
             loadingElements.forEach(el => {
                 el.style.display = 'flex';
                 el.innerHTML = `
-                    <div style="color: #f44336; text-align: center;">
-                        <div style="font-size: 32px; margin-bottom: 16px;">⚠️</div>
+                    <div style="color: #C62828; text-align: center;">
                         <p style="font-size: 14px;">图表加载失败，请刷新页面重试</p>
                     </div>
                 `;
