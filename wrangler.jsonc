@@ -1,0 +1,39 @@
+{
+  // ═══════════════════════════════════════════════════════════
+  // Cloudflare Worker 配置（jkkeji-api）
+  // 部署命令: npx wrangler deploy
+  // 部署后路由: https://jkkeji-api.health-management.workers.dev
+  // 注意: 项目同时存在 wrangler.toml 会报 "Multiple configuration files found"，
+  //       因此本仓库统一使用 wrangler.jsonc，不要再新建 wrangler.toml
+  // ═══════════════════════════════════════════════════════════
+
+  // Worker 名称（决定 workers.dev 子域）
+  "name": "jkkeji-api",
+
+  // 入口文件：内置 AI Chat(/chat) + CORS 代理(/proxy) 两个路由
+  "main": "workers/index.js",
+
+  // 兼容性日期：须不早于代码所用 API 的引入日期
+  "compatibility_date": "2026-08-18",
+
+  // 可观测性：开启实时日志（免费额度内，便于排查 /chat /proxy 调用）
+  "observability": {
+    "enabled": true
+  },
+
+  // Cron 触发器：Supabase keep-alive 定时任务
+  // ⚠️ 需先在 workers/index.js 中实现 scheduled handler，否则触发无效；
+  //    若暂不迁移 keep-alive，可删除整个 triggers 块
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // 环境变量（密钥不入库，按以下方式注入）
+  // 生产: npx wrangler secret put SILICONFLOW_API_KEY
+  //       npx wrangler secret put SUPABASE_URL
+  //       npx wrangler secret put SUPABASE_SERVICE_KEY
+  // 本地: 复制 .dev.vars.example 为 .dev.vars 并填写真实值
+  // 代码实际读取: env.SILICONFLOW_API_KEY（见 workers/index.js handleChat）
+  // ═══════════════════════════════════════════════════════════
+}

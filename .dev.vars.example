@@ -1,0 +1,13 @@
+# ═══ Cloudflare Worker 本地开发环境变量模板 ═══
+# 使用方法：
+#   1. 复制本文件为 .dev.vars  （.dev.vars 已被 .gitignore 忽略，不会入库）
+#   2. 填写真实值
+#   3. 运行: npx wrangler dev
+# 生产环境请勿使用本文件，改用: npx wrangler secret put <变量名>
+
+# SiliconFlow AI API 密钥（AI Chat 必需）
+SILICONFLOW_API_KEY=sk-xxxxxxxxxxxxxxxx
+
+# Supabase 配置（keep-alive 定时任务 / 未来迁移用）
+SUPABASE_URL=https://gxohpxiekmpsmkzkcxfc.supabase.co
+SUPABASE_SERVICE_KEY=service_role_xxxxxxxxxxxxxxxx

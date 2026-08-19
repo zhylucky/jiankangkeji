@@ -1,97 +1,113 @@
 ﻿/**
- * AI聊天功能实现
- * 包含界面控制、消息管理和API调用逻辑
+ * AI 助手 v3
+ * - 仿 Perplexity / Claude / ChatGPT 网页聊天布局
+ * - 流式输出（打字机）
+ * - Markdown 渲染（标题/列表/代码块）
+ * - 图片：上传按钮 + 剪贴板粘贴
+ * - 发送图片自动切换多模态模型
  */
 
 class AIChatWidget {
     constructor() {
         this.isOpen = false;
         this.messages = [];
-        
-        // 等待配置加载后初始化
+        this.pendingImage = null;
+        this.pendingImageName = null;
+        this.isRequestPending = false;
+        this._isStreaming = false;
         this.waitForConfigAndInit();
     }
-    
+
     async waitForConfigAndInit() {
-        // 等待配置文件加载
         let attempts = 0;
         while (!window.AI_CHAT_CONFIG && attempts < 50) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(r => setTimeout(r, 100));
             attempts++;
         }
-        
         if (window.AI_CHAT_CONFIG) {
             this.config = window.AI_CHAT_CONFIG;
-            this.functionUrl = this.config.functionUrl || '/.netlify/functions/chat';
-            this.model = this.config.model;
-            this.systemPrompt = this.config.systemPrompt;
-            this.maxMessages = this.config.maxMessages || 6;
-            this.isRequestPending = false; // 添加请求防重标记
         } else {
-            // 使用默认配置
-            this.functionUrl = '/.netlify/functions/chat';
-            this.model = 'Qwen/Qwen3-8B';
-            this.systemPrompt = '你是一个专业的健康管理AI助手，负责解答个人健康Pro+和睡眠呼吸监测仪两款产品的问题。';
-            this.maxMessages = 10;
+            this.config = {
+                functionUrl: '/api/chat',
+                model: 'Qwen/Qwen3.5-4B',
+                imageModel: 'Qwen/Qwen3.5-4B',
+                ocrModel: 'deepseek-ai/DeepSeek-OCR',
+                stream: true,
+                systemPrompt: '你是健康科技团队的AI健康助手。',
+                maxMessages: 9,
+                ui: {}
+            };
         }
-        
+        this.functionUrl = this.config.functionUrl;
+        this.model = this.config.model;
+        this.systemPrompt = this.config.systemPrompt;
+        this.maxMessages = this.config.maxMessages || 9;
         this.init();
     }
-    
+
     init() {
         this.createHTML();
         this.bindEvents();
         this.showWelcomeMessage();
     }
-    
+
     createHTML() {
-        // 创建悬浮按钮
+        // 悬浮按钮
         const floatBtn = document.createElement('button');
         floatBtn.className = 'ai-chat-float-btn';
-        floatBtn.innerHTML = ''; // 使用背景图片显示头像
         floatBtn.title = 'AI 健康助手';
-            
-        // 创建聊天窗口
-        const chatContainer = document.createElement('div');
-        chatContainer.className = 'ai-chat-container';
-        const headerTitle = this.config?.ui?.title || 'AI 健康助手';
-        const inputPlaceholder = this.config?.ui?.placeholder || '请输入您的问题...';
-                        
-        chatContainer.innerHTML = `
-            <div class="ai-chat-header">
-                <h3>${headerTitle}</h3>
-                <button class="ai-chat-close" title="关闭">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="ai-chat-status-bar"></div>
-            </div>
-            <div class="ai-chat-messages" id="chatMessages">
-                <!-- 消息将在这里显示 -->
-            </div>
-            <div class="ai-chat-input">
-                <textarea 
-                    class="chat-input-field" 
-                    id="chatInput" 
-                    placeholder="${inputPlaceholder}" 
-                    rows="1"
-                ></textarea>
-                <button class="chat-send-btn" id="chatSendBtn" title="发送">
-                    <i class="fas fa-arrow-up"></i>
-                </button>
-            </div>
-        `;
-            
-        // 添加到页面
         document.body.appendChild(floatBtn);
-            
-        // 创建遮罩层
+
+        // 遮罩（全屏窗口下隐藏，仅保留元素兼容）
         const overlay = document.createElement('div');
         overlay.className = 'ai-chat-overlay';
         document.body.appendChild(overlay);
-            
+
+        // 聊天窗口
+        const chatContainer = document.createElement('div');
+        chatContainer.className = 'ai-chat-container';
+        chatContainer.innerHTML = `
+            <header class="ai-chat-header">
+                <button class="ai-chat-close" title="关闭">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="ai-chat-title">
+                    <span class="ai-chat-name">豆眼儿</span>
+                    <span class="ai-chat-subtitle">健康科技 AI 助手</span>
+                </div>
+                <div class="ai-chat-actions">
+                    <button class="ai-chat-clear" title="清空对话">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="ai-chat-messages" id="chatMessages"></div>
+            <div class="ai-chat-composer">
+                <div class="ai-chat-composer-inner">
+                    <div class="ai-chat-img-preview" id="chatImgPreview" hidden>
+                        <img id="chatImgPreviewImg" alt="预览">
+                        <div class="ai-chat-img-info" id="chatImgInfo"></div>
+                        <button class="ai-chat-img-remove" title="移除">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="ai-chat-input">
+                        <input type="file" id="chatImgInput" accept="image/*" hidden>
+                        <button class="ai-chat-attach" id="chatImgBtn" title="发送图片（也可直接粘贴）">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <textarea class="chat-input-field" id="chatInput"
+                            placeholder="输入消息，回车发送，Shift+回车换行..." rows="1"></textarea>
+                        <button class="ai-chat-send" id="chatSendBtn" title="发送">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    </div>
+                    <div class="ai-chat-hint">Enter 发送 · Shift+Enter 换行 · 支持图片粘贴</div>
+                </div>
+            </div>
+        `;
         document.body.appendChild(chatContainer);
-            
-        // 保存引用
+
         this.floatBtn = floatBtn;
         this.overlay = overlay;
         this.chatContainer = chatContainer;
@@ -99,516 +115,558 @@ class AIChatWidget {
         this.inputField = document.getElementById('chatInput');
         this.sendBtn = document.getElementById('chatSendBtn');
         this.closeBtn = chatContainer.querySelector('.ai-chat-close');
+        this.imgBtn = document.getElementById('chatImgBtn');
+        this.imgInput = document.getElementById('chatImgInput');
+        this.imgPreview = document.getElementById('chatImgPreview');
+        this.imgPreviewImg = document.getElementById('chatImgPreviewImg');
+        this.imgInfo = document.getElementById('chatImgInfo');
+        this.clearBtn = chatContainer.querySelector('.ai-chat-clear');
     }
-    
+
     bindEvents() {
-        // 悬浮按钮点击事件
-        this.floatBtn.addEventListener('click', () => {
-            this.toggleChat();
-        });
-        
-        // 关闭按钮点击事件
-        this.closeBtn.addEventListener('click', () => {
-            this.closeChat();
-        });
-        
-        // 发送按钮点击事件
-        this.sendBtn.addEventListener('click', () => {
-            this.sendMessage();
-        });
-        
-        // 输入框回车发送
+        this.floatBtn.addEventListener('click', () => this.toggleChat());
+        this.closeBtn.addEventListener('click', () => this.closeChat());
+        this.sendBtn.addEventListener('click', () => this.sendMessage());
+
         this.inputField.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
                 e.preventDefault();
                 this.sendMessage();
             }
         });
-        
-        // 输入框自动调整高度
-        this.inputField.addEventListener('input', () => {
-            this.autoResizeTextarea();
+        this.inputField.addEventListener('input', () => this.autoResizeTextarea());
+
+        // 图片按钮：触发文件选择
+        this.imgBtn.addEventListener('click', () => this.imgInput.click());
+        this.imgInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) this.handleImageFile(file);
+            e.target.value = '';
         });
-        
-        // 点击外部关闭聊天窗口
-        this.overlay.addEventListener('click', () => {
-            this.closeChat();
+
+        // 粘贴图片支持（Ctrl+V）
+        this.inputField.addEventListener('paste', (e) => {
+            const items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            for (const item of items) {
+                if (item.type && item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) this.handleImageFile(file);
+                    return;
+                }
+            }
+        });
+
+        // 全局 paste 监听（用户在消息列表里粘贴也能捕获）
+        document.addEventListener('paste', (e) => {
+            if (!this.isOpen) return;
+            const items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            for (const item of items) {
+                if (item.type && item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        e.preventDefault();
+                        this.handleImageFile(file);
+                        return;
+                    }
+                }
+            }
+        });
+
+        // 移除待发送图片
+        const removeBtn = this.chatContainer.querySelector('.ai-chat-img-remove');
+        if (removeBtn) removeBtn.addEventListener('click', () => this.clearImage());
+
+        // 模型自动切换：发图时 callAIAPI 内已用 imageModel（多模态），无需手动选择
+
+        // 清空对话
+        this.clearBtn.addEventListener('click', () => {
+            if (this.isRequestPending) {
+                this.showError('请等待当前回答完成');
+                return;
+            }
+            this.messages = [];
+            this.messagesContainer.innerHTML = '';
+            this.showWelcomeMessage();
         });
     }
-    
-    toggleChat() {
-        if (this.isOpen) {
-            this.closeChat();
-        } else {
-            this.openChat();
-        }
-    }
-    
+
     openChat() {
         this.isOpen = true;
-        
-        // 禁止页面滚动
         document.body.style.overflow = 'hidden';
-        
-        // 先显示遮罩层
         this.overlay.classList.add('show');
-        
-        // 稍微延迟显示聊天窗口，确保动画流畅
-        requestAnimationFrame(() => {
-            this.chatContainer.classList.add('show');
-        });
-        
+        requestAnimationFrame(() => this.chatContainer.classList.add('show'));
         this.floatBtn.classList.remove('pulse');
-        
-        // 等待动画完成后聚焦输入框
         setTimeout(() => {
             this.inputField.focus();
             this.scrollToBottom();
-        }, 300);
+        }, 100);
     }
-    
+
     closeChat() {
         this.isOpen = false;
-        
-        // 隐藏聊天窗口
         this.chatContainer.classList.remove('show');
-        
-        // 等待窗口动画完成后隐藏遮罩层
-        setTimeout(() => {
-            this.overlay.classList.remove('show');
-            // 恢复页面滚动
-            document.body.style.overflow = '';
-        }, 300);
+        this.overlay.classList.remove('show');
+        document.body.style.overflow = '';
     }
-    
+
+    toggleChat() {
+        this.isOpen ? this.closeChat() : this.openChat();
+    }
+
     showWelcomeMessage() {
-        const welcomeText = this.config?.ui?.welcomeMessage || 
-            '您好！我是 AI 健康助手，我可以帮助您解答关于健康管理、产品功能、技术支持等各种问题。请随时向我提问！';
-            
-        // 创建欢迎卡片
-        const welcomeCard = document.createElement('div');
-        welcomeCard.className = 'welcome-card';
-        
-                welcomeCard.innerHTML = `
+        const welcome = document.createElement('div');
+        welcome.className = 'welcome-wrapper';
+        welcome.innerHTML = `
             <div class="welcome-avatar-row">
-                <div class="welcome-avatar">
-                    <i class="fas fa-robot" style=""></i>
-                </div>
+                <div class="welcome-avatar"></div>
                 <div class="welcome-name">豆眼儿</div>
             </div>
-            <div class="welcome-desc">您好！我是豆眼儿，您的专属AI健康助手 🌟<br>请随时向我提问，我会尽力为您提供帮助！</div>
+            <div class="welcome-desc">您好！我是豆眼儿，健康科技 AI 助手。可以问我产品功能、操作方法、设备问题，或直接发送图片让我看图回答。</div>
             <div class="quick-actions">
-                <button class="quick-action-btn" data-action="sleep">
-                    <span class="quick-action-icon">🛏️</span>
-                    <span class="quick-action-title">睡眠测评</span>
-                    <span class="quick-action-desc">分析昨晚的睡眠质量</span>
-                </button>
-                <button class="quick-action-btn" data-action="device">
-                    <span class="quick-action-icon">🔌</span>
-                    <span class="quick-action-title">设备绑定</span>
-                    <span class="quick-action-desc">一键连接你的智能手环</span>
-                </button>
-                <button class="quick-action-btn" data-action="report">
-                    <span class="quick-action-icon">📄</span>
-                    <span class="quick-action-title">查看健康报告</span>
-                    <span class="quick-action-desc">生成最新的AI分析报告</span>
-                </button>
-                <button class="quick-action-btn" data-action="support">
-                    <span class="quick-action-icon">🛠️</span>
-                    <span class="quick-action-title">技术支持</span>
-                    <span class="quick-action-desc">解决设备与数据同步问题</span>
-                </button>
+                <button class="quick-action-btn" data-action="sleep">睡眠测评流程</button>
+                <button class="quick-action-btn" data-action="device">设备绑定步骤</button>
+                <button class="quick-action-btn" data-action="report">健康报告解读</button>
+                <button class="quick-action-btn" data-action="support">设备连接不上</button>
             </div>
         `;
-            
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'welcome-wrapper';
-        messageDiv.appendChild(welcomeCard);
-            
-        this.messagesContainer.appendChild(messageDiv);
+        this.messagesContainer.appendChild(welcome);
         this.scrollToBottom();
-            
-        // 绑定快速操作按钮事件
-        this.bindQuickActions();
-    }
-        
-    bindQuickActions() {
-        const actionButtons = this.messagesContainer.querySelectorAll('.quick-action-btn');
-        actionButtons.forEach(btn => {
+
+        const map = {
+            sleep: '请问睡眠测评的具体操作流程是什么？',
+            device: '如何绑定血压计、血氧仪等配套设备？',
+            report: '如何查看历史测评报告？',
+            support: '设备连接不上，一直显示搜索中怎么办？'
+        };
+        welcome.querySelectorAll('.quick-action-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const action = btn.getAttribute('data-action');
-                const actionMessages = {
-                    sleep: '请问睡眠测评的具体操作流程是什么？',
-                    device: '如何绑定血压计、血氧仪等配套设备？',
-                    report: '我想查看历史测评报告，应该怎么操作？',
-                    support: '设备连接不上，一直显示搜索中怎么办？'
-                };
-                    
-                if (actionMessages[action]) {
-                    this.inputField.value = actionMessages[action];
-                    this.sendMessage();
-                }
+                this.inputField.value = map[btn.dataset.action] || '';
+                this.sendMessage();
             });
         });
     }
-    
+
+    // 统一处理图片文件（上传 / 粘贴）
+    handleImageFile(file) {
+        if (!file.type.startsWith('image/')) {
+            this.showError('仅支持图片文件');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            this.showError('图片大小不能超过 5MB');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            this.pendingImage = reader.result;
+            this.pendingImageName = file.name || 'pasted-image';
+            this.imgPreviewImg.src = this.pendingImage;
+            this.imgInfo.textContent = `${this.pendingImageName} · ${(file.size / 1024).toFixed(1)} KB`;
+            this.imgPreview.hidden = false;
+            this.openChat();
+            this.inputField.focus();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    clearImage() {
+        this.pendingImage = null;
+        this.pendingImageName = null;
+        this.imgPreview.hidden = true;
+        this.imgPreviewImg.src = '';
+        this.imgInfo.textContent = '';
+    }
+
+    autoResizeTextarea() {
+        const t = this.inputField;
+        t.style.height = 'auto';
+        t.style.height = Math.min(t.scrollHeight, 160) + 'px';
+    }
+
+    scrollToBottom() {
+        requestAnimationFrame(() => {
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        });
+    }
+
     async sendMessage() {
         const message = this.inputField.value.trim();
-        if (!message) return;
+        const hasImage = !!this.pendingImage;
+        if (!message && !hasImage) return;
         if (this.isRequestPending) {
             this.showError('请等待上一个问题回答完成...');
             return;
         }
         this.isRequestPending = true;
 
-        const userMsg = { role: 'user', content: message };
+        // 移除欢迎区
+        const welcome = this.messagesContainer.querySelector('.welcome-wrapper');
+        if (welcome) welcome.remove();
+
+        const userMsg = {
+            role: 'user',
+            content: message || '请看这张图片',
+            image: this.pendingImage,
+            imageName: this.pendingImageName
+        };
         this.addMessage(userMsg);
         this.messages.push(userMsg);
+
         this.inputField.value = '';
         this.autoResizeTextarea();
+        this.clearImage();
 
-        // 按钮视觉反馈
-        const originalSendHtml = this.sendBtn.innerHTML;
+        const originalHtml = this.sendBtn.innerHTML;
         this.sendBtn.disabled = true;
-        this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; // 发送中
+        this.sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
         try {
             this.validateAndCleanMessages();
+            const strategy = this.classifyIntent(message || '');
 
-            // 非流式响应
-            this.showTypingIndicator();
-            const response = await this.callAIAPI(message);
-            this.hideTypingIndicator();
-            const aiMsg = { role: 'assistant', content: this.formatContent(response) };
+            const aiMsg = { role: 'assistant', content: '' };
             this.addMessage(aiMsg);
+            this.scrollToBottom();
+
+            // 图片/OCR 请求为非流式：先显示加载状态，避免用户无感知
+            if (hasImage) {
+                const lastDiv = this.messagesContainer.querySelector('.chat-message.assistant:last-child');
+                const bubble = lastDiv && lastDiv.querySelector('.chat-bubble');
+                if (bubble) {
+                    const loading = document.createElement('div');
+                    loading.className = 'message-text message-loading';
+                    loading.textContent = '🔍 正在识别图片...';
+                    bubble.appendChild(loading);
+                    this.scrollToBottom();
+                }
+            }
+
+            // 流式渲染节流：每 50ms 最多渲染一次，避免逐字重绘卡顿
+            let lastRender = 0;
+            const content = await this.callAIAPI(message, {
+                strategy,
+                image: hasImage ? userMsg.image : null,
+                onDelta: (delta) => {
+                    aiMsg.content += delta;
+                    const now = Date.now();
+                    if (now - lastRender >= 50) {
+                        lastRender = now;
+                        this.updateMessageContent(aiMsg, aiMsg.content, true);
+                    }
+                }
+            });
+            aiMsg.content = content;
+            this.updateMessageContent(aiMsg, content, false);
             this.messages.push(aiMsg);
         } catch (error) {
-            console.error('AI API调用失败:', error);
+            console.error('AI API 调用失败:', error);
+            // 移除"只有加载提示 / 空内容"的 AI 气泡
+            const last = this.messagesContainer.lastElementChild;
+            if (last && last.classList.contains('chat-message')) {
+                const bubble = last.querySelector('.chat-bubble');
+                const textEl = bubble && bubble.querySelector('.message-text');
+                const loadingEl = bubble && bubble.querySelector('.message-loading');
+                if (!textEl || (!textEl.textContent.trim() && loadingEl)) {
+                    last.remove();
+                }
+            }
             let errorMsg;
-            if (error.message.includes('网络') || error.message.includes('Network')) {
-                errorMsg = this.config?.ui?.errorMessages?.networkError || '网络连接失败，请检查网络后重试';
-            } else if (error.message.includes('API')) {
-                errorMsg = this.config?.ui?.errorMessages?.apiError || 'AI服务暂时无法响应，请稍后再试';
+            if (/Failed to fetch|fetch|Network/i.test(error.message || '')) {
+                errorMsg = '⚠️ 无法连接到 AI 服务（可能是网络问题或 Worker 跨境连接超时）。请稍后重试，或检查网络。';
+            } else if (/超时|timeout|AbortError/i.test(error.message || '')) {
+                errorMsg = '请求超时，请稍后重试';
+            } else if (/API|AI|密钥|404|1042/i.test(error.message || '')) {
+                errorMsg = this.config?.ui?.errorMessages?.apiError || 'AI 服务暂时无法响应，请稍后再试';
             } else {
                 errorMsg = this.config?.ui?.errorMessages?.unknownError || '出现了未知错误，请重新尝试';
             }
             this.showError(errorMsg);
         } finally {
             this.sendBtn.disabled = false;
-            this.sendBtn.innerHTML = originalSendHtml;
+            this.sendBtn.innerHTML = originalHtml;
             this.isRequestPending = false;
         }
     }
 
-    // 调用 AI 的函数
-    async callAIAPI(userMessage) {
-        // 网络离线直接给出友好提示
+    async callAIAPI(userMessage, options = {}) {
         if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-            throw new Error('当前网络不可用，请检查网络连接后重试');
+            throw new Error('当前网络不可用');
         }
+        const { strategy, image, onDelta } = options;
+        const hasImage = !!image;
 
-        // 组合系统提示
         const enhancedSystemPrompt = this.systemPrompt + `\n\n重要提醒：${this.getCurrentTime()}，请确保时间信息的准确性。`;
-
-        // 构建消息历史（裁剪到最近 N 条）
+        // this.messages 已包含刚发送的 userMsg，无需重复追加
         const messageHistory = [
             { role: 'system', content: enhancedSystemPrompt },
             ...this.messages.slice(-this.maxMessages).map(msg => ({
                 role: msg.role === 'ai' ? 'assistant' : msg.role,
-                content: msg.content
-            })),
-            { role: 'user', content: userMessage }
+                content: typeof msg.content === 'string' ? msg.content : ''
+            }))
         ];
 
-        // 超时与重试设置
-        const timeoutMs = 55000; // 55 秒超时
-        const maxRetries = 2;    // 最多重试 2 次
-        const baseDelay = 800;   // 初始退避 800ms
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 30000);
+        const strategyCfg = strategy || {};
+        const isStream = this.config.stream !== false && !hasImage;
+        this._isStreaming = isStream;
 
-        const doRequest = async (attempt) => {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(this.functionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': isStream ? 'text/event-stream' : 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: messageHistory,
+                    // 图片消息自动切换到多模态模型
+                    model: hasImage ? this.config.imageModel : this.model,
+                    injectKnowledge: true,
+                    stream: isStream,
+                    temperature: strategyCfg.temperature ?? 0.5,
+                    max_tokens: strategyCfg.maxTokens ?? 800,
+                    ...(hasImage ? { image, imageMode: 'understand' } : {})
+                }),
+                signal: controller.signal,
+                cache: 'no-store'
+            });
+            clearTimeout(timer);
 
-            try {
-                const response = await fetch(this.functionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        messages: messageHistory,
-                        model: this.model,
-                        injectKnowledge: true
-                    }),
-                    signal: controller.signal,
-                    cache: 'no-store'
-                });
-
-                clearTimeout(timer);
-
-                if (!response.ok) {
-                    const errorText = await response.text().catch(() => '');
-                    throw new Error(`AI 服务请求失败：${response.status} ${response.statusText}${errorText ? `\n详细信息：${errorText}` : ''}`);
-                }
-
-                // 解析 JSON 响应
-                const data = await response.json();
-
-                // 结构校验
-                if (data && Array.isArray(data.choices) && data.choices[0] && data.choices[0].message) {
-                    return data.choices[0].message.content;
-                }
-
-                // 兼容部分返回结构
-                if (data && data.message && typeof data.message.content === 'string') {
-                    return data.message.content;
-                }
-
-                throw new Error('AI 响应格式不正确');
-            } catch (err) {
-                clearTimeout(timer);
-
-                const isAbort = err?.name === 'AbortError';
-                const isTimeout = /超时|timeout|AbortError/i.test(err?.message || '');
-                const isNetwork = /Failed to fetch|NetworkError|网络|fetch|504/i.test(err?.message || '');
-
-                // 可重试的错误
-                if ((isAbort || isTimeout || isNetwork) && attempt < maxRetries) {
-                    const delay = baseDelay * Math.pow(2, attempt); // 指数退避
-                    console.log(`[Retry ${attempt + 1}/${maxRetries}] Waiting ${delay}ms before retry...`);
-                    await new Promise(r => setTimeout(r, delay));
-                    return doRequest(attempt + 1);
-                }
-
-                // 其他错误或超过重试次数
-                throw new Error(`调用 AI 失败：${err.message}`);
+            if (!response.ok) {
+                const errText = await response.text().catch(() => '');
+                throw new Error(`AI 服务请求失败：${response.status}${errText ? ` ${errText.slice(0, 200)}` : ''}`);
             }
-        };
 
-        return doRequest(0);
+            if (hasImage) {
+                const data = await response.json();
+                return data?.choices?.[0]?.message?.content
+                    || data?.message?.content
+                    || '';
+            }
+            if (isStream) {
+                return await this.parseSSE(response, onDelta);
+            }
+            const data = await response.json();
+            return data?.choices?.[0]?.message?.content
+                || data?.message?.content
+                || '';
+        } catch (err) {
+            clearTimeout(timer);
+            if (err?.name === 'AbortError') throw new Error('请求超时');
+            throw err;
+        } finally {
+            this._isStreaming = false;
+        }
     }
 
-    // 优化内容格式，去除多余的空格和换行
-    formatContent(content) {
-        return content
-            .replace(/\n{3,}/g, '\n\n') // 将多个连续换行替换为最多两个
-            .replace(/[ \t]{2,}/g, ' ') // 将多个连续空格替换为一个
-            .replace(/^\s+|\s+$/g, '') // 去除开头和结尾的空白字符
-            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // 简单的加粗处理
-            .replace(/\n/g, '<br>'); // 换行处理
+    // SSE 流式解析（OpenAI/SiliconFlow 兼容）
+    async parseSSE(response, onDelta) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let fullText = '';
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let lineEnd;
+            while ((lineEnd = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.slice(0, lineEnd).trim();
+                buffer = buffer.slice(lineEnd + 1);
+                if (!line || !line.startsWith('data:')) continue;
+                const payload = line.slice(5).trim();
+                if (payload === '[DONE]') continue;
+                try {
+                    const json = JSON.parse(payload);
+                    const delta = json.choices?.[0]?.delta?.content;
+                    if (typeof delta === 'string' && delta) {
+                        fullText += delta;
+                        if (onDelta) onDelta(delta);
+                    }
+                } catch (e) { /* 忽略无法解析的帧 */ }
+            }
+        }
+        if (!fullText) throw new Error('AI 流式响应为空');
+        return fullText;
     }
-    
+
     addMessage(message) {
         const messageDiv = document.createElement('div');
-        const displayRole = message.role === 'assistant' ? 'ai' : message.role;
+        const displayRole = message.role === 'assistant' ? 'assistant' : 'user';
         messageDiv.className = `chat-message ${displayRole}`;
-            
+
         const avatar = document.createElement('div');
         avatar.className = `chat-avatar ${displayRole}`;
-        avatar.innerHTML = displayRole === 'user' ? 
-            '<i class="fas fa-user"></i>' : 
-            '';
-            
+        avatar.innerHTML = displayRole === 'user'
+            ? '<i class="fas fa-user"></i>'
+            : '';
+
         const bubble = document.createElement('div');
-        bubble.className = `chat-bubble ${displayRole}`;
-        
-        // 处理图片消息
+        bubble.className = 'chat-bubble';
+
         if (message.image) {
             const imgContainer = document.createElement('div');
             imgContainer.className = 'message-image-container';
-            
             const img = document.createElement('img');
             img.src = message.image;
             img.className = 'message-image';
-            img.alt = message.imageName || '用户图片';
-            
+            img.alt = message.imageName || '图片';
             imgContainer.appendChild(img);
             bubble.appendChild(imgContainer);
-            
-            if (message.content) {
-                const contentP = document.createElement('p');
-                contentP.className = 'message-text';
-                contentP.textContent = message.content;
-                bubble.appendChild(contentP);
-            }
-        } else if (message.content) {
-            if (message.content.includes('<br>') || message.content.includes('<strong>')) {
-                bubble.innerHTML = message.content;
-            } else {
-                bubble.textContent = message.content;
-            }
         }
-            
-        const timestamp = document.createElement('div');
-        timestamp.className = 'message-timestamp';
-        const now = new Date();
-        timestamp.textContent = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        bubble.appendChild(timestamp);
-            
+
+        if (message.content) {
+            const textEl = document.createElement('div');
+            textEl.className = 'message-text';
+            textEl.innerHTML = this.formatContent(message.content);
+            bubble.appendChild(textEl);
+        }
+
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(bubble);
-            
         this.messagesContainer.appendChild(messageDiv);
         this.scrollToBottom();
     }
-    
-    showTypingIndicator() {
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'chat-message ai';
-        typingDiv.innerHTML = `
-            <div class="chat-avatar ai">
-            </div>
-            <div class="typing-indicator show">
-                <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            </div>
-        `;
-        
-        this.messagesContainer.appendChild(typingDiv);
-        this.typingIndicator = typingDiv;
-        this.scrollToBottom();
-    }
-    
-    hideTypingIndicator() {
-        if (this.typingIndicator) {
-            this.typingIndicator.remove();
-            this.typingIndicator = null;
+
+    // 流式更新最后一条 AI 气泡
+    updateMessageContent(msg, content, isStream) {
+        const msgDivs = this.messagesContainer.querySelectorAll('.chat-message.assistant');
+        const lastDiv = msgDivs[msgDivs.length - 1];
+        if (!lastDiv) return;
+        const bubble = lastDiv.querySelector('.chat-bubble');
+        if (!bubble) return;
+        // 移除加载提示
+        const loadingEl = bubble.querySelector('.message-loading');
+        if (loadingEl) loadingEl.remove();
+        let textEl = bubble.querySelector('.message-text');
+        if (!textEl) {
+            textEl = document.createElement('div');
+            textEl.className = 'message-text';
+            bubble.appendChild(textEl);
         }
-    }
-    
-    showError(errorMessage) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.textContent = errorMessage;
-        
-        this.messagesContainer.appendChild(errorDiv);
-        this.scrollToBottom();
-        
-        // 3秒后自动移除错误消息
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 3000);
-    }
-    
-    autoResizeTextarea() {
-        const textarea = this.inputField;
-        textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 80) + 'px';
-    }
-    
-    scrollToBottom() {
-        setTimeout(() => {
-            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-        }, 100);
-    }
-    
-    // 添加脉冲效果到悬浮按钮
-    addPulseEffect() {
-        this.floatBtn.classList.add('pulse');
-    }
-    
-    // 移除脉冲效果
-    removePulseEffect() {
-        this.floatBtn.classList.remove('pulse');
-    }
-    
-    // 清空聊天记录
-    clearMessages() {
-        this.messages = [];
-        this.messagesContainer.innerHTML = '';
-        this.showWelcomeMessage();
-    }
-    
-    // 初始化时清理历史消息，确保格式正确
-    validateAndCleanMessages() {
-        this.messages = this.messages.filter(msg => {
-            return msg.role && ['user', 'assistant', 'system'].includes(msg.role) && msg.content;
-        }).map(msg => ({
-            role: msg.role === 'ai' ? 'assistant' : msg.role,
-            content: msg.content
-        }));
+        textEl.innerHTML = this.formatContent(content || '');
+        if (isStream) this.scrollToBottom();
     }
 
-    // 获取当前本地时间（优化版本）
+    // ═══ 轻量 Markdown 渲染（避免显示原始符号） ═══
+    formatContent(content) {
+        if (!content) return '';
+        let text = content;
+
+        // 1. 转义 HTML 特殊字符
+        text = text.replace(/&/g, '&amp;')
+                   .replace(/</g, '&lt;')
+                   .replace(/>/g, '&gt;');
+
+        // 2. 代码块（```...```）
+        text = text.replace(/```([\s\S]*?)```/g, (m, code) =>
+            `<pre><code>${code.trim()}</code></pre>`);
+
+        // 3. 行内代码 `...`
+        text = text.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+        // 4. 标题
+        text = text.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+        text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+        // 5. 水平线
+        text = text.replace(/^---+$/gm, '<hr>');
+
+        // 6. 无序列表（合并连续行）
+        text = text.replace(/(^|\n)((?:[-*] [^\n]+(?:\n|$))+)/g, (m, prefix, list) => {
+            const items = list.trim().split('\n').map(l => l.replace(/^[-*] /, '')).filter(Boolean);
+            return `${prefix}<ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+        });
+
+        // 7. 有序列表
+        text = text.replace(/(^|\n)((?:\d+\. [^\n]+(?:\n|$))+)/g, (m, prefix, list) => {
+            const items = list.trim().split('\n').map(l => l.replace(/^\d+\. /, '')).filter(Boolean);
+            return `${prefix}<ol>${items.map(i => `<li>${i}</li>`).join('')}</ol>`;
+        });
+
+        // 8. 加粗
+        text = text.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+
+        // 9. 斜体（无 lookbehind，兼容所有浏览器）
+        text = text.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+
+        // 10. 链接
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
+            '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+        // 11. 段落：空行分段，单换行换 <br>
+        const blocks = text.split(/\n{2,}/);
+        text = blocks.map(b => {
+            const trimmed = b.trim();
+            if (!trimmed) return '';
+            if (/^<(h[1-6]|ul|ol|hr|pre|div)/.test(trimmed)) return b;
+            return `<p>${b.replace(/\n/g, '<br>')}</p>`;
+        }).join('');
+
+        return text;
+    }
+
+    validateAndCleanMessages() {
+        this.messages = this.messages.filter(m => m && m.role &&
+            ['user', 'assistant', 'system'].includes(m.role) &&
+            (m.content || m.image))
+            .map(m => ({
+                role: m.role === 'ai' ? 'assistant' : m.role,
+                content: typeof m.content === 'string' ? m.content : ''
+            }));
+    }
+
     getCurrentTime() {
         const now = new Date();
-        return `当前时间是${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+        return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     }
-    
-    // 问题分类和策略选择（参考 NoteGen 的智能路由）
+
     classifyIntent(message) {
-        const strategyConfig = this.config?.strategySettings || {};
-        if (!strategyConfig.enabled) {
-            return strategyConfig.defaultStrategy || { temperature: 0.5, maxTokens: 800 };
-        }
-        
-        const classifications = strategyConfig.intentClassification || {};
-        const lowerMessage = message.toLowerCase();
-        
-        // 遍历所有分类，找到匹配的关键词
-        for (const [intentName, config] of Object.entries(classifications)) {
-            if (config.keywords && Array.isArray(config.keywords)) {
-                const hasMatch = config.keywords.some(keyword => 
-                    lowerMessage.includes(keyword.toLowerCase())
-                );
-                if (hasMatch) {
-                    console.log(`[Intent Classification] Detected: ${intentName} - ${config.focus}`);
-                    return {
-                        temperature: config.temperature,
-                        maxTokens: config.maxTokens,
-                        focus: config.focus,
-                        includeSteps: config.includeSteps
-                    };
-                }
+        const sc = this.config?.strategySettings;
+        if (!sc || !sc.enabled) return sc?.defaultStrategy || { temperature: 0.5, maxTokens: 800 };
+        const cls = sc.intentClassification || {};
+        const lower = (message || '').toLowerCase();
+        for (const [name, cfg] of Object.entries(cls)) {
+            if (cfg.keywords?.some(k => lower.includes(k.toLowerCase()))) {
+                return { temperature: cfg.temperature, maxTokens: cfg.maxTokens, focus: cfg.focus };
             }
         }
-        
-        // 返回默认策略
-        return strategyConfig.defaultStrategy || { temperature: 0.5, maxTokens: 800 };
+        return sc.defaultStrategy || { temperature: 0.5, maxTokens: 800 };
     }
-    
-    // 根据问题类型动态调整系统提示词
-    enhanceSystemPrompt(basePrompt, strategy) {
-        let enhanced = basePrompt;
-        
-        if (strategy.focus) {
-            enhanced += `\n\n[当前问题类型：${strategy.focus}]`;
-            
-            if (strategy.includeSteps) {
-                enhanced += `\n请按步骤详细说明操作流程，使用清晰的数字序号。`;
-            }
-        }
-        
-        return enhanced;
+
+    showError(msg) {
+        const err = document.createElement('div');
+        err.className = 'error-message';
+        err.textContent = msg;
+        this.messagesContainer.appendChild(err);
+        this.scrollToBottom();
+        // 网络错误延长显示时间，便于用户看到重试建议
+        const ttl = /⚠️|网络|连接/.test(msg) ? 6000 : 3000;
+        setTimeout(() => err.remove(), ttl);
+    }
+
+    addPulseEffect() {
+        if (this.floatBtn) this.floatBtn.classList.add('pulse');
+    }
+
+    removePulseEffect() {
+        if (this.floatBtn) this.floatBtn.classList.remove('pulse');
     }
 }
 
-// 初始化AI聊天组件
+// 初始化
 let aiChatWidget = null;
-
-// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
-    // 延迟初始化，确保所有样式和配置都已加载
     setTimeout(() => {
         aiChatWidget = new AIChatWidget();
-        
-        // 可选：添加脉冲效果提醒用户
-        setTimeout(() => {
-            if (aiChatWidget) {
-                aiChatWidget.addPulseEffect();
-            }
-        }, 2000);
-        
-        console.log('AI聊天组件已初始化');
+        setTimeout(() => aiChatWidget?.addPulseEffect?.(), 2000);
     }, 500);
 });
-
-// 导出全局函数供其他脚本使用
 window.AIChatWidget = AIChatWidget;
-window.getAIChatWidget = function() {
-    return aiChatWidget;
-};
+window.getAIChatWidget = () => aiChatWidget;

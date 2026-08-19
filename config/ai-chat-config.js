@@ -5,59 +5,68 @@
 
 // AI服务配置 - 安全版本
 const AI_CHAT_CONFIG = {
-    // 不再需要 apiKey，通过Netlify Function代理调用
-    functionUrl: '/.netlify/functions/chat', // Netlify Function 地址
-    model: 'Qwen/Qwen3-8B', 
+    // 通过 Pages Functions 同域代理调用（/api/chat → SiliconFlow），避免 workers.dev 跨境不稳定
+    // 备用（Worker 直连）：'https://jkkeji-api.health-management.workers.dev/chat'
+    functionUrl: '/api/chat',
+    // 对话模型（免费）：Qwen3.5-4B 更快 + 原生多模态；Qwen3-8B 质量更好但免费档生成慢
+    // 2026-08-19 已从 Qwen3-8B 切换为 Qwen3.5-4B 提速
+    model: 'Qwen/Qwen3.5-4B',
+    // 识图模型（免费，原生多模态，看图理解+问答，替代付费的 VL 模型）
+    imageModel: 'Qwen/Qwen3.5-4B',
+    // OCR 模型（免费，图片/文档/截图 → 文字/markdown 提取）
+    ocrModel: 'deepseek-ai/DeepSeek-OCR',
+    // 流式输出：逐字显示（打字机效果），显著改善响应感知速度
+    stream: true,
     
     // 聊天配置
-    maxMessages: 9, // 减少上下文消息数量以提高响应速度
+    maxMessages: 6, // 上下文裁剪到最近 6 条，控制 prompt 体积以提速
     // 动态回答策略配置（参考 NoteGen 的智能路由）
     strategySettings: {
         enabled: true,
-        // 问题分类及对应处理策略
+        // 问题分类及对应处理策略（maxTokens 已调低，控制生成量以加快流式完成）
         intentClassification: {
             'product-inquiry': {
                 keywords: ['是什么', '功能', '介绍', '产品', '有什么', '特点', '优势'],
                 temperature: 0.6,
-                maxTokens: 800,
+                maxTokens: 500,
                 focus: '产品介绍'
             },
             'operation-guide': {
                 keywords: ['怎么', '如何', '操作', '使用', '步骤', '流程', '教程'],
                 temperature: 0.5,
-                maxTokens: 1200,
+                maxTokens: 700,
                 focus: '操作指导',
                 includeSteps: true
             },
             'troubleshooting': {
                 keywords: ['问题', '故障', '错误', '失败', '连接不上', '无法', '不行', '不能用'],
                 temperature: 0.5,
-                maxTokens: 1000,
+                maxTokens: 600,
                 focus: '故障排查'
             },
             'device-support': {
                 keywords: ['设备', '绑定', '连接', '蓝牙', '发射器', '血压计', '血氧仪', '胸贴'],
                 temperature: 0.5,
-                maxTokens: 900,
+                maxTokens: 600,
                 focus: '设备支持'
             },
             'report-related': {
                 keywords: ['报告', '测评', '结果', '数据', '分析', '睡眠', '情绪', '体能'],
                 temperature: 0.6,
-                maxTokens: 1000,
+                maxTokens: 600,
                 focus: '报告解读'
             },
             'account-support': {
                 keywords: ['账号', '登录', '注册', '密码', '会员', '订单', '支付'],
                 temperature: 0.5,
-                maxTokens: 600,
+                maxTokens: 400,
                 focus: '账户支持'
             }
         },
         // 默认策略
         defaultStrategy: {
             temperature: 0.5,
-            maxTokens: 800
+            maxTokens: 500
         }
     },
     
@@ -79,6 +88,7 @@ const AI_CHAT_CONFIG = {
 - 未知或超出范围的问题（如医疗诊断），建议咨询专业医生或联系客服
 
 # 输出格式
+- 回答尽量简洁：一般问题 3-5 句话内说清，操作步骤控制在 6 步内，不要重复、不要说空话
 - 使用清晰的段落和换行，避免大段连续文字
 - 操作步骤用数字编号
 - 重要提示单独成段

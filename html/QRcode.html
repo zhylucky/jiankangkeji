@@ -694,11 +694,11 @@
         // API端点基础URL
         const directBaseURL = 'https://management.lifetide.cn/path/management/version/get?appId=';
 
-        // 检测运行环境并选择代理地址
+        // 检测运行环境并选择代理地址（生产走同域 Pages Function，绕开 workers.dev 不稳定）
         const isLocalDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         const proxyBase = isLocalDev
             ? 'http://localhost:3003/proxy?url='
-            : '/.netlify/functions/proxy?url=';
+            : '/api/proxy?url=';
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {

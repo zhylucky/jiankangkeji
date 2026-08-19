@@ -5,12 +5,12 @@
 
 window.EChartsLoader = (function() {
 	let echartsPromise = null;
-	// 多CDN候选（按优先级）——优先国内较快节点
+	// 多CDN候选（按优先级）——cdnjs 优先（非跟踪器，稳定）；unpkg 最后备用
 	const CDN_CANDIDATES = [
-		'https://unpkg.com/echarts@5.4.3/dist/echarts.min.js',
 		'https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js',
 		'https://npm.elemecdn.com/echarts@5.4.3/dist/echarts.min.js',
-		'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js' // 最后备用
+		'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js',
+		'https://unpkg.com/echarts@5.4.3/dist/echarts.min.js' // 最后备用
 	];
 	const LOAD_TIMEOUT_MS = 12000; // 单个CDN加载超时
 	const MAX_RETRIES_PER_CDN = 1; // 每个CDN的重试次数

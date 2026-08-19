@@ -1,5 +1,8 @@
 # Local Netlify folder
 .netlify
+# Local Cloudflare / Wrangler
+.wrangler
+.dev.vars
 CLAUDE.md
 # Dependencies
 node_modules/
