@@ -108,6 +108,24 @@ class AIChatWidget {
         `;
         document.body.appendChild(chatContainer);
 
+        // 图片灯箱（点击聊天中的图片放大查看）
+        const lightbox = document.createElement('div');
+        lightbox.className = 'image-lightbox';
+        lightbox.innerHTML = `
+            <button class="image-lightbox-close" title="关闭"><i class="fas fa-times"></i></button>
+            <img class="image-lightbox-img" alt="放大预览">
+        `;
+        document.body.appendChild(lightbox);
+        this.lightbox = lightbox;
+        this.lightboxImg = lightbox.querySelector('.image-lightbox-img');
+        this.lightboxClose = lightbox.querySelector('.image-lightbox-close');
+        lightbox.addEventListener('click', (e) => {
+            // 点击遮罩或大图本身均关闭（但点大图时不冒泡到遮罩造成闪烁）
+            if (e.target === lightbox || e.target === this.lightboxImg || e.target === this.lightboxClose || this.lightboxClose.contains(e.target)) {
+                this.closeLightbox();
+            }
+        });
+
         this.floatBtn = floatBtn;
         this.overlay = overlay;
         this.chatContainer = chatContainer;
@@ -346,10 +364,36 @@ class AIChatWidget {
 
             // 流式渲染节流：每 50ms 最多渲染一次，避免逐字重绘卡顿
             let lastRender = 0;
+
+            // 思考模式：创建思考内容区域（像 DeepSeek 网页一样先显示思考再输出回答）
+            let thinkingEl = null;
+            let thinkingDone = false;
+            const thinkingBubble = (() => {
+                const divs = this.messagesContainer.querySelectorAll('.chat-message.assistant');
+                const lastDiv = divs[divs.length - 1];
+                return lastDiv ? lastDiv.querySelector('.chat-bubble') : null;
+            })();
+
             const content = await this.callAIAPI(message, {
                 strategy,
                 image: hasImage ? userMsg.image : null,
+                onReasoning: (text) => {
+                    if (!thinkingBubble) return;
+                    if (!thinkingEl) {
+                        thinkingEl = document.createElement('div');
+                        thinkingEl.className = 'message-thinking';
+                        thinkingEl.textContent = '思考中...';
+                        thinkingBubble.insertBefore(thinkingEl, thinkingBubble.firstChild);
+                    }
+                    thinkingEl.textContent = '思考中...\n' + text;
+                    this.scrollToBottom();
+                },
                 onDelta: (delta) => {
+                    // 回答开始：思考区域标记完成（停止闪烁动画）
+                    if (thinkingEl && !thinkingDone) {
+                        thinkingDone = true;
+                        thinkingEl.classList.add('done');
+                    }
                     aiMsg.content += delta;
                     const now = Date.now();
                     if (now - lastRender >= 50) {
@@ -395,8 +439,9 @@ class AIChatWidget {
         if (typeof navigator !== 'undefined' && navigator.onLine === false) {
             throw new Error('当前网络不可用');
         }
-        const { strategy, image, onDelta } = options;
+        const { strategy, image, onDelta, onReasoning } = options;
         const hasImage = !!image;
+        const thinkingMode = this.config.thinkingMode === true && !hasImage;
 
         const enhancedSystemPrompt = this.systemPrompt + `\n\n重要提醒：${this.getCurrentTime()}，请确保时间信息的准确性。`;
         // this.messages 已包含刚发送的 userMsg，无需重复追加
@@ -428,8 +473,12 @@ class AIChatWidget {
                     injectKnowledge: true,
                     stream: isStream,
                     temperature: strategyCfg.temperature ?? 0.5,
-                    max_tokens: strategyCfg.maxTokens ?? 800,
-                    ...(hasImage ? { image, imageMode: 'understand' } : {})
+                    // 思考模式开启时翻倍输出上限（思考+回答都计入 max_tokens），上限 4000
+                    max_tokens: thinkingMode
+                        ? Math.min((strategyCfg.maxTokens ?? 800) * 2, 4000)
+                        : (strategyCfg.maxTokens ?? 800),
+                    ...(hasImage ? { image, imageMode: 'understand' } : {}),
+                    ...(thinkingMode ? { enable_thinking: true } : {})
                 }),
                 signal: controller.signal,
                 cache: 'no-store'
@@ -463,8 +512,8 @@ class AIChatWidget {
         }
     }
 
-    // SSE 流式解析（OpenAI/SiliconFlow 兼容）
-    async parseSSE(response, onDelta) {
+    // SSE 流式解析（OpenAI/SiliconFlow 兼容；支持思考模式 reasoning_content）
+    async parseSSE(response, onDelta, onReasoning) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder('utf-8');
         let buffer = '';
@@ -482,7 +531,14 @@ class AIChatWidget {
                 if (payload === '[DONE]') continue;
                 try {
                     const json = JSON.parse(payload);
-                    const delta = json.choices?.[0]?.delta?.content;
+                    const frame = json.choices?.[0]?.delta || {};
+                    // 思考内容（Qwen3.5 思考模式）
+                    const reasoning = frame.reasoning_content;
+                    if (typeof reasoning === 'string' && reasoning && onReasoning) {
+                        onReasoning(reasoning);
+                    }
+                    // 正式回答
+                    const delta = frame.content;
                     if (typeof delta === 'string' && delta) {
                         fullText += delta;
                         if (onDelta) onDelta(delta);
@@ -515,6 +571,8 @@ class AIChatWidget {
             img.src = message.image;
             img.className = 'message-image';
             img.alt = message.imageName || '图片';
+            img.title = '点击查看大图';
+            img.addEventListener('click', () => this.openLightbox(message.image));
             imgContainer.appendChild(img);
             bubble.appendChild(imgContainer);
         }
@@ -530,6 +588,20 @@ class AIChatWidget {
         messageDiv.appendChild(bubble);
         this.messagesContainer.appendChild(messageDiv);
         this.scrollToBottom();
+    }
+
+    // 图片灯箱：打开
+    openLightbox(src) {
+        this.lightboxImg.src = src;
+        this.lightbox.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // 图片灯箱：关闭
+    closeLightbox() {
+        this.lightbox.classList.remove('show');
+        this.lightboxImg.src = '';
+        document.body.style.overflow = '';
     }
 
     // 流式更新最后一条 AI 气泡

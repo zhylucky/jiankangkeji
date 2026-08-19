@@ -143,8 +143,8 @@ async function handleImage(request, env, body) {
       ]
     }],
     stream: false,
-    // OCR 用较小输出上限 + 简洁参数，避免免费档排队时间过长
-    max_tokens: mode === 'ocr' ? 1200 : 1000,
+    // OCR 1200 / understand 2000：长报告可能超过 1000 token 触发 length 截断
+    max_tokens: mode === 'ocr' ? 1200 : 2000,
     temperature: mode === 'ocr' ? 0.1 : 0.7,
     top_p: 0.8
   };
@@ -242,10 +242,12 @@ async function handleChat(request, env) {
       frequency_penalty: 0.3
     };
 
-    // Qwen 模型关闭思考/搜索，避免额外耗时
+    // Qwen 模型：关闭搜索，思考模式由前端配置控制（thinkingMode）
     if (requestBody.model.includes('Qwen')) {
       requestBody.enable_search = false;
-      requestBody.enable_thinking = false;
+      if (typeof body.enable_thinking === 'boolean') {
+        requestBody.enable_thinking = body.enable_thinking;
+      }
     }
 
     // ── 流式模式：直接透传 SSE 流（不重试，避免打断已开始的流） ──

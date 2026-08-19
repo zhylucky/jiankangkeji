@@ -17,6 +17,9 @@ const AI_CHAT_CONFIG = {
     ocrModel: 'deepseek-ai/DeepSeek-OCR',
     // 流式输出：逐字显示（打字机效果），显著改善响应感知速度
     stream: true,
+    // 思考模式：true 时像 DeepSeek 网页一样先流式显示思考内容，再输出正式回答
+    // 注意：开启思考模式会显著增加响应时间（思考也消耗 token 与时间），嫌慢可改 false
+    thinkingMode: true,
     
     // 聊天配置
     maxMessages: 6, // 上下文裁剪到最近 6 条，控制 prompt 体积以提速

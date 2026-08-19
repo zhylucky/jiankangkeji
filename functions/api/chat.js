@@ -124,7 +124,7 @@ async function handleImage(env, body) {
       ]
     }],
     stream: false,
-    max_tokens: mode === 'ocr' ? 1200 : 1000,
+    max_tokens: mode === 'ocr' ? 1200 : 2000,
     temperature: mode === 'ocr' ? 0.1 : 0.7,
     top_p: 0.8
   };
@@ -205,7 +205,10 @@ export async function onRequestPost(context) {
 
     if (requestBody.model.includes('Qwen')) {
       requestBody.enable_search = false;
-      requestBody.enable_thinking = false;
+      // 思考模式由前端配置控制（thinkingMode），不再强制关闭
+      if (typeof body.enable_thinking === 'boolean') {
+        requestBody.enable_thinking = body.enable_thinking;
+      }
     }
 
     // ── 流式：透传 SSE ──
