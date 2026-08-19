@@ -87,7 +87,7 @@ npm run cf:dev
 生产配置：
 
 ```bash
-npx wrangler pages secret put SILICONFLOW_API_KEY --project-name=jkkeji
+npx wrangler pages secret put SILICONFLOW_API_KEY --project-name=health-management
 ```
 
 本地配置：复制 `.dev.vars.example` 为 `.dev.vars` 并填写（已被 .gitignore 忽略）。
@@ -98,7 +98,7 @@ npx wrangler pages secret put SILICONFLOW_API_KEY --project-name=jkkeji
 
 ```bash
 # Cloudflare Pages（主，含 Functions）
-npm run deploy:pages        # 等价 npx wrangler pages deploy . --project-name=jkkeji --branch=main
+npm run deploy:pages        # 等价 npx wrangler pages deploy . --project-name=health-management --branch=main
 
 # Cloudflare Worker（备用 API）
 npm run deploy:worker       # 等价 npx wrangler deploy

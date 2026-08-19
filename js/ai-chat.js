@@ -518,6 +518,7 @@ class AIChatWidget {
         const decoder = new TextDecoder('utf-8');
         let buffer = '';
         let fullText = '';
+        let reasoningLen = 0;
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -534,8 +535,9 @@ class AIChatWidget {
                     const frame = json.choices?.[0]?.delta || {};
                     // 思考内容（Qwen3.5 思考模式）
                     const reasoning = frame.reasoning_content;
-                    if (typeof reasoning === 'string' && reasoning && onReasoning) {
-                        onReasoning(reasoning);
+                    if (typeof reasoning === 'string' && reasoning) {
+                        reasoningLen += reasoning.length;
+                        if (onReasoning) onReasoning(reasoning);
                     }
                     // 正式回答
                     const delta = frame.content;
@@ -546,7 +548,12 @@ class AIChatWidget {
                 } catch (e) { /* 忽略无法解析的帧 */ }
             }
         }
-        if (!fullText) throw new Error('AI 流式响应为空');
+        if (!fullText) {
+            // 思考完成但未输出回答（思考可能耗尽了输出上限）——给友好提示
+            throw new Error(reasoningLen > 0
+                ? '模型思考完成但未输出回答（可能输出超限），请重试或关闭思考模式'
+                : 'AI 流式响应为空，请稍后重试');
+        }
         return fullText;
     }
 

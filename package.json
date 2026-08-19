@@ -11,7 +11,7 @@
     "start": "netlify dev",
     "cf:dev": "wrangler dev",
     "deploy:worker": "wrangler deploy",
-    "deploy:pages": "wrangler pages deploy . --project-name=jkkeji --branch=main",
+    "deploy:pages": "wrangler pages deploy . --project-name=health-management --branch=main",
     "deploy:all": "npm run deploy:worker && npm run deploy:pages"
   },
   "keywords": [

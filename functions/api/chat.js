@@ -205,10 +205,9 @@ export async function onRequestPost(context) {
 
     if (requestBody.model.includes('Qwen')) {
       requestBody.enable_search = false;
-      // 思考模式由前端配置控制（thinkingMode），不再强制关闭
-      if (typeof body.enable_thinking === 'boolean') {
-        requestBody.enable_thinking = body.enable_thinking;
-      }
+      // 思考模式由前端配置控制（thinkingMode）；未传时默认 false，兼容旧前端
+      // 避免平台默认开启思考导致 content 为空（旧前端无法解析 reasoning_content）
+      requestBody.enable_thinking = typeof body.enable_thinking === 'boolean' ? body.enable_thinking : false;
     }
 
     // ── 流式：透传 SSE ──

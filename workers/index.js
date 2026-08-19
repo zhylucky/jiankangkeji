@@ -242,12 +242,10 @@ async function handleChat(request, env) {
       frequency_penalty: 0.3
     };
 
-    // Qwen 模型：关闭搜索，思考模式由前端配置控制（thinkingMode）
+    // Qwen 模型：关闭搜索，思考模式由前端配置控制（thinkingMode）；未传时默认 false 兼容旧前端
     if (requestBody.model.includes('Qwen')) {
       requestBody.enable_search = false;
-      if (typeof body.enable_thinking === 'boolean') {
-        requestBody.enable_thinking = body.enable_thinking;
-      }
+      requestBody.enable_thinking = typeof body.enable_thinking === 'boolean' ? body.enable_thinking : false;
     }
 
     // ── 流式模式：直接透传 SSE 流（不重试，避免打断已开始的流） ──
