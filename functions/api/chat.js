@@ -129,6 +129,13 @@ async function handleImage(env, body) {
     top_p: 0.8
   };
 
+  // Qwen3.5 系列默认开启思考模式，思考耗尽 max_tokens 会让 content 为空
+  // 识图必须关闭思考以保证直接输出结果
+  if (imageRequestBody.model.includes('Qwen')) {
+    imageRequestBody.enable_search = false;
+    imageRequestBody.enable_thinking = false;
+  }
+
   const resp = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -143,8 +150,9 @@ async function handleImage(env, body) {
     throw new Error(`识图请求失败：${resp.status} - ${errText.slice(0, 200)}`);
   }
   const data = await resp.json();
+  const content = data.choices?.[0]?.message?.content;
   return {
-    choices: [{ message: { content: data.choices?.[0]?.message?.content || '识别失败' } }],
+    choices: [{ message: { content: content || '图片识别返回为空，请重试（可能是 SiliconFlow 免费档偶发问题，或图片过大/格式不支持）' } }],
     type: mode === 'ocr' ? 'ocr_response' : 'image_response'
   };
 }
